@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}Carga de Archivos{% endblock %}
+
+{% block header %}
+<div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; background: var(--color-bg);">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div style="text-align: center; margin-bottom: 40px;">
+        <h1 style="color: var(--color-primary); font-size: 2.5em; margin-bottom: 10px; font-weight: 700;">
+            📊 SIPAC
+        </h1>
+        <p style="color: var(--color-muted); font-size: 1.1em;">
+            Sistema de Procesamiento de Auxiliares Contables
+        </p>
+    </div>
+
+    <div class="nav-links">
+        <a href="/dashboard">📈 Dashboard</a>
+        <a href="/reportes">📄 Reportes</a>
+    </div>
+
+    <div class="upload-area" id="uploadArea">
+        <div class="upload-icon">📁</div>
+        <div class="upload-text">Haz clic o arrastra archivos aquí</div>
+        <div class="upload-hint">Archivos Excel (.xlsx, .xls) - Máximo 500 MB</div>
+        <input type="file" id="fileInput" accept=".xlsx,.xls" multiple>
+    </div>
+
+    <div class="file-list" id="fileList"></div>
+
+    <button class="btn-process" id="btnProcess" disabled>Procesar Archivos</button>
+
+    <div class="progress-container" id="progressContainer" style="display:none;">
+        <div class="progress-bar-wrapper">
+            <div class="progress-bar" id="progressBar">0%</div>
+        </div>
+        <div class="progress-info" id="progressInfo">Preparando...</div>
+    </div>
+
+    <div class="success-message" id="successMessage"></div>
+    <div class="error-message" id="errorMessage"></div>
+
+    <div class="stats-grid" id="statsGrid" style="display: none;"></div>
+</div>
+</div>
+{% endblock %}
+
+{% block footer %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let selectedFiles = [];
+const uploadArea = document.getElementById('uploadArea');
+const fileInput = document.getElementById('fileInput');
+const fileList = document.getElementById('fileList');
+const btnProcess = document.getElementById('btnProcess');
+const progressContainer = document.getElementById('progressContainer');
+const progressBar = document.getElementById('progressBar');
+const progressInfo = document.getElementById('progressInfo');
+const successMessage = document.getElementById('successMessage');
+const errorMessage = document.getElementById('errorMessage');
+const statsGrid = document.getElementById('statsGrid');
+
+// === Funciones de utilidad ===
+function formatNumber(num) {
+    return new Intl.NumberFormat('es-MX', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(num);
+}
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+}
+function isExcelFile(file) {
+    return file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+}
+
+// === Manejadores de carga ===
+uploadArea.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', (e) => handleFiles(Array.from(e.target.files)));
+uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('drag-over');
+});
+uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag-over'));
+uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('drag-over');
+    handleFiles(Array.from(e.dataTransfer.files));
+});
+
+function handleFiles(files) {
+    const excelFiles = files.filter(f => isExcelFile(f));
+    selectedFiles = [...selectedFiles, ...excelFiles];
+    updateFileList();
+}
+
+function updateFileList() {
+    fileList.innerHTML = '';
+    if (selectedFiles.length === 0) {
+        btnProcess.disabled = true;
+        return;
+    }
+    btnProcess.disabled = false;
+    selectedFiles.forEach((file, index) => {
+        const fileItem = document.createElement('div');
+        fileItem.className = 'file-item';
+        fileItem.innerHTML = `
+            <div>
+                <div class="file-name">${file.name}</div>
+                <div class="file-size">${formatFileSize(file.size)}</div>
+            </div>
+            <button class="remove-file" onclick="removeFile(${index})">Eliminar</button>
+        `;
+        fileList.appendChild(fileItem);
+    });
+}
+
+function removeFile(index) {
+    selectedFiles.splice(index, 1);
+    updateFileList();
+}
+
+// === Procesamiento ===
+btnProcess.addEventListener('click', async () => {
+    if (selectedFiles.length === 0) return;
+
+    btnProcess.disabled = true;
+    progressContainer.style.display = 'block';
+    successMessage.style.display = 'none';
+    errorMessage.style.display = 'none';
+    statsGrid.style.display = 'none';
+
+    const formData = new FormData();
+    selectedFiles.forEach(file => formData.append('archivo', file));
+
+    try {
+        const response = await fetch('/api/process', {
+            method: 'POST',
+            body: formData
+        });
+        if (!response.ok) throw new Error('Error al iniciar procesamiento');
+        const data = await response.json();
+        monitorProgress(data.job_id);
+    } catch (error) {
+        console.error('Error:', error);
+        showError(error.message);
+        progressContainer.style.display = 'none';
+        btnProcess.disabled = false;
+    }
+});
+
+function monitorProgress(jobId) {
+    const eventSource = new EventSource(`/api/progress/${jobId}`);
+    eventSource.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+
+        progressBar.style.width = data.progress + '%';
+        progressBar.textContent = Math.round(data.progress) + '%';
+        progressInfo.textContent = data.message;
+
+        if (data.done && !data.error) {
+            eventSource.close();
+            showSuccess({
+                message: data.message,
+                total_records: data.total_registros
+            });
+        } else if (data.error) {
+            eventSource.close();
+            showError(data.error);
+        }
+    };
+
+    eventSource.onerror = (error) => {
+        console.error('EventSource error:', error);
+        eventSource.close();
+        showError('Error de conexión con el servidor');
+    };
+}
+
+function showSuccess(data) {
+    successMessage.innerHTML = `
+        <h3>✅ Procesamiento Completado</h3>
+        <p>${data.message}</p>
+        <p>Total de registros: ${data.total_records || 'N/A'}</p>
+    `;
+    successMessage.style.display = 'block';
+
+    selectedFiles = [];
+    fileInput.value = '';
+    updateFileList();
+    btnProcess.disabled = false;
+
+    setTimeout(() => progressContainer.style.display = 'none', 2000);
+}
+
+function showError(message) {
+    errorMessage.textContent = '❌ Error: ' + message;
+    errorMessage.style.display = 'block';
+    progressContainer.style.display = 'none';
+    btnProcess.disabled = false;
+}
+</script>
+{% endblock %}
+

@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block title %}Reportes{% endblock %}
+
+{% block header_title %}SIPAC - Reportes{% endblock %}
+
+{% block header_subtitle %}Generación de Reportes Personalizados{% endblock %}
+
+{% block nav_links %}
+<a href="/" style="color: white; margin-right: 1rem;">Cargar Archivos</a>
+<a href="/dashboard" style="color: white; margin-right: 1rem;">Dashboard</a>
+<a href="/reporte-online" style="color: white;">Reporte Online</a>
+{% endblock %}
+
+{% block content %}
+<main class="reportes-container">
+
+    <!-- Reportes predefinidos -->
+    <h2 style="margin-bottom: 1rem;">📋 Reportes Rápidos</h2>
+    <div class="presets-section">
+        <div class="preset-card" onclick="aplicarPreset('mes_actual')">
+            <h3>📅 Mes Actual</h3>
+            <p>Todas las transacciones del mes en curso</p>
+        </div>
+        <div class="preset-card" onclick="aplicarPreset('trimestre')">
+            <h3>📊 Trimestre</h3>
+            <p>Últimos 3 meses de actividad</p>
+        </div>
+        <div class="preset-card" onclick="aplicarPreset('anual')">
+            <h3>📈 Año Completo</h3>
+            <p>Todas las transacciones del año</p>
+        </div>
+    </div>
+
+    <!-- Formulario personalizado -->
+    <div class="report-card">
+        <h2>🔧 Reporte Personalizado</h2>
+
+        <div class="info-box">
+            <p><strong>📌 Nota:</strong> Selecciona los filtros que desees aplicar. Límite de 100,000 registros por reporte.</p>
+        </div>
+
+        <form id="reportForm" onsubmit="generarReporte(event)">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Cuenta Contable</label>
+                    <input type="text" id="reportCuenta" placeholder="Ej: 11101">
+                    <small style="color: #666; margin-top: 0.25rem;">Puede ser parcial</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Dependencia</label>
+                    <select id="reportDependencia">
+                        <option value="">Todas</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Fecha Inicio *</label>
+                    <input type="date" id="reportFechaInicio" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Fecha Fin *</label>
+                    <input type="date" id="reportFechaFin" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Póliza</label>
+                    <input type="text" id="reportPoliza" placeholder="Número de póliza">
+                </div>
+
+                <div class="form-group">
+                    <label>Tipo de Reporte</label>
+                    <select id="reportTipo">
+                        <option value="completo">Completo (Todas las columnas)</option>
+                        <option value="resumido">Resumido (Solo movimientos)</option>
+                        <option value="saldos">Solo Saldos</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-generate" id="btnGenerar">
+                📥 Generar y Descargar Reporte
+            </button>
+        </form>
+
+        <div id="statusMessage" class="status-message"></div>
+    </div>
+
+    <!-- Historial de reportes -->
+    <div class="report-card">
+        <h2>📜 Historial de Reportes</h2>
+        <p style="color: #666;">Próximamente: Aquí podrás ver y descargar tus reportes anteriores.</p>
+    </div>
+
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Funciones auxiliares
+function getTodayDate() {
+    return new Date().toISOString().split('T')[0];
+}
+
+function getDateNDaysAgo(days) {
+    const date = new Date();
+    date.setDate(date.getDate() - days);
+    return date.toISOString().split('T')[0];
+}
+
+function scrollToElement(id) {
+    document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+}
+
+async function downloadExcelReport(url, filtros, filename) {
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(filtros)
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Error al generar reporte');
+    }
+
+    const blob = await response.blob();
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(downloadUrl);
+}
+
+// Cargar dependencias al inicio
+async function cargarDependencias() {
+    try {
+        const response = await fetch('/api/dependencias/lista');
+        const data = await response.json();
+
+        const select = document.getElementById('reportDependencia');
+        data.dependencias.forEach(dep => {
+            const option = document.createElement('option');
+            option.value = dep;
+            option.textContent = dep;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error cargando dependencias:', error);
+    }
+}
+
+// Aplicar presets
+function aplicarPreset(tipo) {
+    const hoy = new Date();
+    let fechaInicio, fechaFin;
+
+    switch(tipo) {
+        case 'mes_actual':
+            fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+            fechaFin = hoy;
+            break;
+        case 'trimestre':
+            fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth() - 3, 1);
+            fechaFin = hoy;
+            break;
+        case 'anual':
+            fechaInicio = new Date(hoy.getFullYear(), 0, 1);
+            fechaFin = hoy;
+            break;
+    }
+
+    document.getElementById('reportFechaInicio').value = fechaInicio.toISOString().split('T')[0];
+    document.getElementById('reportFechaFin').value = fechaFin.toISOString().split('T')[0];
+
+    // Scroll al formulario
+    scrollToElement('reportForm');
+}
+
+// Generar reporte
+async function generarReporte(event) {
+    event.preventDefault();
+
+    const btnGenerar = document.getElementById('btnGenerar');
+    const statusMessage = document.getElementById('statusMessage');
+
+    // Mostrar loading
+    btnGenerar.disabled = true;
+    btnGenerar.innerHTML = '<span class="loading-spinner"></span> Generando reporte...';
+
+    statusMessage.className = 'status-message info';
+    statusMessage.style.display = 'block';
+    statusMessage.textContent = '⏳ Consultando base de datos y generando Excel...';
+
+    try {
+        const filtros = {
+            fecha_inicio: document.getElementById('reportFechaInicio').value,
+            fecha_fin: document.getElementById('reportFechaFin').value
+        };
+
+        // Agregar filtros opcionales
+        const cuenta = document.getElementById('reportCuenta').value;
+        if (cuenta) filtros.cuenta_contable = cuenta;
+
+        const dependencia = document.getElementById('reportDependencia').value;
+        if (dependencia) filtros.dependencia = dependencia;
+
+        const poliza = document.getElementById('reportPoliza').value;
+        if (poliza) filtros.poliza = poliza;
+
+        filtros.tipo = document.getElementById('reportTipo').value;
+
+        // Generar nombre de archivo
+        const filename = `reporte_sipac_${getTodayDate()}.xlsx`;
+
+        // Usar la función utilitaria de descarga
+        await downloadExcelReport('/api/reportes/generar', filtros, filename);
+
+        // Mostrar éxito
+        statusMessage.className = 'status-message success';
+        statusMessage.textContent = '✅ Reporte generado y descargado exitosamente';
+
+        setTimeout(() => {
+            statusMessage.style.display = 'none';
+        }, 5000);
+
+    } catch (error) {
+        console.error('Error:', error);
+        statusMessage.className = 'status-message error';
+        statusMessage.textContent = '❌ Error: ' + error.message;
+    } finally {
+        btnGenerar.disabled = false;
+        btnGenerar.innerHTML = '📥 Generar y Descargar Reporte';
+    }
+}
+
+// Cargar al inicio
+window.addEventListener('DOMContentLoaded', () => {
+    cargarDependencias();
+
+    // Establecer fecha fin como hoy
+    document.getElementById('reportFechaFin').value = getTodayDate();
+
+    // Establecer fecha inicio como hace 30 días
+    document.getElementById('reportFechaInicio').value = getDateNDaysAgo(30);
+});
+</script>
+{% endblock %}

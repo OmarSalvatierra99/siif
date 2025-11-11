@@ -1,0 +1,680 @@
+/* ========================================
+   SIPAC - Sistema de Procesamiento de Auxiliares Contables
+   Estilos principales
+   ======================================== */
+
+/* ========== Variables CSS ========== */
+:root {
+    /* Colores principales */
+    --color-primary: #1e3a8a;
+    --color-primary-light: #2563eb;
+    --color-accent: #1d4ed8;
+    --color-secondary: #4472C4;
+
+    /* Colores de fondo */
+    --color-bg: #f8fafc;
+    --color-surface: #ffffff;
+
+    /* Colores de texto */
+    --color-text: #0f172a;
+    --color-muted: #64748b;
+    --color-border: #e2e8f0;
+
+    /* Colores de estado */
+    --color-success: #22c55e;
+    --color-success-dark: #16a34a;
+    --color-error: #b91c1c;
+    --color-error-dark: #991b1b;
+    --color-warning: #f59e0b;
+    --color-info: #3b82f6;
+
+    /* Bordes y sombras */
+    --radius: 10px;
+    --radius-sm: 6px;
+    --radius-lg: 12px;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
+
+    /* Transiciones */
+    --transition: all 0.25s ease;
+}
+
+/* ========== Reset y Base ========== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Inter", "Segoe UI", Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--color-bg);
+    color: var(--color-text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+}
+
+/* ========== Header ========== */
+.header-fixed {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+    color: white;
+    padding: 1rem 0;
+    box-shadow: var(--shadow-md);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.header-text h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.header-text p {
+    font-size: 0.9rem;
+    opacity: 0.95;
+    margin: 0;
+}
+
+/* Logo OFS */
+.ofs-logo {
+    height: 60px;
+    width: auto;
+    object-fit: contain;
+}
+
+/* Navegación en header */
+header nav a {
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+}
+
+header nav a:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* ========== Layout Containers ========== */
+.container {
+    background: var(--color-surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--color-border);
+    max-width: 800px;
+    width: 100%;
+    padding: 40px;
+    margin: 0 auto;
+}
+
+.dashboard-container,
+.reportes-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* ========== Typography ========== */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--color-text);
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+h1 { font-size: 2.5rem; }
+h2 { font-size: 2rem; }
+h3 { font-size: 1.5rem; }
+
+/* ========== Botones ========== */
+.btn,
+.btn-primary,
+.btn-process,
+.btn-generate {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+    text-align: center;
+}
+
+.btn-primary {
+    background: var(--color-secondary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #365a9c;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-process {
+    width: 100%;
+    padding: 15px;
+    background: var(--color-accent);
+    color: white;
+    font-size: 1.2em;
+    margin-top: 20px;
+}
+
+.btn-process:hover {
+    background: var(--color-primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-process:disabled,
+.btn-generate:disabled {
+    background: var(--color-muted);
+    cursor: not-allowed;
+    transform: none;
+    opacity: 0.6;
+}
+
+.btn-generate {
+    background: var(--color-success);
+    color: white;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.btn-generate:hover {
+    background: var(--color-success-dark);
+}
+
+.remove-file {
+    background: var(--color-error);
+    color: white;
+    border: none;
+    padding: 5px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition);
+    font-weight: 600;
+}
+
+.remove-file:hover {
+    background: var(--color-error-dark);
+}
+
+/* ========== Enlaces de navegación ========== */
+.nav-links {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.nav-links a {
+    padding: 10px 20px;
+    background: var(--color-accent);
+    color: white;
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+    font-weight: 600;
+}
+
+.nav-links a:hover {
+    background: var(--color-primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* ========== Cards ========== */
+.stat-card,
+.report-card,
+.chart-card {
+    background: var(--color-surface);
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+}
+
+.stat-card {
+    border-left: 4px solid var(--color-secondary);
+}
+
+.stat-card h3 {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--color-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-card .value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--color-text);
+    margin: 0.5rem 0;
+}
+
+.stat-card .change {
+    font-size: 0.85rem;
+    color: var(--color-success);
+}
+
+.report-card,
+.chart-card {
+    margin-bottom: 2rem;
+}
+
+.report-card h2,
+.chart-card h3 {
+    margin: 0 0 1.5rem 0;
+    color: var(--color-text);
+}
+
+/* ========== Grids ========== */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.form-grid,
+.filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+/* ========== Formularios ========== */
+.form-group,
+.filter-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label,
+.filter-group label {
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--color-text);
+}
+
+.form-group input,
+.form-group select,
+.filter-group input,
+.filter-group select {
+    padding: 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    transition: var(--transition);
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.filter-group input:focus,
+.filter-group select:focus {
+    outline: none;
+    border-color: var(--color-primary-light);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-group small {
+    color: var(--color-muted);
+    margin-top: 0.25rem;
+    font-size: 0.85rem;
+}
+
+/* ========== Secciones de Filtros ========== */
+.filters-section {
+    background: var(--color-surface);
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    margin-bottom: 2rem;
+}
+
+/* ========== Tablas ========== */
+.table-section {
+    background: var(--color-surface);
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    overflow-x: auto;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.data-table thead {
+    background: var(--color-secondary);
+    color: white;
+}
+
+.data-table th,
+.data-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.data-table tbody tr:hover {
+    background: var(--color-bg);
+}
+
+.data-table .money {
+    text-align: right;
+    font-family: 'Courier New', monospace;
+}
+
+/* ========== Paginación ========== */
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.pagination button {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.pagination button:hover {
+    background: var(--color-bg);
+}
+
+.pagination button.active {
+    background: var(--color-secondary);
+    color: white;
+    border-color: var(--color-secondary);
+}
+
+/* ========== Upload Area ========== */
+.upload-area {
+    border: 2px dashed var(--color-border);
+    border-radius: var(--radius);
+    padding: 60px 40px;
+    text-align: center;
+    transition: var(--transition);
+    cursor: pointer;
+    margin-bottom: 30px;
+    background: var(--color-bg);
+}
+
+.upload-area:hover {
+    border-color: var(--color-primary-light);
+    background: rgba(37, 99, 235, 0.05);
+}
+
+.upload-area.drag-over {
+    border-color: var(--color-primary-light);
+    background: rgba(37, 99, 235, 0.1);
+}
+
+.upload-icon {
+    font-size: 4em;
+    color: var(--color-primary-light);
+    margin-bottom: 20px;
+}
+
+.upload-text {
+    font-size: 1.3em;
+    color: var(--color-text);
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.upload-hint {
+    color: var(--color-muted);
+    font-size: 0.95em;
+}
+
+#fileInput {
+    display: none;
+}
+
+/* ========== File List ========== */
+.file-list {
+    margin: 20px 0;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 15px;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 10px;
+}
+
+.file-name {
+    color: var(--color-text);
+    font-weight: 600;
+}
+
+.file-size {
+    color: var(--color-muted);
+    font-size: 0.9em;
+}
+
+/* ========== Progress Bar ========== */
+.progress-container {
+    display: none;
+    margin-top: 30px;
+}
+
+.progress-bar-wrapper {
+    background: var(--color-border);
+    border-radius: var(--radius);
+    height: 30px;
+    overflow: hidden;
+    margin-bottom: 15px;
+}
+
+.progress-bar {
+    background: var(--color-accent);
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+}
+
+.progress-info {
+    color: var(--color-muted);
+    font-size: 0.95em;
+    text-align: center;
+}
+
+/* ========== Mensajes de Estado ========== */
+.success-message,
+.error-message,
+.status-message {
+    padding: 20px;
+    border-radius: var(--radius);
+    text-align: center;
+    margin-top: 20px;
+    display: none;
+}
+
+.success-message,
+.status-message.success {
+    background: rgba(34, 197, 94, 0.1);
+    color: #15803d;
+    border-left: 4px solid #15803d;
+}
+
+.error-message,
+.status-message.error {
+    background: rgba(185, 28, 28, 0.1);
+    color: var(--color-error);
+    border-left: 4px solid var(--color-error);
+}
+
+.status-message.info {
+    background: #dbeafe;
+    color: #1e40af;
+    border: 1px solid var(--color-info);
+}
+
+.info-box {
+    background: #f0f9ff;
+    border-left: 4px solid var(--color-info);
+    padding: 1rem;
+    border-radius: var(--radius-sm);
+    margin-bottom: 1.5rem;
+}
+
+.info-box p {
+    margin: 0;
+    color: #1e40af;
+}
+
+/* ========== Presets ========== */
+.presets-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.preset-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.preset-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.preset-card h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.2rem;
+    color: white;
+}
+
+.preset-card p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 0.9rem;
+}
+
+/* ========== Loading ========== */
+.loading {
+    text-align: center;
+    padding: 2rem;
+    color: var(--color-muted);
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ========== Responsive ========== */
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-grid,
+    .form-grid,
+    .filters-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .container {
+        padding: 20px;
+    }
+
+    .dashboard-container,
+    .reportes-container {
+        padding: 1rem;
+    }
+
+    header nav {
+        margin-left: 0 !important;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        font-size: 14px;
+    }
+
+    h1 { font-size: 1.75rem; }
+    h2 { font-size: 1.5rem; }
+    h3 { font-size: 1.25rem; }
+
+    .ofs-logo {
+        height: 40px;
+    }
+}
+
+/* ========== Utilidades ========== */
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.mt-1 { margin-top: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
+.mb-1 { margin-bottom: 0.5rem; }
+.mb-2 { margin-bottom: 1rem; }
+.hidden { display: none; }

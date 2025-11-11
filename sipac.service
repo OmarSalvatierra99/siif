@@ -1,0 +1,37 @@
+[Unit]
+Description=SIPAC - Sistema de Procesamiento de Auxiliares Contables
+Documentation=https://github.com/your-org/sipac
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=gabo
+Group=gabo
+WorkingDirectory=/home/gabo/portfolio/projects/sipac
+Environment="PATH=/home/gabo/portfolio/projects/sipac/venv/bin"
+Environment="FLASK_ENV=production"
+
+# Load environment variables from .env file
+EnvironmentFile=/home/gabo/portfolio/projects/sipac/.env
+
+# Main process
+ExecStart=/home/gabo/portfolio/projects/sipac/venv/bin/python app_mejorado.py
+
+# Restart policy
+Restart=always
+RestartSec=10
+StartLimitInterval=5min
+StartLimitBurst=5
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=sipac
+
+[Install]
+WantedBy=multi-user.target

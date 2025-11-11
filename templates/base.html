@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sistema de Procesamiento de Auxiliares Contables">
+    <meta name="author" content="SIPAC">
+
+    <title>{% block title %}SIPAC{% endblock %} - Sistema de Procesamiento de Auxiliares Contables</title>
+
+    <!-- Estilos principales -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- Estilos adicionales por página -->
+    {% block extra_css %}{% endblock %}
+
+    <!-- Favicon (opcional) -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/ofs_logo.png') }}">
+</head>
+<body>
+    <!-- Header -->
+    {% block header %}
+    <header class="header-fixed">
+        <div class="header-content">
+            <img src="{{ url_for('static', filename='img/ofs_logo.png') }}" alt="Logo OFS" class="ofs-logo">
+            <div class="header-text">
+                <h1>{% block header_title %}SIPAC{% endblock %}</h1>
+                <p>{% block header_subtitle %}Sistema de Procesamiento de Auxiliares Contables{% endblock %}</p>
+            </div>
+            <nav style="margin-left: auto;">
+                {% block nav_links %}
+                <a href="/">Inicio</a>
+                <a href="/dashboard">Dashboard</a>
+                <a href="/reportes">Reportes</a>
+                {% endblock %}
+            </nav>
+        </div>
+    </header>
+    {% endblock %}
+
+    <!-- Contenido principal -->
+    <main>
+        {% block content %}
+        <!-- El contenido específico de cada página va aquí -->
+        {% endblock %}
+    </main>
+
+    <!-- Footer (opcional) -->
+    {% block footer %}
+    {% endblock %}
+
+    <!-- JavaScript principal -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    <!-- JavaScript adicional por página -->
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
