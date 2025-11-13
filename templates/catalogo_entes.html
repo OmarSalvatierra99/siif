@@ -1,0 +1,397 @@
+{% extends "base.html" %}
+
+{% block title %}Catálogo de Entes - SIPAC{% endblock %}
+
+{% block extra_css %}
+<style>
+    .catalogo-container {
+        max-width: 1100px;
+        margin: 2rem auto;
+        background: var(--color-surface);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-md);
+        padding: 2rem;
+    }
+
+    .header-flex {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--color-primary);
+    }
+
+    .header-flex h2 {
+        color: var(--color-primary);
+        font-size: 1.8rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .header-flex .subtitle {
+        color: var(--color-muted);
+        font-size: 0.95rem;
+    }
+
+    .search-section {
+        background: #f8fafc;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        padding: 1.2rem;
+        margin-bottom: 2rem;
+    }
+
+    .search-box {
+        position: relative;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 3rem;
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        font-size: 0.95rem;
+        transition: var(--transition);
+        background: white;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: var(--color-accent);
+        box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--color-muted);
+        font-size: 1.25rem;
+    }
+
+    .stats-bar {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+        padding: 1rem 1.5rem;
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border-radius: var(--radius);
+        border: 1px solid #bfdbfe;
+        justify-content: center;
+    }
+
+    .stat-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .stat-label {
+        font-size: 0.75rem;
+        color: var(--color-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--color-primary);
+    }
+
+    .table-wrapper {
+        border-radius: var(--radius);
+        overflow: hidden;
+        border: 1px solid var(--color-border);
+    }
+
+    .table-scroll {
+        overflow-x: auto;
+    }
+
+    .tabla-resultados {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .tabla-resultados thead {
+        background: var(--color-primary);
+    }
+
+    .tabla-resultados th {
+        background: var(--color-primary);
+        color: #fff;
+        padding: 0.7rem 1rem;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+    }
+
+    .tabla-resultados td {
+        border-bottom: 1px solid var(--color-border);
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .tabla-resultados tr:nth-child(even) td {
+        background: #f9fafc;
+    }
+
+    .tabla-resultados tr:hover td {
+        background: #f3f4f6;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.35rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .badge-poder {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .badge-dependencia {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .badge-desconcentrado {
+        background: #e0e7ff;
+        color: #3730a3;
+    }
+
+    .badge-descentralizado {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .badge-autonomo {
+        background: #fce7f3;
+        color: #9f1239;
+    }
+
+    .badge-patronato {
+        background: #f3e8ff;
+        color: #6b21a8;
+    }
+
+    .no-results {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--color-muted);
+    }
+
+    .msg-vacio {
+        text-align: center;
+        color: var(--color-muted);
+        margin-top: 2rem;
+        font-size: 0.95rem;
+    }
+
+    .loading {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--color-muted);
+    }
+
+    @media (max-width: 768px) {
+        .catalogo-container {
+            padding: 1rem;
+        }
+        .tabla-resultados th,
+        .tabla-resultados td {
+            font-size: 0.8rem;
+            padding: 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="catalogo-container">
+    <div class="header-flex">
+        <h2>Catálogos Institucionales</h2>
+        <span class="subtitle">Consulta de Entes Estatales Registrados</span>
+    </div>
+
+    <div class="search-section">
+        <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input
+                type="text"
+                class="search-input"
+                id="searchInput"
+                placeholder="Buscar por nombre, clave, siglas o clasificación..."
+                autocomplete="off"
+            >
+        </div>
+    </div>
+
+    <div class="stats-bar">
+        <div class="stat-item">
+            <span class="stat-label">Total de Entes</span>
+            <span class="stat-value" id="totalEntes">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Mostrando</span>
+            <span class="stat-value" id="mostrandoEntes">0</span>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Cargando catálogo...</p>
+        </div>
+        <div class="table-scroll" id="tableContainer" style="display: none;">
+            <table class="tabla-resultados">
+                <thead>
+                    <tr>
+                        <th>NUM</th>
+                        <th>Nombre</th>
+                        <th>Siglas</th>
+                        <th>Clasificación</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaBody">
+                </tbody>
+            </table>
+        </div>
+        <div id="noResults" class="no-results" style="display: none;">
+            <p class="msg-vacio">No se encontraron registros en el catálogo de entes.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let todosLosEntes = [];
+let entesFiltrados = [];
+
+async function cargarEntes() {
+    try {
+        const response = await fetch('/api/entes');
+        const data = await response.json();
+
+        todosLosEntes = data.entes || [];
+        entesFiltrados = [...todosLosEntes];
+
+        actualizarEstadisticas();
+        renderizarTabla();
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('tableContainer').style.display = 'block';
+    } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('loading').innerHTML = `
+            <div class="no-results">
+                <p class="msg-vacio">⚠️ Error al cargar el catálogo</p>
+            </div>
+        `;
+    }
+}
+
+function renderizarTabla() {
+    const tbody = document.getElementById('tablaBody');
+    const noResults = document.getElementById('noResults');
+    const tableContainer = document.getElementById('tableContainer');
+
+    tbody.innerHTML = '';
+
+    if (entesFiltrados.length === 0) {
+        tableContainer.style.display = 'none';
+        noResults.style.display = 'block';
+        return;
+    }
+
+    tableContainer.style.display = 'block';
+    noResults.style.display = 'none';
+
+    const fragment = document.createDocumentFragment();
+
+    entesFiltrados.forEach((ente, index) => {
+        const row = document.createElement('tr');
+
+        const tipoBadge = getBadgeClass(ente.tipo);
+
+        row.innerHTML = `
+            <td><strong>${index + 1}</strong></td>
+            <td>${ente.nombre}</td>
+            <td><strong>${ente.siglas || '-'}</strong></td>
+            <td><span class="badge ${tipoBadge}">${ente.tipo || '-'}</span></td>
+        `;
+
+        fragment.appendChild(row);
+    });
+
+    tbody.appendChild(fragment);
+    actualizarEstadisticas();
+}
+
+function getBadgeClass(tipo) {
+    if (!tipo) return '';
+    const tipoLower = tipo.toLowerCase();
+    if (tipoLower.includes('poder')) return 'badge-poder';
+    if (tipoLower.includes('dependencia')) return 'badge-dependencia';
+    if (tipoLower.includes('desconcentrado')) return 'badge-desconcentrado';
+    if (tipoLower.includes('descentralizado') || tipoLower.includes('paraestatal')) return 'badge-descentralizado';
+    if (tipoLower.includes('autónomo')) return 'badge-autonomo';
+    if (tipoLower.includes('patronato')) return 'badge-patronato';
+    return '';
+}
+
+function filtrarEntes(texto) {
+    const busqueda = texto.toLowerCase().trim();
+
+    if (!busqueda) {
+        entesFiltrados = [...todosLosEntes];
+    } else {
+        entesFiltrados = todosLosEntes.filter(ente => {
+            return (
+                ente.nombre.toLowerCase().includes(busqueda) ||
+                ente.clave.toLowerCase().includes(busqueda) ||
+                (ente.siglas && ente.siglas.toLowerCase().includes(busqueda)) ||
+                (ente.tipo && ente.tipo.toLowerCase().includes(busqueda))
+            );
+        });
+    }
+
+    renderizarTabla();
+}
+
+function actualizarEstadisticas() {
+    document.getElementById('totalEntes').textContent = todosLosEntes.length;
+    document.getElementById('mostrandoEntes').textContent = entesFiltrados.length;
+}
+
+// Debounce para búsqueda
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Event listeners
+document.getElementById('searchInput').addEventListener('input',
+    debounce((e) => filtrarEntes(e.target.value), 300)
+);
+
+// Cargar al inicio
+window.addEventListener('DOMContentLoaded', cargarEntes);
+</script>
+{% endblock %}

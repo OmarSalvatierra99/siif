@@ -1,384 +1,630 @@
 {% extends "base.html" %}
 
-{% block title %}Reporte General{% endblock %}
-
-{% block header_title %}SIPAC - Reporte General{% endblock %}
-
-{% block nav_links %}
-<a href="/" style="color: white; margin-right: 1rem;">Inicio</a>
-<a href="/dashboard" style="color: white; margin-right: 1rem;">Dashboard</a>
-<a href="/reportes" style="color: white;">Reportes Descargables</a>
-{% endblock %}
+{% block title %}Consultar Transacciones - SIPAC{% endblock %}
 
 {% block extra_css %}
 <style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+    .consulta-container {
+        max-width: 1600px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
 
-.reporte-container {
-    padding: 1.5rem;
-    max-width: 100%;
-    background: #f8f9fa;
-    min-height: 100vh;
-}
+    .header-flex {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--color-primary);
+    }
 
-.header-reporte {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-bottom: 1rem;
-    text-align: center;
-}
+    .header-flex h2 {
+        color: var(--color-primary);
+        font-size: 1.8rem;
+        margin-bottom: 0.5rem;
+        font-weight: 700;
+    }
 
-.header-reporte img {
-    max-width: 120px;
-    height: auto;
-    margin-bottom: 0.5rem;
-}
+    .header-flex .subtitle {
+        color: var(--color-muted);
+        font-size: 0.95rem;
+    }
 
-.header-reporte h1 {
-    font-size: 1.5rem;
-    color: #2c5282;
-    margin-bottom: 0.3rem;
-}
+    .filters-section {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
 
-.header-reporte p {
-    font-size: 0.9rem;
-    color: #718096;
-}
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
 
-.info-bar {
-    background: white;
-    padding: 1rem 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-bottom: 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
 
-.info-stats {
-    display: flex;
-    gap: 2rem;
-}
+    .filter-group label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 0.4rem;
+        color: var(--color-primary);
+    }
 
-.stat-item {
-    display: flex;
-    flex-direction: column;
-}
+    .filter-group input,
+    .filter-group select {
+        padding: 0.6rem;
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        font-size: 0.9rem;
+    }
 
-.stat-label {
-    font-size: 0.75rem;
-    color: #718096;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
+    .filter-actions {
+        display: flex;
+        gap: 0.8rem;
+        margin-top: 1rem;
+        justify-content: flex-end;
+    }
 
-.stat-value {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #2c5282;
-}
+    .stats-bar {
+        display: flex;
+        gap: 2rem;
+        flex-wrap: wrap;
+        margin-bottom: 2rem;
+        padding: 1rem 1.5rem;
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border-radius: var(--radius);
+        border: 1px solid #bfdbfe;
+    }
 
-.btn-exportar {
-    background: #38a169;
-    color: white;
-    padding: 0.6rem 1.2rem;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 0.9rem;
-    transition: all 0.2s;
-}
+    .stat-item {
+        display: flex;
+        flex-direction: column;
+    }
 
-.btn-exportar:hover {
-    background: #2f855a;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-}
+    .stat-label {
+        font-size: 0.75rem;
+        color: var(--color-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.25rem;
+    }
 
-.tabla-wrapper {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    overflow: hidden;
-}
+    .stat-value {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--color-primary);
+    }
 
-.tabla-reporte {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 11px;
-}
+    .actions-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
 
-.tabla-reporte thead {
-    background: linear-gradient(135deg, #2c5282 0%, #2b6cb0 100%);
-}
+    .pagination {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
 
-.tabla-reporte th {
-    color: white;
-    padding: 10px 8px;
-    text-align: left;
-    font-weight: 600;
-    position: sticky;
-    top: 0;
-    white-space: nowrap;
-    text-transform: uppercase;
-    font-size: 10px;
-    letter-spacing: 0.3px;
-    border-right: 1px solid rgba(255,255,255,0.1);
-    z-index: 10;
-}
+    .pagination button {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--color-border);
+        background: var(--color-surface);
+        border-radius: 4px;
+        cursor: pointer;
+        transition: var(--transition);
+        font-size: 0.875rem;
+    }
 
-.tabla-reporte th:last-child {
-    border-right: none;
-}
+    .pagination button:hover:not(:disabled) {
+        background: var(--color-bg);
+        border-color: var(--color-primary);
+    }
 
-.tabla-reporte tbody tr {
-    transition: background 0.15s;
-}
+    .pagination button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
 
-.tabla-reporte tbody tr:nth-child(even) {
-    background: #f8f9fa;
-}
+    .table-wrapper {
+        background: var(--color-surface);
+        border-radius: var(--radius);
+        border: 1px solid var(--color-border);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+    }
 
-.tabla-reporte tbody tr:hover {
-    background: #e6f3ff;
-}
+    .table-scroll {
+        overflow-x: auto;
+        max-height: calc(100vh - 500px);
+    }
 
-.tabla-reporte td {
-    padding: 8px;
-    border-bottom: 1px solid #e2e8f0;
-    white-space: nowrap;
-}
+    .tabla-resultados {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.75rem;
+    }
 
-.money {
-    text-align: right;
-    font-family: 'Courier New', monospace;
-    font-weight: 500;
-}
+    .tabla-resultados th {
+        position: sticky;
+        top: 0;
+        background: var(--color-primary);
+        color: #fff;
+        padding: 0.7rem 0.5rem;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.7rem;
+        white-space: nowrap;
+        z-index: 10;
+    }
 
-.positive {
-    color: #38a169;
-}
+    .tabla-resultados td {
+        border-bottom: 1px solid var(--color-border);
+        padding: 0.6rem 0.5rem;
+        font-size: 0.75rem;
+    }
 
-.negative {
-    color: #e53e3e;
-}
+    .tabla-resultados tr:nth-child(even) td {
+        background: #f9fafc;
+    }
 
-.loading-container {
-    text-align: center;
-    padding: 4rem 2rem;
-}
+    .tabla-resultados tr:hover td {
+        background: #f3f4f6;
+    }
 
-.spinner {
-    border: 4px solid #f3f4f6;
-    border-top: 4px solid #2c5282;
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 1rem;
-}
+    .money {
+        text-align: right;
+        font-family: 'Courier New', monospace;
+        font-weight: 500;
+    }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
+    .positive {
+        color: #059669;
+    }
 
-.tabla-scroll-wrapper {
-    max-height: calc(100vh - 320px);
-    overflow-y: auto;
-    overflow-x: auto;
-}
+    .negative {
+        color: #dc2626;
+    }
 
-/* Scrollbar personalizado */
-.tabla-scroll-wrapper::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-}
+    .loading {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--color-muted);
+    }
 
-.tabla-scroll-wrapper::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
+    .no-results {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--color-muted);
+    }
 
-.tabla-scroll-wrapper::-webkit-scrollbar-thumb {
-    background: #cbd5e0;
-    border-radius: 5px;
-}
+    .msg-vacio {
+        text-align: center;
+        color: var(--color-muted);
+        margin-top: 2rem;
+        font-size: 0.95rem;
+    }
 
-.tabla-scroll-wrapper::-webkit-scrollbar-thumb:hover {
-    background: #a0aec0;
-}
+    @media (max-width: 768px) {
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
+        .filter-actions {
+            flex-direction: column;
+            width: 100%;
+        }
+        .filter-actions button {
+            width: 100%;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<main class="reporte-container">
-    <!-- Header con logo -->
-    <div class="header-reporte">
-        <img src="/static/img/ofs_logo.png" alt="Logo OFS">
-        <h1>Reporte General de Transacciones</h1>
-        <p>Sistema de Procesamiento de Auxiliares Contables</p>
+<div class="consulta-container">
+    <div class="header-flex">
+        <h2>Consultar Transacciones</h2>
+        <span class="subtitle">Búsqueda y visualización de transacciones contables</span>
     </div>
 
-    <!-- Barra de información y exportar -->
-    <div class="info-bar">
-        <div class="info-stats">
-            <div class="stat-item">
-                <span class="stat-label">Total Registros</span>
-                <span class="stat-value" id="totalRegistros">0</span>
+    <div class="filters-section">
+        <h3 style="margin-bottom: 1rem; color: var(--color-primary);">Filtros de Búsqueda</h3>
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label>Cuenta Contable</label>
+                <input type="text" id="filtroCuenta" placeholder="Ej: 32210080500000000600N">
             </div>
-            <div class="stat-item">
-                <span class="stat-label">Cargos Totales</span>
-                <span class="stat-value money positive" id="totalCargos">$0.00</span>
+            <div class="filter-group">
+                <label>Género</label>
+                <input type="text" id="filtroGenero" placeholder="1 carácter" maxlength="1">
             </div>
-            <div class="stat-item">
-                <span class="stat-label">Abonos Totales</span>
-                <span class="stat-value money negative" id="totalAbonos">$0.00</span>
+            <div class="filter-group">
+                <label>Grupo</label>
+                <input type="text" id="filtroGrupo" placeholder="1 carácter" maxlength="1">
+            </div>
+            <div class="filter-group">
+                <label>Rubro</label>
+                <input type="text" id="filtroRubro" placeholder="1 carácter" maxlength="1">
+            </div>
+            <div class="filter-group">
+                <label>Cuenta</label>
+                <input type="text" id="filtroCuentaNum" placeholder="2 caracteres" maxlength="2">
+            </div>
+            <div class="filter-group">
+                <label>Subcuenta</label>
+                <input type="text" id="filtroSubcuenta" placeholder="2 caracteres" maxlength="2">
+            </div>
+            <div class="filter-group">
+                <label>Dependencia</label>
+                <input type="text" id="filtroDependencia" placeholder="2 caracteres" maxlength="2">
+            </div>
+            <div class="filter-group">
+                <label>Unidad Responsable</label>
+                <input type="text" id="filtroUnidadResponsable" placeholder="2 caracteres" maxlength="2">
+            </div>
+            <div class="filter-group">
+                <label>Centro de Costo</label>
+                <input type="text" id="filtroCentroCosto" placeholder="2 caracteres" maxlength="2">
+            </div>
+            <div class="filter-group">
+                <label>Proyecto Presupuestario</label>
+                <input type="text" id="filtroProyectoPresupuestario" placeholder="2 caracteres" maxlength="2">
+            </div>
+            <div class="filter-group">
+                <label>Fuente</label>
+                <input type="text" id="filtroFuente" placeholder="1 carácter" maxlength="1">
+            </div>
+            <div class="filter-group">
+                <label>SubFuente</label>
+                <input type="text" id="filtroSubfuente" placeholder="1 carácter" maxlength="1">
+            </div>
+            <div class="filter-group">
+                <label>Tipo de Recurso</label>
+                <input type="text" id="filtroTipoRecurso" placeholder="1 carácter" maxlength="1">
+            </div>
+            <div class="filter-group">
+                <label>Partida Presupuestal</label>
+                <input type="text" id="filtroPartidaPresupuestal" placeholder="4 caracteres" maxlength="4">
+            </div>
+            <div class="filter-group">
+                <label>Nombre de Cuenta</label>
+                <input type="text" id="filtroNombreCuenta" placeholder="Buscar por nombre">
+            </div>
+            <div class="filter-group">
+                <label>Beneficiario</label>
+                <input type="text" id="filtroBeneficiario" placeholder="Buscar beneficiario">
+            </div>
+            <div class="filter-group">
+                <label>Descripción</label>
+                <input type="text" id="filtroDescripcion" placeholder="Buscar descripción">
+            </div>
+            <div class="filter-group">
+                <label>O.P.</label>
+                <input type="text" id="filtroOrdenPago" placeholder="Orden de pago">
+            </div>
+            <div class="filter-group">
+                <label>Póliza</label>
+                <input type="text" id="filtroPoliza" placeholder="Buscar póliza">
+            </div>
+            <div class="filter-group">
+                <label>Fecha Inicio</label>
+                <input type="date" id="filtroFechaInicio">
+            </div>
+            <div class="filter-group">
+                <label>Fecha Fin</label>
+                <input type="date" id="filtroFechaFin">
             </div>
         </div>
-        <button onclick="exportarExcel()" class="btn-exportar">📥 Exportar a Excel</button>
+        <div class="filter-actions">
+            <button class="btn btn-secondary" onclick="limpiarFiltros()">Limpiar Filtros</button>
+            <button class="btn btn-primary" onclick="aplicarFiltros()">Aplicar Filtros</button>
+        </div>
     </div>
 
-    <!-- Tabla de resultados -->
-    <div class="tabla-wrapper">
-        <div id="loading" class="loading-container">
+    <div class="stats-bar">
+        <div class="stat-item">
+            <span class="stat-label">Total Registros</span>
+            <span class="stat-value" id="totalRegistros">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Cargos Totales</span>
+            <span class="stat-value money positive" id="totalCargos">$0.00</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Abonos Totales</span>
+            <span class="stat-value money negative" id="totalAbonos">$0.00</span>
+        </div>
+    </div>
+
+    <div class="actions-bar">
+        <div class="pagination">
+            <button id="btnPrevPage" onclick="cambiarPagina(-1)">‹ Anterior</button>
+            <span id="paginaInfo">Página 1</span>
+            <button id="btnNextPage" onclick="cambiarPagina(1)">Siguiente ›</button>
+        </div>
+        <button class="btn btn-success" onclick="exportarExcel()">
+            📥 Exportar a Excel
+        </button>
+    </div>
+
+    <div class="table-wrapper">
+        <div id="loading" class="loading">
             <div class="spinner"></div>
             <p>Cargando transacciones...</p>
         </div>
-        <div class="tabla-scroll-wrapper" id="tablaScrollWrapper" style="display: none;">
-            <table class="tabla-reporte" id="tablaReporte">
+        <div class="table-scroll" id="tableContainer" style="display: none;">
+            <table class="tabla-resultados">
                 <thead>
                     <tr>
                         <th>Cuenta Contable</th>
-                        <th>Genero</th>
+                        <th>Género</th>
                         <th>Grupo</th>
                         <th>Rubro</th>
                         <th>Cuenta</th>
                         <th>Subcuenta</th>
                         <th>Dependencia</th>
-                        <th>Unidad Resp.</th>
-                        <th>Centro Costo</th>
-                        <th>Proyecto Pres.</th>
+                        <th>Unidad Responsable</th>
+                        <th>Centro de Costo</th>
+                        <th>Proyecto Presupuestario</th>
                         <th>Fuente</th>
                         <th>SubFuente</th>
-                        <th>Tipo Recurso</th>
-                        <th>Partida Pres.</th>
-                        <th>Nombre Cuenta</th>
-                        <th>Fecha</th>
-                        <th>Póliza</th>
-                        <th>Beneficiario</th>
-                        <th>Descripción</th>
+                        <th>Tipo de Recurso</th>
+                        <th>Partida Presupuestal</th>
+                        <th>Nombre de la Cuenta</th>
+                        <th>FECHA</th>
+                        <th>POLIZA</th>
+                        <th>BENEFICIARIO</th>
+                        <th>DESCRIPCION</th>
                         <th>O.P.</th>
-                        <th>Saldo Inicial</th>
-                        <th>Cargos</th>
-                        <th>Abonos</th>
-                        <th>Saldo Final</th>
+                        <th>SALDO INICIAL</th>
+                        <th>CARGOS</th>
+                        <th>ABONOS</th>
+                        <th>SALDO FINAL</th>
                     </tr>
                 </thead>
                 <tbody id="tablaBody">
                 </tbody>
             </table>
         </div>
+        <div id="noResults" class="no-results" style="display: none;">
+            <p class="msg-vacio">No se encontraron transacciones</p>
+        </div>
     </div>
-</main>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-let transaccionesActuales = [];
 let paginaActual = 1;
-const registrosPorPagina = 5000;
+const registrosPorPagina = 50;
+let totalPaginas = 0;
+let filtrosActuales = {};
 
-// Cargar todas las transacciones
 async function cargarTransacciones() {
     try {
-        document.getElementById('loading').style.display = 'block';
-        document.getElementById('tablaScrollWrapper').style.display = 'none';
-
         const params = new URLSearchParams({
             page: paginaActual,
-            per_page: registrosPorPagina
+            per_page: registrosPorPagina,
+            ...filtrosActuales
         });
 
         const response = await fetch(`/api/transacciones?${params}`);
         const data = await response.json();
 
-        transaccionesActuales = data.transacciones;
-
-        const tbody = document.getElementById('tablaBody');
-        tbody.innerHTML = '';
-
-        let totalCargos = 0;
-        let totalAbonos = 0;
-
-        data.transacciones.forEach(t => {
-            totalCargos += parseFloat(t.cargos || 0);
-            totalAbonos += parseFloat(t.abonos || 0);
-
-            const row = tbody.insertRow();
-            row.innerHTML = `
-                <td><strong>${t.cuenta_contable || ''}</strong></td>
-                <td>${t.genero || ''}</td>
-                <td>${t.grupo || ''}</td>
-                <td>${t.rubro || ''}</td>
-                <td>${t.cuenta || ''}</td>
-                <td>${t.subcuenta || ''}</td>
-                <td>${t.dependencia || ''}</td>
-                <td>${t.unidad_responsable || ''}</td>
-                <td>${t.centro_costo || ''}</td>
-                <td>${t.proyecto_presupuestario || ''}</td>
-                <td>${t.fuente || ''}</td>
-                <td>${t.subfuente || ''}</td>
-                <td>${t.tipo_recurso || ''}</td>
-                <td>${t.partida_presupuestal || ''}</td>
-                <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${t.nombre_cuenta || ''}">${t.nombre_cuenta || ''}</td>
-                <td>${formatDate(t.fecha_transaccion)}</td>
-                <td>${t.poliza || ''}</td>
-                <td style="max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${t.beneficiario || ''}">${t.beneficiario || ''}</td>
-                <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${t.descripcion || ''}">${t.descripcion || ''}</td>
-                <td>${t.orden_pago || ''}</td>
-                <td class="money">${formatNumber(t.saldo_inicial)}</td>
-                <td class="money positive">${formatNumber(t.cargos)}</td>
-                <td class="money negative">${formatNumber(t.abonos)}</td>
-                <td class="money"><strong>${formatNumber(t.saldo_final)}</strong></td>
-            `;
-        });
-
-        // Actualizar estadísticas
-        document.getElementById('totalRegistros').textContent = data.total.toLocaleString('es-MX');
-        document.getElementById('totalCargos').textContent = formatCurrency(totalCargos);
-        document.getElementById('totalAbonos').textContent = formatCurrency(totalAbonos);
+        totalPaginas = data.pages || 1;
+        renderizarTabla(data.transacciones);
+        actualizarEstadisticas(data);
+        actualizarPaginacion();
 
         document.getElementById('loading').style.display = 'none';
-        document.getElementById('tablaScrollWrapper').style.display = 'block';
-
+        document.getElementById('tableContainer').style.display = 'block';
     } catch (error) {
         console.error('Error:', error);
-        document.getElementById('loading').innerHTML = '<p style="color: #e53e3e;">Error al cargar datos. Por favor, recargue la página.</p>';
+        document.getElementById('loading').innerHTML = `
+            <div class="no-results">
+                <p class="msg-vacio">⚠️ Error al cargar transacciones</p>
+            </div>
+        `;
     }
 }
 
-// Exportar a Excel
-async function exportarExcel() {
-    if (!transaccionesActuales.length) {
-        alert('No hay datos para exportar.');
+function renderizarTabla(transacciones) {
+    const tbody = document.getElementById('tablaBody');
+    const noResults = document.getElementById('noResults');
+    const tableContainer = document.getElementById('tableContainer');
+
+    tbody.innerHTML = '';
+
+    if (!transacciones || transacciones.length === 0) {
+        tableContainer.style.display = 'none';
+        noResults.style.display = 'block';
         return;
     }
 
+    tableContainer.style.display = 'block';
+    noResults.style.display = 'none';
+
+    const fragment = document.createDocumentFragment();
+
+    transacciones.forEach(t => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><strong>${t.cuenta_contable || ''}</strong></td>
+            <td>${t.genero || ''}</td>
+            <td>${t.grupo || ''}</td>
+            <td>${t.rubro || ''}</td>
+            <td>${t.cuenta || ''}</td>
+            <td>${t.subcuenta || ''}</td>
+            <td>${t.dependencia || ''}</td>
+            <td>${t.unidad_responsable || ''}</td>
+            <td>${t.centro_costo || ''}</td>
+            <td>${t.proyecto_presupuestario || ''}</td>
+            <td>${t.fuente || ''}</td>
+            <td>${t.subfuente || ''}</td>
+            <td>${t.tipo_recurso || ''}</td>
+            <td>${t.partida_presupuestal || ''}</td>
+            <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis;" title="${t.nombre_cuenta || ''}">${truncate(t.nombre_cuenta, 40)}</td>
+            <td>${t.fecha_transaccion || ''}</td>
+            <td>${t.poliza || ''}</td>
+            <td style="max-width: 180px; overflow: hidden; text-overflow: ellipsis;" title="${t.beneficiario || ''}">${truncate(t.beneficiario, 25)}</td>
+            <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;" title="${t.descripcion || ''}">${truncate(t.descripcion, 30)}</td>
+            <td>${t.orden_pago || ''}</td>
+            <td class="money">${formatNumber(t.saldo_inicial)}</td>
+            <td class="money positive">${formatNumber(t.cargos)}</td>
+            <td class="money negative">${formatNumber(t.abonos)}</td>
+            <td class="money"><strong>${formatNumber(t.saldo_final)}</strong></td>
+        `;
+        fragment.appendChild(row);
+    });
+
+    tbody.appendChild(fragment);
+}
+
+function actualizarEstadisticas(data) {
+    document.getElementById('totalRegistros').textContent = (data.total || 0).toLocaleString('es-MX');
+
+    let totalCargos = 0;
+    let totalAbonos = 0;
+
+    if (data.transacciones) {
+        data.transacciones.forEach(t => {
+            totalCargos += parseFloat(t.cargos || 0);
+            totalAbonos += parseFloat(t.abonos || 0);
+        });
+    }
+
+    document.getElementById('totalCargos').textContent = formatCurrency(totalCargos);
+    document.getElementById('totalAbonos').textContent = formatCurrency(totalAbonos);
+}
+
+function actualizarPaginacion() {
+    document.getElementById('paginaInfo').textContent = `Página ${paginaActual} de ${totalPaginas}`;
+    document.getElementById('btnPrevPage').disabled = paginaActual === 1;
+    document.getElementById('btnNextPage').disabled = paginaActual === totalPaginas;
+}
+
+function cambiarPagina(delta) {
+    const nuevaPagina = paginaActual + delta;
+    if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas) {
+        paginaActual = nuevaPagina;
+        cargarTransacciones();
+    }
+}
+
+function aplicarFiltros() {
+    filtrosActuales = {};
+
+    const cuenta = document.getElementById('filtroCuenta').value.trim();
+    if (cuenta) filtrosActuales.cuenta_contable = cuenta;
+
+    const genero = document.getElementById('filtroGenero').value.trim();
+    if (genero) filtrosActuales.genero = genero;
+
+    const grupo = document.getElementById('filtroGrupo').value.trim();
+    if (grupo) filtrosActuales.grupo = grupo;
+
+    const rubro = document.getElementById('filtroRubro').value.trim();
+    if (rubro) filtrosActuales.rubro = rubro;
+
+    const cuentaNum = document.getElementById('filtroCuentaNum').value.trim();
+    if (cuentaNum) filtrosActuales.cuenta = cuentaNum;
+
+    const subcuenta = document.getElementById('filtroSubcuenta').value.trim();
+    if (subcuenta) filtrosActuales.subcuenta = subcuenta;
+
+    const dependencia = document.getElementById('filtroDependencia').value.trim();
+    if (dependencia) filtrosActuales.dependencia = dependencia;
+
+    const unidadResponsable = document.getElementById('filtroUnidadResponsable').value.trim();
+    if (unidadResponsable) filtrosActuales.unidad_responsable = unidadResponsable;
+
+    const centroCosto = document.getElementById('filtroCentroCosto').value.trim();
+    if (centroCosto) filtrosActuales.centro_costo = centroCosto;
+
+    const proyectoPresupuestario = document.getElementById('filtroProyectoPresupuestario').value.trim();
+    if (proyectoPresupuestario) filtrosActuales.proyecto_presupuestario = proyectoPresupuestario;
+
+    const fuente = document.getElementById('filtroFuente').value.trim();
+    if (fuente) filtrosActuales.fuente = fuente;
+
+    const subfuente = document.getElementById('filtroSubfuente').value.trim();
+    if (subfuente) filtrosActuales.subfuente = subfuente;
+
+    const tipoRecurso = document.getElementById('filtroTipoRecurso').value.trim();
+    if (tipoRecurso) filtrosActuales.tipo_recurso = tipoRecurso;
+
+    const partidaPresupuestal = document.getElementById('filtroPartidaPresupuestal').value.trim();
+    if (partidaPresupuestal) filtrosActuales.partida_presupuestal = partidaPresupuestal;
+
+    const nombreCuenta = document.getElementById('filtroNombreCuenta').value.trim();
+    if (nombreCuenta) filtrosActuales.nombre_cuenta = nombreCuenta;
+
+    const beneficiario = document.getElementById('filtroBeneficiario').value.trim();
+    if (beneficiario) filtrosActuales.beneficiario = beneficiario;
+
+    const descripcion = document.getElementById('filtroDescripcion').value.trim();
+    if (descripcion) filtrosActuales.descripcion = descripcion;
+
+    const ordenPago = document.getElementById('filtroOrdenPago').value.trim();
+    if (ordenPago) filtrosActuales.orden_pago = ordenPago;
+
+    const poliza = document.getElementById('filtroPoliza').value.trim();
+    if (poliza) filtrosActuales.poliza = poliza;
+
+    const fechaInicio = document.getElementById('filtroFechaInicio').value;
+    if (fechaInicio) filtrosActuales.fecha_inicio = fechaInicio;
+
+    const fechaFin = document.getElementById('filtroFechaFin').value;
+    if (fechaFin) filtrosActuales.fecha_fin = fechaFin;
+
+    paginaActual = 1;
+    cargarTransacciones();
+}
+
+function limpiarFiltros() {
+    document.getElementById('filtroCuenta').value = '';
+    document.getElementById('filtroGenero').value = '';
+    document.getElementById('filtroGrupo').value = '';
+    document.getElementById('filtroRubro').value = '';
+    document.getElementById('filtroCuentaNum').value = '';
+    document.getElementById('filtroSubcuenta').value = '';
+    document.getElementById('filtroDependencia').value = '';
+    document.getElementById('filtroUnidadResponsable').value = '';
+    document.getElementById('filtroCentroCosto').value = '';
+    document.getElementById('filtroProyectoPresupuestario').value = '';
+    document.getElementById('filtroFuente').value = '';
+    document.getElementById('filtroSubfuente').value = '';
+    document.getElementById('filtroTipoRecurso').value = '';
+    document.getElementById('filtroPartidaPresupuestal').value = '';
+    document.getElementById('filtroNombreCuenta').value = '';
+    document.getElementById('filtroBeneficiario').value = '';
+    document.getElementById('filtroDescripcion').value = '';
+    document.getElementById('filtroOrdenPago').value = '';
+    document.getElementById('filtroPoliza').value = '';
+    document.getElementById('filtroFechaInicio').value = '';
+    document.getElementById('filtroFechaFin').value = '';
+
+    filtrosActuales = {};
+    paginaActual = 1;
+    cargarTransacciones();
+}
+
+async function exportarExcel() {
     try {
         const response = await fetch('/api/reportes/generar', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({})
+            body: JSON.stringify(filtrosActuales)
         });
 
         if (!response.ok) throw new Error('Error al generar reporte');
@@ -387,7 +633,7 @@ async function exportarExcel() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `reporte_general_${new Date().toISOString().split('T')[0]}.xlsx`;
+        a.download = `reporte_sipac_${new Date().toISOString().split('T')[0]}.xlsx`;
         document.body.appendChild(a);
         a.click();
         a.remove();
@@ -405,15 +651,12 @@ function formatCurrency(num) {
     return '$' + (num || 0).toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 }
 
-function formatDate(dateStr) {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('es-MX');
+function truncate(str, maxLen) {
+    if (!str) return '';
+    return str.length > maxLen ? str.substring(0, maxLen) + '...' : str;
 }
 
 // Cargar al inicio
-window.addEventListener('DOMContentLoaded', () => {
-    cargarTransacciones();
-});
+window.addEventListener('DOMContentLoaded', cargarTransacciones);
 </script>
 {% endblock %}

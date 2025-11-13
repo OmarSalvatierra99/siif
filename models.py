@@ -143,7 +143,7 @@ class Usuario(db.Model):
 class ReporteGenerado(db.Model):
     """Modelo para rastrear reportes generados"""
     __tablename__ = 'reportes_generados'
-    
+
     id = db.Column(db.Integer, primary_key=True)
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'))
     fecha_generacion = db.Column(db.DateTime, default=datetime.utcnow)
@@ -151,9 +151,9 @@ class ReporteGenerado(db.Model):
     filtros_aplicados = db.Column(db.JSON)
     total_registros = db.Column(db.Integer)
     nombre_archivo = db.Column(db.String(255))
-    
+
     usuario = db.relationship('Usuario', backref='reportes')
-    
+
     def to_dict(self):
         return {
             'id': self.id,
@@ -163,4 +163,32 @@ class ReporteGenerado(db.Model):
             'filtros_aplicados': self.filtros_aplicados,
             'total_registros': self.total_registros,
             'nombre_archivo': self.nombre_archivo
+        }
+
+
+class Ente(db.Model):
+    """Modelo para catálogo de entes públicos"""
+    __tablename__ = 'entes'
+
+    id = db.Column(db.Integer, primary_key=True)
+    clave = db.Column(db.String(20), unique=True, nullable=False, index=True)
+    codigo = db.Column(db.String(50), nullable=False)
+    nombre = db.Column(db.String(255), nullable=False)
+    siglas = db.Column(db.String(50))
+    tipo = db.Column(db.String(100))
+    ambito = db.Column(db.String(50))
+    activo = db.Column(db.Boolean, default=True)
+    fecha_registro = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'clave': self.clave,
+            'codigo': self.codigo,
+            'nombre': self.nombre,
+            'siglas': self.siglas,
+            'tipo': self.tipo,
+            'ambito': self.ambito,
+            'activo': self.activo,
+            'fecha_registro': self.fecha_registro.isoformat() if self.fecha_registro else None
         }

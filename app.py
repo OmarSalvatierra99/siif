@@ -3,7 +3,7 @@ from flask_cors import CORS
 import io, os, time, json, threading, uuid
 from datetime import datetime
 from config import config
-from models import db, Transaccion, LoteCarga, Usuario, ReporteGenerado
+from models import db, Transaccion, LoteCarga, Usuario, ReporteGenerado, Ente
 from data_processor import process_files_to_database
 from sqlalchemy import func, and_, or_
 import pandas as pd
@@ -37,17 +37,13 @@ def create_app(config_name="default"):
     def index():
         return render_template("index.html")
 
-    @app.route("/dashboard")
-    def dashboard():
-        return render_template("dashboard.html")
-
-    @app.route("/reportes")
-    def reportes():
-        return render_template("reportes.html")
-
     @app.route("/reporte-online")
     def reporte_online():
         return render_template("reporte_online.html")
+
+    @app.route("/catalogo-entes")
+    def catalogo_entes():
+        return render_template("catalogo_entes.html")
 
     # ==================== API DE CARGA ====================
 
@@ -203,6 +199,42 @@ def create_app(config_name="default"):
             if poliza := request.args.get("poliza"):
                 query = query.filter(Transaccion.poliza.like(f"%{poliza}%"))
 
+            # Filtros por componentes de cuenta
+            if genero := request.args.get("genero"):
+                query = query.filter(Transaccion.genero == genero)
+            if grupo := request.args.get("grupo"):
+                query = query.filter(Transaccion.grupo == grupo)
+            if rubro := request.args.get("rubro"):
+                query = query.filter(Transaccion.rubro == rubro)
+            if cuenta_num := request.args.get("cuenta"):
+                query = query.filter(Transaccion.cuenta == cuenta_num)
+            if subcuenta := request.args.get("subcuenta"):
+                query = query.filter(Transaccion.subcuenta == subcuenta)
+            if unidad_responsable := request.args.get("unidad_responsable"):
+                query = query.filter(Transaccion.unidad_responsable == unidad_responsable)
+            if centro_costo := request.args.get("centro_costo"):
+                query = query.filter(Transaccion.centro_costo == centro_costo)
+            if proyecto_presupuestario := request.args.get("proyecto_presupuestario"):
+                query = query.filter(Transaccion.proyecto_presupuestario == proyecto_presupuestario)
+            if fuente := request.args.get("fuente"):
+                query = query.filter(Transaccion.fuente == fuente)
+            if subfuente := request.args.get("subfuente"):
+                query = query.filter(Transaccion.subfuente == subfuente)
+            if tipo_recurso := request.args.get("tipo_recurso"):
+                query = query.filter(Transaccion.tipo_recurso == tipo_recurso)
+            if partida_presupuestal := request.args.get("partida_presupuestal"):
+                query = query.filter(Transaccion.partida_presupuestal == partida_presupuestal)
+
+            # Filtros de texto con búsqueda parcial
+            if nombre_cuenta := request.args.get("nombre_cuenta"):
+                query = query.filter(Transaccion.nombre_cuenta.like(f"%{nombre_cuenta}%"))
+            if beneficiario := request.args.get("beneficiario"):
+                query = query.filter(Transaccion.beneficiario.like(f"%{beneficiario}%"))
+            if descripcion := request.args.get("descripcion"):
+                query = query.filter(Transaccion.descripcion.like(f"%{descripcion}%"))
+            if orden_pago := request.args.get("orden_pago"):
+                query = query.filter(Transaccion.orden_pago.like(f"%{orden_pago}%"))
+
             query = query.order_by(Transaccion.fecha_transaccion.desc())
             paginated = query.paginate(page=page, per_page=per_page, error_out=False)
 
@@ -241,6 +273,42 @@ def create_app(config_name="default"):
                 query = query.filter(Transaccion.fecha_transaccion <= fecha_fin)
             if poliza := filtros.get("poliza"):
                 query = query.filter(Transaccion.poliza.like(f"%{poliza}%"))
+
+            # Filtros por componentes de cuenta
+            if genero := filtros.get("genero"):
+                query = query.filter(Transaccion.genero == genero)
+            if grupo := filtros.get("grupo"):
+                query = query.filter(Transaccion.grupo == grupo)
+            if rubro := filtros.get("rubro"):
+                query = query.filter(Transaccion.rubro == rubro)
+            if cuenta_num := filtros.get("cuenta"):
+                query = query.filter(Transaccion.cuenta == cuenta_num)
+            if subcuenta := filtros.get("subcuenta"):
+                query = query.filter(Transaccion.subcuenta == subcuenta)
+            if unidad_responsable := filtros.get("unidad_responsable"):
+                query = query.filter(Transaccion.unidad_responsable == unidad_responsable)
+            if centro_costo := filtros.get("centro_costo"):
+                query = query.filter(Transaccion.centro_costo == centro_costo)
+            if proyecto_presupuestario := filtros.get("proyecto_presupuestario"):
+                query = query.filter(Transaccion.proyecto_presupuestario == proyecto_presupuestario)
+            if fuente := filtros.get("fuente"):
+                query = query.filter(Transaccion.fuente == fuente)
+            if subfuente := filtros.get("subfuente"):
+                query = query.filter(Transaccion.subfuente == subfuente)
+            if tipo_recurso := filtros.get("tipo_recurso"):
+                query = query.filter(Transaccion.tipo_recurso == tipo_recurso)
+            if partida_presupuestal := filtros.get("partida_presupuestal"):
+                query = query.filter(Transaccion.partida_presupuestal == partida_presupuestal)
+
+            # Filtros de texto con búsqueda parcial
+            if nombre_cuenta := filtros.get("nombre_cuenta"):
+                query = query.filter(Transaccion.nombre_cuenta.like(f"%{nombre_cuenta}%"))
+            if beneficiario := filtros.get("beneficiario"):
+                query = query.filter(Transaccion.beneficiario.like(f"%{beneficiario}%"))
+            if descripcion := filtros.get("descripcion"):
+                query = query.filter(Transaccion.descripcion.like(f"%{descripcion}%"))
+            if orden_pago := filtros.get("orden_pago"):
+                query = query.filter(Transaccion.orden_pago.like(f"%{orden_pago}%"))
 
             query = query.order_by(Transaccion.fecha_transaccion, Transaccion.cuenta_contable)
             transacciones = query.limit(100000).all()
@@ -336,6 +404,72 @@ def create_app(config_name="default"):
                 ),
                 500,
             )
+
+    # ==================== API CATÁLOGO DE ENTES ====================
+
+    @app.route("/api/entes")
+    def get_entes():
+        try:
+            entes = Ente.query.filter_by(activo=True).order_by(Ente.clave).all()
+            return jsonify({
+                "entes": [e.to_dict() for e in entes],
+                "total": len(entes)
+            })
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    @app.route("/api/entes", methods=["POST"])
+    def create_ente():
+        try:
+            data = request.json
+
+            # Validar que la clave no exista
+            if Ente.query.filter_by(clave=data['clave']).first():
+                return jsonify({"error": "La clave ya existe"}), 400
+
+            ente = Ente(
+                clave=data['clave'],
+                codigo=data['codigo'],
+                nombre=data['nombre'],
+                siglas=data.get('siglas', ''),
+                tipo=data.get('tipo', ''),
+                ambito=data.get('ambito', 'ESTATAL')
+            )
+            db.session.add(ente)
+            db.session.commit()
+
+            return jsonify({"success": True, "ente": ente.to_dict()}), 201
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"error": str(e)}), 500
+
+    @app.route("/api/entes/<int:ente_id>", methods=["PUT"])
+    def update_ente(ente_id):
+        try:
+            ente = Ente.query.get_or_404(ente_id)
+            data = request.json
+
+            ente.nombre = data.get('nombre', ente.nombre)
+            ente.siglas = data.get('siglas', ente.siglas)
+            ente.tipo = data.get('tipo', ente.tipo)
+            ente.ambito = data.get('ambito', ente.ambito)
+
+            db.session.commit()
+            return jsonify({"success": True, "ente": ente.to_dict()})
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"error": str(e)}), 500
+
+    @app.route("/api/entes/<int:ente_id>", methods=["DELETE"])
+    def delete_ente(ente_id):
+        try:
+            ente = Ente.query.get_or_404(ente_id)
+            ente.activo = False
+            db.session.commit()
+            return jsonify({"success": True})
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"error": str(e)}), 500
 
     # ==================== ERRORES ====================
 
