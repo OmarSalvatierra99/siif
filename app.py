@@ -1,15 +1,44 @@
-from flask import Flask, render_template, request, jsonify, Response, send_file, session
+"""
+SIPAC - Sistema de Procesamiento de Auxiliares Contables
+Aplicación Flask refactorizada con arquitectura modular
+"""
+from flask import Flask, render_template, request, jsonify, Response, send_file
 from flask_cors import CORS
-import io, os, time, json, threading, uuid
+import io
+import os
+import time
+import json
+import threading
+import uuid
 from datetime import datetime
+
 from config import config
-from models import db, Transaccion, LoteCarga, Usuario, ReporteGenerado, Ente
+from models import db
 from data_processor import process_files_to_database
-from sqlalchemy import func, and_, or_
-import pandas as pd
+from services import (
+    TransaccionService, ReporteService,
+    DashboardService, EnteService
+)
+from validators import (
+    FileValidator, FiltrosValidator, EnteValidator,
+    ValidationError, safe_int
+)
+from utils import setup_logger
+
+
+logger = setup_logger(__name__)
 
 
 def create_app(config_name="default"):
+    """
+    Factory para crear la aplicación Flask
+
+    Args:
+        config_name: Nombre de configuración a usar
+
+    Returns:
+        Aplicación Flask configurada
+    """
     app = Flask(__name__)
     app.config.from_object(config[config_name])
 
@@ -17,81 +46,99 @@ def create_app(config_name="default"):
     db.init_app(app)
     CORS(app)
 
-    # Crear tablas con manejo de errores
+    # Crear tablas
     with app.app_context():
         try:
             db.create_all()
-            print("✓ Base de datos conectada")
+            logger.info("✓ Base de datos conectada exitosamente")
         except Exception as e:
-            print(f"❌ Error al conectar con la base de datos: {str(e)}")
-            print(f"   Verifica: DATABASE_URL en .env")
+            logger.error(f"Error conectando a base de datos: {str(e)}")
+            logger.error("Verifica DATABASE_URL en .env")
             raise
 
-    # Jobs para tracking de progreso
+    # Sistema de tracking de jobs para procesamiento asíncrono
     jobs = {}
     jobs_lock = threading.Lock()
 
-    # ==================== RUTAS PRINCIPALES ====================
+    # ==================== RUTAS DE VISTAS ====================
 
     @app.route("/")
     def index():
+        """Página principal de carga de archivos"""
         return render_template("index.html")
 
     @app.route("/reporte-online")
     def reporte_online():
+        """Página de generación de reportes en línea"""
         return render_template("reporte_online.html")
 
     @app.route("/catalogo-entes")
     def catalogo_entes():
+        """Página de catálogo de entes públicos"""
         return render_template("catalogo_entes.html")
 
-    # ==================== API DE CARGA ====================
+    # ==================== API DE CARGA DE ARCHIVOS ====================
 
     @app.route("/api/process", methods=["POST"])
     def process():
+        """
+        Procesa archivos Excel subidos
+
+        Returns:
+            JSON con job_id para tracking de progreso
+        """
         try:
+            # Obtener archivos
             files = request.files.getlist("archivo")
             usuario = request.form.get("usuario", "sistema")
 
+            # Validar que se subieron archivos
             if not files or all(f.filename == "" for f in files):
                 return jsonify({"error": "No se subieron archivos"}), 400
 
+            # Filtrar y validar archivos
             valid_files = []
             for f in files:
                 if f.filename:
-                    ext = os.path.splitext(f.filename)[1].lower()
-                    if ext not in app.config["UPLOAD_EXTENSIONS"]:
-                        return jsonify(
-                            {"error": f"Archivo {f.filename} tiene extensión no válida"}
-                        ), 400
-                    valid_files.append(f)
+                    try:
+                        FileValidator.validate_file(
+                            f.filename,
+                            f.content_length
+                        )
+                        valid_files.append(f)
+                    except ValidationError as e:
+                        return jsonify({"error": str(e)}), 400
 
             if not valid_files:
                 return jsonify({"error": "No hay archivos válidos"}), 400
 
+            # Crear job para tracking
             job_id = str(uuid.uuid4())
             with jobs_lock:
                 jobs[job_id] = {
                     "progress": 0,
-                    "message": "Iniciando...",
+                    "message": "Iniciando procesamiento...",
                     "done": False,
                     "error": None,
                     "lote_id": None,
                     "total_registros": 0,
                 }
 
+            # Callback para actualizar progreso
             def progress_callback(pct, msg):
                 with jobs_lock:
                     if job_id in jobs:
                         jobs[job_id]["progress"] = pct
                         jobs[job_id]["message"] = msg
 
+            # Leer archivos en memoria
             files_in_memory = []
             for f in valid_files:
                 f.seek(0)
                 content = io.BytesIO(f.read())
                 files_in_memory.append((f.filename, content))
 
+            # Procesar en thread separado
             def process_files():
                 try:
                     with app.app_context():
@@ -104,11 +151,10 @@ def create_app(config_name="default"):
                             jobs[job_id]["total_registros"] = total
                             jobs[job_id]["done"] = True
                             jobs[job_id]["progress"] = 100
-                            jobs[job_id]["message"] = (
-                                f"✅ {total:,} registros guardados en BD"
-                            )
+                            jobs[job_id]["message"] = f"✅ {total:,} registros guardados"
 
                 except Exception as e:
+                    logger.error(f"Error en procesamiento: {str(e)}")
                     with jobs_lock:
                         jobs[job_id]["error"] = str(e)
                         jobs[job_id]["done"] = True
@@ -120,32 +166,35 @@ def create_app(config_name="default"):
             return jsonify({"job_id": job_id})
 
         except Exception as e:
-            print(f"❌ Error procesando archivos: {str(e)}")
-            return (
-                jsonify(
-                    {
-                        "error": "Error al procesar archivos",
-                        "detalle": str(e),
-                        "tipo": type(e).__name__,
-                    }
-                ),
-                500,
-            )
-
-    # ==================== STREAM DE PROGRESO ====================
+            logger.error(f"Error en /api/process: {str(e)}")
+            return jsonify({
+                "error": "Error procesando solicitud",
+                "detalle": str(e)
+            }), 500
 
     @app.route("/api/progress/<job_id>")
     def progress_stream(job_id):
+        """
+        Stream de Server-Sent Events para tracking de progreso
+
+        Args:
+            job_id: ID del job a monitorear
+
+        Returns:
+            Response con stream de eventos
+        """
         def generate():
             last_progress = -1
-            max_wait = 300
+            max_wait = 300  # 5 minutos timeout
             start_time = time.time()
 
             while True:
+                # Timeout
                 if time.time() - start_time > max_wait:
                     yield f"data: {json.dumps({'progress': 100, 'message': 'Timeout', 'done': True})}\n\n"
                     break
 
+                # Obtener estado del job
                 with jobs_lock:
                     job = jobs.get(job_id)
 
@@ -160,6 +209,7 @@ def create_app(config_name="default"):
                 lote_id = job.get("lote_id")
                 total_registros = job.get("total_registros", 0)
 
+                # Enviar update si cambió
                 if current_progress != last_progress or done or error:
                     data = {
                         "progress": current_progress,
@@ -183,320 +233,292 @@ def create_app(config_name="default"):
 
     @app.route("/api/transacciones")
     def get_transacciones():
+        """
+        Obtiene transacciones con paginación y filtros
+
+        Query params:
+            - page: Número de página
+            - per_page: Registros por página
+            - Filtros diversos (ver FiltrosValidator)
+
+        Returns:
+            JSON con transacciones y metadata de paginación
+        """
         try:
-            page = request.args.get("page", 1, type=int)
-            per_page = request.args.get("per_page", 50, type=int)
-            query = Transaccion.query
+            # Obtener parámetros de paginación
+            page = safe_int(request.args.get("page", 1), default=1, min_value=1)
+            per_page = safe_int(request.args.get("per_page", 50), default=50, min_value=1)
 
-            if cuenta := request.args.get("cuenta_contable"):
-                query = query.filter(Transaccion.cuenta_contable.like(f"{cuenta}%"))
-            if dependencia := request.args.get("dependencia"):
-                query = query.filter(Transaccion.dependencia == dependencia)
-            if fecha_inicio := request.args.get("fecha_inicio"):
-                query = query.filter(Transaccion.fecha_transaccion >= fecha_inicio)
-            if fecha_fin := request.args.get("fecha_fin"):
-                query = query.filter(Transaccion.fecha_transaccion <= fecha_fin)
-            if poliza := request.args.get("poliza"):
-                query = query.filter(Transaccion.poliza.like(f"%{poliza}%"))
+            # Validar paginación
+            FiltrosValidator.validate_pagination(
+                page, per_page,
+                app.config.get('MAX_ITEMS_PER_PAGE', 1000)
+            )
 
-            # Filtros por componentes de cuenta
-            if genero := request.args.get("genero"):
-                query = query.filter(Transaccion.genero == genero)
-            if grupo := request.args.get("grupo"):
-                query = query.filter(Transaccion.grupo == grupo)
-            if rubro := request.args.get("rubro"):
-                query = query.filter(Transaccion.rubro == rubro)
-            if cuenta_num := request.args.get("cuenta"):
-                query = query.filter(Transaccion.cuenta == cuenta_num)
-            if subcuenta := request.args.get("subcuenta"):
-                query = query.filter(Transaccion.subcuenta == subcuenta)
-            if unidad_responsable := request.args.get("unidad_responsable"):
-                query = query.filter(Transaccion.unidad_responsable == unidad_responsable)
-            if centro_costo := request.args.get("centro_costo"):
-                query = query.filter(Transaccion.centro_costo == centro_costo)
-            if proyecto_presupuestario := request.args.get("proyecto_presupuestario"):
-                query = query.filter(Transaccion.proyecto_presupuestario == proyecto_presupuestario)
-            if fuente := request.args.get("fuente"):
-                query = query.filter(Transaccion.fuente == fuente)
-            if subfuente := request.args.get("subfuente"):
-                query = query.filter(Transaccion.subfuente == subfuente)
-            if tipo_recurso := request.args.get("tipo_recurso"):
-                query = query.filter(Transaccion.tipo_recurso == tipo_recurso)
-            if partida_presupuestal := request.args.get("partida_presupuestal"):
-                query = query.filter(Transaccion.partida_presupuestal == partida_presupuestal)
+            # Construir filtros
+            filtros = {k: v for k, v in request.args.items()
+                      if k not in ('page', 'per_page') and v}
 
-            # Filtros de texto con búsqueda parcial
-            if nombre_cuenta := request.args.get("nombre_cuenta"):
-                query = query.filter(Transaccion.nombre_cuenta.like(f"%{nombre_cuenta}%"))
-            if beneficiario := request.args.get("beneficiario"):
-                query = query.filter(Transaccion.beneficiario.like(f"%{beneficiario}%"))
-            if descripcion := request.args.get("descripcion"):
-                query = query.filter(Transaccion.descripcion.like(f"%{descripcion}%"))
-            if orden_pago := request.args.get("orden_pago"):
-                query = query.filter(Transaccion.orden_pago.like(f"%{orden_pago}%"))
+            # Obtener transacciones
+            result = TransaccionService.get_transacciones_paginated(
+                page=page,
+                per_page=per_page,
+                filters=filtros if filtros else None
+            )
 
-            query = query.order_by(Transaccion.fecha_transaccion.desc())
-            paginated = query.paginate(page=page, per_page=per_page, error_out=False)
+            return jsonify(result)
 
-            return jsonify({
-                "transacciones": [t.to_dict() for t in paginated.items],
-                "total": paginated.total,
-                "pages": paginated.pages,
-                "page": page,
-            })
+        except ValidationError as e:
+            return jsonify({"error": str(e)}), 400
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            logger.error(f"Error en /api/transacciones: {str(e)}")
+            return jsonify({"error": "Error obteniendo transacciones"}), 500
 
     @app.route("/api/dependencias/lista")
     def get_dependencias():
+        """
+        Obtiene lista de dependencias únicas
+
+        Returns:
+            JSON con lista de dependencias
+        """
         try:
-            deps = db.session.query(Transaccion.dependencia).distinct().filter(
-                Transaccion.dependencia.isnot(None)
-            ).order_by(Transaccion.dependencia).all()
-            return jsonify({"dependencias": [d[0] for d in deps if d[0]]})
+            dependencias = TransaccionService.get_dependencias()
+            return jsonify({"dependencias": dependencias})
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            logger.error(f"Error obteniendo dependencias: {str(e)}")
+            return jsonify({"error": "Error obteniendo dependencias"}), 500
+
+    # ==================== API DE REPORTES ====================
 
     @app.route("/api/reportes/generar", methods=["POST"])
     def generar_reporte():
+        """
+        Genera un reporte Excel con filtros aplicados
+
+        Body:
+            JSON con filtros opcionales
+
+        Returns:
+            Archivo Excel para descarga
+        """
         try:
-            filtros = request.json
-            query = Transaccion.query
+            filtros = request.json or {}
 
-            if cuenta := filtros.get("cuenta_contable"):
-                query = query.filter(Transaccion.cuenta_contable.like(f"{cuenta}%"))
-            if dependencia := filtros.get("dependencia"):
-                query = query.filter(Transaccion.dependencia == dependencia)
-            if fecha_inicio := filtros.get("fecha_inicio"):
-                query = query.filter(Transaccion.fecha_transaccion >= fecha_inicio)
-            if fecha_fin := filtros.get("fecha_fin"):
-                query = query.filter(Transaccion.fecha_transaccion <= fecha_fin)
-            if poliza := filtros.get("poliza"):
-                query = query.filter(Transaccion.poliza.like(f"%{poliza}%"))
+            # Validar filtros
+            if filtros:
+                FiltrosValidator.validate_filtros(filtros)
 
-            # Filtros por componentes de cuenta
-            if genero := filtros.get("genero"):
-                query = query.filter(Transaccion.genero == genero)
-            if grupo := filtros.get("grupo"):
-                query = query.filter(Transaccion.grupo == grupo)
-            if rubro := filtros.get("rubro"):
-                query = query.filter(Transaccion.rubro == rubro)
-            if cuenta_num := filtros.get("cuenta"):
-                query = query.filter(Transaccion.cuenta == cuenta_num)
-            if subcuenta := filtros.get("subcuenta"):
-                query = query.filter(Transaccion.subcuenta == subcuenta)
-            if unidad_responsable := filtros.get("unidad_responsable"):
-                query = query.filter(Transaccion.unidad_responsable == unidad_responsable)
-            if centro_costo := filtros.get("centro_costo"):
-                query = query.filter(Transaccion.centro_costo == centro_costo)
-            if proyecto_presupuestario := filtros.get("proyecto_presupuestario"):
-                query = query.filter(Transaccion.proyecto_presupuestario == proyecto_presupuestario)
-            if fuente := filtros.get("fuente"):
-                query = query.filter(Transaccion.fuente == fuente)
-            if subfuente := filtros.get("subfuente"):
-                query = query.filter(Transaccion.subfuente == subfuente)
-            if tipo_recurso := filtros.get("tipo_recurso"):
-                query = query.filter(Transaccion.tipo_recurso == tipo_recurso)
-            if partida_presupuestal := filtros.get("partida_presupuestal"):
-                query = query.filter(Transaccion.partida_presupuestal == partida_presupuestal)
+            # Obtener transacciones
+            transacciones = TransaccionService.get_transacciones_for_export(
+                filters=filtros if filtros else None,
+                limit=100000
+            )
 
-            # Filtros de texto con búsqueda parcial
-            if nombre_cuenta := filtros.get("nombre_cuenta"):
-                query = query.filter(Transaccion.nombre_cuenta.like(f"%{nombre_cuenta}%"))
-            if beneficiario := filtros.get("beneficiario"):
-                query = query.filter(Transaccion.beneficiario.like(f"%{beneficiario}%"))
-            if descripcion := filtros.get("descripcion"):
-                query = query.filter(Transaccion.descripcion.like(f"%{descripcion}%"))
-            if orden_pago := filtros.get("orden_pago"):
-                query = query.filter(Transaccion.orden_pago.like(f"%{orden_pago}%"))
+            if not transacciones:
+                return jsonify({"error": "No se encontraron transacciones"}), 404
 
-            query = query.order_by(Transaccion.fecha_transaccion, Transaccion.cuenta_contable)
-            transacciones = query.limit(100000).all()
+            # Generar Excel con resumen
+            output = ReporteService.generar_reporte_excel(
+                transacciones,
+                incluir_resumen=True
+            )
 
-            # Crear Excel
-            output = io.BytesIO()
-            df = pd.DataFrame([{
-                'Cuenta Contable': t.cuenta_contable,
-                'Genero': t.genero,
-                'Grupo': t.grupo,
-                'Rubro': t.rubro,
-                'Cuenta': t.cuenta,
-                'Subcuenta': t.subcuenta,
-                'Dependencia': t.dependencia,
-                'Unidad Responsable': t.unidad_responsable,
-                'Centro de Costo': t.centro_costo,
-                'Proyecto Presupuestario': t.proyecto_presupuestario,
-                'Fuente': t.fuente,
-                'SubFuente': t.subfuente,
-                'Tipo de Recurso': t.tipo_recurso,
-                'Partida Presupuestal': t.partida_presupuestal,
-                'Nombre de la Cuenta': t.nombre_cuenta,
-                'FECHA': t.fecha_transaccion.strftime('%d/%m/%Y') if t.fecha_transaccion else '',
-                'POLIZA': t.poliza,
-                'BENEFICIARIO': t.beneficiario,
-                'DESCRIPCION': t.descripcion,
-                'O.P.': t.orden_pago,
-                'SALDO INICIAL': float(t.saldo_inicial) if t.saldo_inicial else 0,
-                'CARGOS': float(t.cargos) if t.cargos else 0,
-                'ABONOS': float(t.abonos) if t.abonos else 0,
-                'SALDO FINAL': float(t.saldo_final) if t.saldo_final else 0,
-            } for t in transacciones])
-
-            df.to_excel(output, index=False, sheet_name='Reporte')
-            output.seek(0)
+            # Generar nombre de archivo
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f'reporte_sipac_{timestamp}.xlsx'
 
             return send_file(
                 output,
                 mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                 as_attachment=True,
-                download_name=f'reporte_sipac_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+                download_name=filename
             )
+
+        except ValidationError as e:
+            return jsonify({"error": str(e)}), 400
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            logger.error(f"Error generando reporte: {str(e)}")
+            return jsonify({"error": "Error generando reporte"}), 500
+
+    # ==================== API DE DASHBOARD ====================
 
     @app.route("/api/dashboard/stats")
     def dashboard_stats():
+        """
+        Obtiene estadísticas para el dashboard
+
+        Returns:
+            JSON con estadísticas generales
+        """
         try:
-            total_transacciones = db.session.query(func.count(Transaccion.id)).scalar()
-            total_cuentas = db.session.query(
-                func.count(func.distinct(Transaccion.cuenta_contable))
-            ).scalar()
-            total_dependencias = db.session.query(
-                func.count(func.distinct(Transaccion.dependencia))
-            ).scalar()
-
-            suma_cargos = db.session.query(func.sum(Transaccion.cargos)).scalar() or 0
-            suma_abonos = db.session.query(func.sum(Transaccion.abonos)).scalar() or 0
-
-            ultimos_lotes = (
-                LoteCarga.query.order_by(LoteCarga.fecha_carga.desc()).limit(5).all()
-            )
-
-            transacciones_mes = (
-                db.session.query(
-                    func.date_trunc("month", Transaccion.fecha_transaccion).label("mes"),
-                    func.count(Transaccion.id).label("total"),
-                )
-                .group_by("mes")
-                .order_by("mes")
-                .all()
-            )
-
-            return jsonify(
-                {
-                    "total_transacciones": total_transacciones,
-                    "total_cuentas": total_cuentas,
-                    "total_dependencias": total_dependencias,
-                    "suma_cargos": float(suma_cargos),
-                    "suma_abonos": float(suma_abonos),
-                    "ultimos_lotes": [l.to_dict() for l in ultimos_lotes],
-                    "transacciones_mes": [
-                        {"mes": str(mes), "total": total}
-                        for mes, total in transacciones_mes
-                    ],
-                }
-            )
+            stats = DashboardService.get_estadisticas_generales()
+            return jsonify(stats)
         except Exception as e:
-            print(f"❌ Error en dashboard/stats: {str(e)}")
-            return (
-                jsonify(
-                    {"error": "Error al obtener estadísticas", "detalle": str(e)}
-                ),
-                500,
-            )
+            logger.error(f"Error en dashboard/stats: {str(e)}")
+            return jsonify({
+                "error": "Error obteniendo estadísticas",
+                "detalle": str(e)
+            }), 500
 
-    # ==================== API CATÁLOGO DE ENTES ====================
+    @app.route("/api/dashboard/distribuciones")
+    def dashboard_distribuciones():
+        """
+        Obtiene distribuciones de datos para visualización
+
+        Returns:
+            JSON con distribuciones por diferentes dimensiones
+        """
+        try:
+            distribuciones = DashboardService.get_distribuciones()
+            return jsonify(distribuciones)
+        except Exception as e:
+            logger.error(f"Error obteniendo distribuciones: {str(e)}")
+            return jsonify({"error": "Error obteniendo distribuciones"}), 500
+
+    # ==================== API DE CATÁLOGO DE ENTES ====================
 
     @app.route("/api/entes")
     def get_entes():
+        """
+        Obtiene todos los entes activos
+
+        Returns:
+            JSON con lista de entes
+        """
         try:
-            entes = Ente.query.filter_by(activo=True).order_by(Ente.clave).all()
+            entes = EnteService.get_entes_activos()
             return jsonify({
-                "entes": [e.to_dict() for e in entes],
+                "entes": entes,
                 "total": len(entes)
             })
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            logger.error(f"Error obteniendo entes: {str(e)}")
+            return jsonify({"error": "Error obteniendo entes"}), 500
 
     @app.route("/api/entes", methods=["POST"])
     def create_ente():
+        """
+        Crea un nuevo ente
+
+        Body:
+            JSON con datos del ente (clave, codigo, nombre, etc.)
+
+        Returns:
+            JSON con ente creado
+        """
         try:
             data = request.json
 
-            # Validar que la clave no exista
-            if Ente.query.filter_by(clave=data['clave']).first():
-                return jsonify({"error": "La clave ya existe"}), 400
+            # Validar datos
+            EnteValidator.validate_ente_data(data, es_creacion=True)
 
-            ente = Ente(
-                clave=data['clave'],
-                codigo=data['codigo'],
-                nombre=data['nombre'],
-                siglas=data.get('siglas', ''),
-                tipo=data.get('tipo', ''),
-                ambito=data.get('ambito', 'ESTATAL')
-            )
-            db.session.add(ente)
-            db.session.commit()
+            # Crear ente
+            ente = EnteService.crear_ente(data)
 
-            return jsonify({"success": True, "ente": ente.to_dict()}), 201
+            return jsonify({
+                "success": True,
+                "ente": ente.to_dict()
+            }), 201
+
+        except ValidationError as e:
+            return jsonify({"error": str(e)}), 400
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400
         except Exception as e:
+            logger.error(f"Error creando ente: {str(e)}")
             db.session.rollback()
-            return jsonify({"error": str(e)}), 500
+            return jsonify({"error": "Error creando ente"}), 500
 
     @app.route("/api/entes/<int:ente_id>", methods=["PUT"])
     def update_ente(ente_id):
+        """
+        Actualiza un ente existente
+
+        Args:
+            ente_id: ID del ente
+
+        Body:
+            JSON con datos a actualizar
+
+        Returns:
+            JSON con ente actualizado
+        """
         try:
-            ente = Ente.query.get_or_404(ente_id)
             data = request.json
 
-            ente.nombre = data.get('nombre', ente.nombre)
-            ente.siglas = data.get('siglas', ente.siglas)
-            ente.tipo = data.get('tipo', ente.tipo)
-            ente.ambito = data.get('ambito', ente.ambito)
+            # Validar datos
+            EnteValidator.validate_ente_data(data, es_creacion=False)
 
-            db.session.commit()
-            return jsonify({"success": True, "ente": ente.to_dict()})
+            # Actualizar ente
+            ente = EnteService.actualizar_ente(ente_id, data)
+
+            return jsonify({
+                "success": True,
+                "ente": ente.to_dict()
+            })
+
+        except ValidationError as e:
+            return jsonify({"error": str(e)}), 400
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 404
         except Exception as e:
+            logger.error(f"Error actualizando ente: {str(e)}")
             db.session.rollback()
-            return jsonify({"error": str(e)}), 500
+            return jsonify({"error": "Error actualizando ente"}), 500
 
     @app.route("/api/entes/<int:ente_id>", methods=["DELETE"])
     def delete_ente(ente_id):
-        try:
-            ente = Ente.query.get_or_404(ente_id)
-            ente.activo = False
-            db.session.commit()
-            return jsonify({"success": True})
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({"error": str(e)}), 500
+        """
+        Elimina (soft delete) un ente
 
-    # ==================== ERRORES ====================
+        Args:
+            ente_id: ID del ente
+
+        Returns:
+            JSON con confirmación
+        """
+        try:
+            EnteService.eliminar_ente(ente_id)
+            return jsonify({"success": True})
+
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 404
+        except Exception as e:
+            logger.error(f"Error eliminando ente: {str(e)}")
+            db.session.rollback()
+            return jsonify({"error": "Error eliminando ente"}), 500
+
+    # ==================== MANEJO DE ERRORES ====================
 
     @app.errorhandler(413)
     def too_large(e):
-        return jsonify({"error": "El archivo es demasiado grande. Máximo 500 MB"}), 413
+        """Maneja archivos demasiado grandes"""
+        return jsonify({
+            "error": "Archivo demasiado grande",
+            "detalle": "Tamaño máximo: 500 MB"
+        }), 413
 
     @app.errorhandler(404)
     def not_found(e):
-        return (
-            jsonify(
-                {
-                    "error": str(e.description)
-                    if hasattr(e, "description")
-                    else "No encontrado"
-                }
-            ),
-            404,
-        )
+        """Maneja recursos no encontrados"""
+        return jsonify({
+            "error": str(e.description) if hasattr(e, "description") else "No encontrado"
+        }), 404
 
     @app.errorhandler(500)
     def internal_error(e):
-        print(f"❌ Error 500: {str(e)}")
-        return (
-            jsonify({"error": "Error interno del servidor", "detalle": str(e)}),
-            500,
-        )
+        """Maneja errores internos del servidor"""
+        logger.error(f"Error 500: {str(e)}")
+        return jsonify({
+            "error": "Error interno del servidor",
+            "detalle": str(e) if app.debug else "Contacte al administrador"
+        }), 500
+
+    @app.errorhandler(ValidationError)
+    def handle_validation_error(e):
+        """Maneja errores de validación"""
+        return jsonify({"error": str(e)}), 400
 
     return app
 
@@ -504,15 +526,20 @@ def create_app(config_name="default"):
 if __name__ == "__main__":
     app = create_app("development")
 
-    print("\n" + "=" * 50)
+    print("\n" + "=" * 60)
     print("SIPAC - Sistema de Procesamiento de Auxiliares Contables")
-    print("=" * 50)
+    print("=" * 60)
     print("✓ Servidor iniciado en puerto 5020")
     print("\nPáginas disponibles:")
-    print("  → http://localhost:5020          (Carga)")
-    print("  → http://localhost:5020/dashboard (Dashboard)")
-    print("  → http://localhost:5020/reportes  (Reportes)")
-    print("=" * 50 + "\n")
+    print("  → http://localhost:5020/              (Carga de archivos)")
+    print("  → http://localhost:5020/reporte-online (Reportes en línea)")
+    print("  → http://localhost:5020/catalogo-entes (Catálogo de entes)")
+    print("\nAPI Endpoints:")
+    print("  → POST /api/process                    (Procesar archivos)")
+    print("  → GET  /api/transacciones              (Consultar transacciones)")
+    print("  → POST /api/reportes/generar           (Generar reportes)")
+    print("  → GET  /api/dashboard/stats            (Estadísticas)")
+    print("  → GET  /api/entes                      (Catálogo de entes)")
+    print("=" * 60 + "\n")
 
     app.run(host="0.0.0.0", port=5020, debug=True, threaded=True)
-
