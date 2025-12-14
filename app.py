@@ -514,5 +514,5 @@ if __name__ == "__main__":
     print("  → http://localhost:5020/reportes  (Reportes)")
     print("=" * 50 + "\n")
 
-    app.run(host="0.0.0.0", port=5020, debug=True, threaded=True)
+    app.run(host="0.0.0.0", port=5010, debug=True, threaded=True)
 
