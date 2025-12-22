@@ -1,0 +1,23 @@
+# SIIF - Sistema de Procesamiento de Auxiliares Contables
+# Dependencias principales
+
+Flask==3.0.3
+Werkzeug==3.0.4
+Jinja2==3.1.4
+
+# CORS
+Flask-CORS==4.0.0
+
+# Base de datos
+Flask-SQLAlchemy==3.1.1
+SQLAlchemy==2.0.35
+
+# Procesamiento de datos
+pandas==2.2.3
+openpyxl==3.1.5
+
+# Servidor WSGI
+gunicorn==22.0.0
+
+# Utilidades
+python-dotenv==1.0.1

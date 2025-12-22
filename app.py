@@ -1,7 +1,9 @@
 from flask import Flask, render_template, request, jsonify, Response, send_file, session
 from flask_cors import CORS
-import io, os, time, json, threading, uuid
+import io, os, time, json, threading, uuid, logging
+from pathlib import Path
 from datetime import datetime
+from logging.handlers import RotatingFileHandler
 from config import config
 from models import db, Transaccion, LoteCarga, Usuario, ReporteGenerado, Ente
 from data_processor import process_files_to_database
@@ -12,6 +14,14 @@ import pandas as pd
 def create_app(config_name="default"):
     app = Flask(__name__)
     app.config.from_object(config[config_name])
+
+    # Configurar logging
+    log_dir = Path('log')
+    log_dir.mkdir(exist_ok=True)
+    handler = RotatingFileHandler('log/siif.log', maxBytes=10*1024*1024, backupCount=10)
+    handler.setFormatter(logging.Formatter('[%(asctime)s] %(levelname)s: %(message)s'))
+    app.logger.addHandler(handler)
+    app.logger.setLevel(logging.INFO)
 
     # Inicializar extensiones
     db.init_app(app)
@@ -507,12 +517,12 @@ if __name__ == "__main__":
     print("\n" + "=" * 50)
     print("SIPAC - Sistema de Procesamiento de Auxiliares Contables")
     print("=" * 50)
-    print("✓ Servidor iniciado en puerto 5020")
+    print("✓ Servidor iniciado en puerto 5009")
     print("\nPáginas disponibles:")
-    print("  → http://localhost:5020          (Carga)")
-    print("  → http://localhost:5020/dashboard (Dashboard)")
-    print("  → http://localhost:5020/reportes  (Reportes)")
+    print("  → http://localhost:5009          (Carga)")
+    print("  → http://localhost:5009/dashboard (Dashboard)")
+    print("  → http://localhost:5009/reportes  (Reportes)")
     print("=" * 50 + "\n")
 
-    app.run(host="0.0.0.0", port=5010, debug=True, threaded=True)
+    app.run(host="0.0.0.0", port=5009, debug=True, threaded=True)
 
