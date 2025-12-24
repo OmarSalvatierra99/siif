@@ -6,6 +6,7 @@ class Config:
     
     # Flask
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
+    PORT = int(os.environ.get('PORT', 5009))
     
     # Base de datos
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
