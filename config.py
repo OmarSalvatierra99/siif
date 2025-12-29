@@ -3,14 +3,15 @@ from datetime import timedelta
 
 class Config:
     """Configuración base de la aplicación"""
-    
+
     # Flask
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
     PORT = int(os.environ.get('PORT', 5009))
-    
+
     # Base de datos
+    # Fallback to SQLite if DATABASE_URL not set or PostgreSQL not available
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        'postgresql://sipac_user:sipac_password@localhost:5432/sipac_db'
+        'sqlite:///sipac_dev.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False
     
