@@ -183,6 +183,50 @@
         color: #6b21a8;
     }
 
+    .badge-estatal {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .badge-municipal {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .badge-municipio {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .filter-chips {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .chip {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border: 2px solid transparent;
+        cursor: pointer;
+        transition: var(--transition);
+        background: #f1f5f9;
+        color: #64748b;
+    }
+
+    .chip:hover {
+        background: #e2e8f0;
+    }
+
+    .chip.active {
+        background: var(--color-primary);
+        color: white;
+        border-color: var(--color-primary);
+    }
+
     .no-results {
         text-align: center;
         padding: 3rem 2rem;
@@ -219,10 +263,21 @@
 <div class="catalogo-container">
     <div class="header-flex">
         <h2>Catálogos Institucionales</h2>
-        <span class="subtitle">Consulta de Entes Estatales Registrados</span>
+        <span class="subtitle">Consulta de Entes Estatales y Municipales de Tlaxcala</span>
     </div>
 
     <div class="search-section">
+        <div class="filter-chips">
+            <button class="chip active" data-ambito="TODOS" onclick="filtrarPorAmbito('TODOS')">
+                📋 Todos
+            </button>
+            <button class="chip" data-ambito="ESTATAL" onclick="filtrarPorAmbito('ESTATAL')">
+                🏛️ Estatales
+            </button>
+            <button class="chip" data-ambito="MUNICIPAL" onclick="filtrarPorAmbito('MUNICIPAL')">
+                🏘️ Municipales
+            </button>
+        </div>
         <div class="search-box">
             <span class="search-icon">🔍</span>
             <input
@@ -241,6 +296,14 @@
             <span class="stat-value" id="totalEntes">0</span>
         </div>
         <div class="stat-item">
+            <span class="stat-label">Estatales</span>
+            <span class="stat-value" id="totalEstatales">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Municipales</span>
+            <span class="stat-value" id="totalMunicipales">0</span>
+        </div>
+        <div class="stat-item">
             <span class="stat-label">Mostrando</span>
             <span class="stat-value" id="mostrandoEntes">0</span>
         </div>
@@ -255,9 +318,11 @@
             <table class="tabla-resultados">
                 <thead>
                     <tr>
-                        <th>NUM</th>
+                        <th>#</th>
+                        <th>Clave</th>
                         <th>Nombre</th>
                         <th>Siglas</th>
+                        <th>Ámbito</th>
                         <th>Clasificación</th>
                     </tr>
                 </thead>
@@ -276,6 +341,7 @@
 <script>
 let todosLosEntes = [];
 let entesFiltrados = [];
+let ambitoActual = 'TODOS';
 
 async function cargarEntes() {
     try {
@@ -322,11 +388,14 @@ function renderizarTabla() {
         const row = document.createElement('tr');
 
         const tipoBadge = getBadgeClass(ente.tipo);
+        const ambitoBadge = getAmbitoBadgeClass(ente.ambito);
 
         row.innerHTML = `
             <td><strong>${index + 1}</strong></td>
+            <td><strong>${ente.codigo || '-'}</strong></td>
             <td>${ente.nombre}</td>
             <td><strong>${ente.siglas || '-'}</strong></td>
+            <td><span class="badge ${ambitoBadge}">${ente.ambito || '-'}</span></td>
             <td><span class="badge ${tipoBadge}">${ente.tipo || '-'}</span></td>
         `;
 
@@ -340,6 +409,7 @@ function renderizarTabla() {
 function getBadgeClass(tipo) {
     if (!tipo) return '';
     const tipoLower = tipo.toLowerCase();
+    if (tipoLower.includes('municipio')) return 'badge-municipio';
     if (tipoLower.includes('poder')) return 'badge-poder';
     if (tipoLower.includes('dependencia')) return 'badge-dependencia';
     if (tipoLower.includes('desconcentrado')) return 'badge-desconcentrado';
@@ -349,27 +419,67 @@ function getBadgeClass(tipo) {
     return '';
 }
 
-function filtrarEntes(texto) {
-    const busqueda = texto.toLowerCase().trim();
+function getAmbitoBadgeClass(ambito) {
+    if (!ambito) return '';
+    const ambitoLower = ambito.toLowerCase();
+    if (ambitoLower === 'estatal') return 'badge-estatal';
+    if (ambitoLower === 'municipal') return 'badge-municipal';
+    return '';
+}
 
-    if (!busqueda) {
-        entesFiltrados = [...todosLosEntes];
-    } else {
-        entesFiltrados = todosLosEntes.filter(ente => {
+function filtrarPorAmbito(ambito) {
+    ambitoActual = ambito;
+
+    // Actualizar chips activos
+    document.querySelectorAll('.chip').forEach(chip => {
+        chip.classList.remove('active');
+        if (chip.dataset.ambito === ambito) {
+            chip.classList.add('active');
+        }
+    });
+
+    // Aplicar filtros
+    aplicarFiltros();
+}
+
+function filtrarEntes(texto) {
+    document.getElementById('searchInput').value = texto;
+    aplicarFiltros();
+}
+
+function aplicarFiltros() {
+    const busqueda = document.getElementById('searchInput').value.toLowerCase().trim();
+
+    // Filtrar por ámbito
+    let resultado = todosLosEntes;
+    if (ambitoActual !== 'TODOS') {
+        resultado = resultado.filter(ente => ente.ambito === ambitoActual);
+    }
+
+    // Filtrar por búsqueda de texto
+    if (busqueda) {
+        resultado = resultado.filter(ente => {
             return (
                 ente.nombre.toLowerCase().includes(busqueda) ||
                 ente.clave.toLowerCase().includes(busqueda) ||
+                (ente.codigo && ente.codigo.toLowerCase().includes(busqueda)) ||
                 (ente.siglas && ente.siglas.toLowerCase().includes(busqueda)) ||
                 (ente.tipo && ente.tipo.toLowerCase().includes(busqueda))
             );
         });
     }
 
+    entesFiltrados = resultado;
     renderizarTabla();
 }
 
 function actualizarEstadisticas() {
+    const totalEstatales = todosLosEntes.filter(e => e.ambito === 'ESTATAL').length;
+    const totalMunicipales = todosLosEntes.filter(e => e.ambito === 'MUNICIPAL').length;
+
     document.getElementById('totalEntes').textContent = todosLosEntes.length;
+    document.getElementById('totalEstatales').textContent = totalEstatales;
+    document.getElementById('totalMunicipales').textContent = totalMunicipales;
     document.getElementById('mostrandoEntes').textContent = entesFiltrados.length;
 }
 
@@ -388,7 +498,7 @@ function debounce(func, wait) {
 
 // Event listeners
 document.getElementById('searchInput').addEventListener('input',
-    debounce((e) => filtrarEntes(e.target.value), 300)
+    debounce(() => aplicarFiltros(), 300)
 );
 
 // Cargar al inicio

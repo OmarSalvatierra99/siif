@@ -1,0 +1,508 @@
+{% extends "base.html" %}
+
+{% block title %}Panel de Auditoría - SIPAC{% endblock %}
+
+{% block body_class %}page-auditoria{% endblock %}
+
+
+{% block content %}
+<div class="auditor-container">
+    <div class="audit-header">
+        <h1>Consulta de Pólizas</h1>
+        <p class="subtitle">Verificación de cargos y abonos por póliza para auditoría gubernamental.</p>
+    </div>
+
+    <section class="summary-panel">
+        <div class="summary-row">
+            <div class="summary-card">
+                <div class="summary-label">Total Cargos</div>
+                <div class="summary-value success" id="metricCargos">$0.00</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Total Abonos</div>
+                <div class="summary-value error" id="metricAbonos">$0.00</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Diferencia</div>
+                <div class="summary-value" id="metricBalance">$0.00</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Verificación</div>
+                <div class="summary-value summary-status" id="metricVerificacion">-</div>
+            </div>
+        </div>
+        <div class="summary-meta">
+            <div class="summary-meta-item">Transacciones <span class="summary-meta-value" id="metricTransacciones">0</span></div>
+            <div class="summary-meta-item">Pólizas únicas <span class="summary-meta-value" id="metricPolizas">0</span></div>
+        </div>
+    </section>
+
+    <div class="filters-section">
+        <div class="filters-header">
+            <div>
+                <h3 class="section-title">Filtros de consulta</h3>
+                <p class="section-subtitle">Acota la búsqueda por póliza, cuenta o rango de fechas.</p>
+            </div>
+            <div class="filter-actions">
+                <button class="btn btn-secondary" onclick="limpiarFiltros()">Limpiar filtros</button>
+                <button class="btn btn-primary" onclick="aplicarFiltros()">Aplicar filtros</button>
+            </div>
+        </div>
+
+        <div class="filters-grid filters-grid-compact">
+            <div class="filter-group">
+                <label>Póliza</label>
+                <input type="text" id="filtroPoliza" placeholder="Número de póliza">
+            </div>
+            <div class="filter-group">
+                <label>Cuenta Contable</label>
+                <input type="text" id="filtroCuenta" placeholder="21 caracteres">
+            </div>
+            <div class="filter-group">
+                <label>Fecha Inicio</label>
+                <input type="date" id="filtroFechaInicio">
+            </div>
+            <div class="filter-group">
+                <label>Fecha Fin</label>
+                <input type="date" id="filtroFechaFin">
+            </div>
+        </div>
+
+        <details class="filters-advanced">
+            <summary class="filters-summary">Filtros avanzados</summary>
+            <div class="filters-grid filters-grid-compact">
+                <div class="filter-group">
+                    <label>Beneficiario</label>
+                    <input type="text" id="filtroBeneficiario" placeholder="Nombre del beneficiario">
+                </div>
+                <div class="filter-group">
+                    <label>Dependencia</label>
+                    <input type="text" id="filtroDependencia" placeholder="Código (2 dígitos)">
+                </div>
+                <div class="filter-group">
+                    <label>Monto Mínimo</label>
+                    <input type="number" id="filtroMontoMin" placeholder="$0.00" step="0.01">
+                </div>
+                <div class="filter-group">
+                    <label>Monto Máximo</label>
+                    <input type="number" id="filtroMontoMax" placeholder="$0.00" step="0.01">
+                </div>
+            </div>
+        </details>
+    </div>
+
+    <!-- Export Section -->
+    <div class="export-section">
+        <div class="export-info">
+            <strong id="exportCount">0</strong> transacciones disponibles para exportar
+        </div>
+        <div class="export-actions">
+            <button class="btn btn-secondary" onclick="imprimirAuditoria()">Imprimir</button>
+            <button class="btn btn-success" onclick="exportarExcel()">Exportar Excel</button>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="loading-state">
+        <div class="spinner"></div>
+        <p>Cargando información de auditoría...</p>
+    </div>
+
+    <!-- Policy List -->
+    <div id="policyList" class="policy-list is-hidden">
+        <!-- Policies will be dynamically inserted here -->
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="empty-state is-hidden">
+        <h3>No se encontraron transacciones</h3>
+        <p>Ajusta los filtros y realiza una nueva búsqueda</p>
+    </div>
+
+    <!-- Pagination -->
+    <div id="paginationControls" class="pagination-controls is-hidden">
+        <button id="btnFirstPage" onclick="irAPagina(1)">Primera</button>
+        <button id="btnPrevPage" onclick="cambiarPagina(-1)">Anterior</button>
+        <span class="pagination-info" id="paginationInfo">Página 1 de 1</span>
+        <button id="btnNextPage" onclick="cambiarPagina(1)">Siguiente</button>
+        <button id="btnLastPage" onclick="irAPagina('last')">Última</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let paginaActual = 1;
+let totalPaginas = 1;
+let filtrosActuales = {};
+const registrosPorPagina = 20;
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', () => {
+    cargarDatos();
+});
+
+// Load data
+async function cargarDatos() {
+    try {
+        showLoading();
+
+        const params = new URLSearchParams({
+            page: paginaActual,
+            per_page: registrosPorPagina,
+            ...filtrosActuales
+        });
+
+        const response = await fetch(`/api/transacciones?${params}`);
+        const data = await response.json();
+
+        if (data.transacciones && data.transacciones.length > 0) {
+            actualizarMetricas(data);
+            renderizarPorPoliza(data.transacciones);
+            actualizarPaginacion(data);
+            showContent();
+        } else {
+            showEmpty();
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al cargar datos: ' + error.message);
+        showEmpty();
+    }
+}
+
+// Update metrics
+function actualizarMetricas(data) {
+    const transacciones = data.transacciones || [];
+
+    // Count unique policies from current page
+    const polizasUnicas = new Set(transacciones.map(t => t.poliza)).size;
+
+    // Calculate totals from filtered dataset when available
+    let totalCargos = data.suma_cargos;
+    let totalAbonos = data.suma_abonos;
+
+    if (totalCargos === undefined || totalAbonos === undefined) {
+        totalCargos = 0;
+        totalAbonos = 0;
+        transacciones.forEach(t => {
+            const cargos = parseFloat(t.cargos || 0);
+            const abonos = parseFloat(t.abonos || 0);
+
+            if (!isNaN(cargos)) totalCargos += cargos;
+            if (!isNaN(abonos)) totalAbonos += abonos;
+        });
+    }
+
+    // Calculate balance
+    const balance = totalCargos - totalAbonos;
+    const isBalanced = Math.abs(balance) < 0.01;
+
+    // Update DOM elements with formatted values
+    document.getElementById('metricTransacciones').textContent = (data.total || 0).toLocaleString('es-MX');
+    document.getElementById('metricPolizas').textContent = polizasUnicas.toLocaleString('es-MX');
+
+    // Update charges and payments with prominent display
+    document.getElementById('metricCargos').textContent = formatCurrency(totalCargos);
+    document.getElementById('metricAbonos').textContent = formatCurrency(totalAbonos);
+    document.getElementById('metricBalance').textContent = formatCurrency(Math.abs(balance));
+
+    // Update verification status
+    const verificationEl = document.getElementById('metricVerificacion');
+    verificationEl.classList.remove('success', 'error');
+    if (transacciones.length === 0) {
+        verificationEl.textContent = '-';
+    } else if (isBalanced) {
+        verificationEl.textContent = 'Balanceado';
+        verificationEl.classList.add('success');
+    } else {
+        verificationEl.textContent = 'Desbalanceado';
+        verificationEl.classList.add('error');
+    }
+
+    // Update export count
+    document.getElementById('exportCount').textContent = (data.total || 0).toLocaleString('es-MX');
+
+}
+
+// Render by policy
+function renderizarPorPoliza(transacciones) {
+    const policyList = document.getElementById('policyList');
+    policyList.innerHTML = '';
+
+    // Group by policy
+    const porPoliza = {};
+    transacciones.forEach(t => {
+        const poliza = t.poliza || 'SIN PÓLIZA';
+        if (!porPoliza[poliza]) {
+            porPoliza[poliza] = {
+                transacciones: [],
+                fecha: t.fecha_transaccion,
+                cargos: 0,
+                abonos: 0
+            };
+        }
+        porPoliza[poliza].transacciones.push(t);
+        porPoliza[poliza].cargos += parseFloat(t.cargos || 0);
+        porPoliza[poliza].abonos += parseFloat(t.abonos || 0);
+    });
+
+    // Render each policy
+    Object.keys(porPoliza).sort().forEach(poliza => {
+        const data = porPoliza[poliza];
+        const balance = data.cargos - data.abonos;
+        const isBalanced = Math.abs(balance) < 0.01;
+
+        const card = document.createElement('div');
+        card.className = 'policy-card';
+        card.innerHTML = `
+            <div class="policy-header" onclick="togglePolicy(this)">
+                <div class="policy-info">
+                    <div class="policy-id">
+                        Póliza: ${poliza}
+                    </div>
+                    <div class="policy-meta">
+                        <div class="policy-meta-item">
+                            ${data.fecha}
+                        </div>
+                        <div class="policy-meta-item">
+                            ${data.transacciones.length} transacciones
+                        </div>
+                    </div>
+                </div>
+                <div class="policy-stats">
+                    <div class="policy-stat">
+                        <div class="policy-stat-label">Cargos</div>
+                        <div class="policy-stat-value cargo">${formatCurrency(data.cargos)}</div>
+                    </div>
+                    <div class="policy-stat">
+                        <div class="policy-stat-label">Abonos</div>
+                        <div class="policy-stat-value abono">${formatCurrency(data.abonos)}</div>
+                    </div>
+                    <div class="policy-stat">
+                        <div class="policy-stat-label">Balance</div>
+                        <div class="policy-stat-value balance">${formatCurrency(Math.abs(balance))}</div>
+                    </div>
+                    <div class="expand-icon">▼</div>
+                </div>
+            </div>
+            <div class="policy-body">
+                <table class="transactions-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Cuenta Contable</th>
+                            <th>Nombre de Cuenta</th>
+                            <th>Dependencia</th>
+                            <th>Beneficiario</th>
+                            <th>Descripción</th>
+                            <th>O.P.</th>
+                            <th>Saldo Inicial</th>
+                            <th>Cargos</th>
+                            <th>Abonos</th>
+                            <th>Saldo Final</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.transacciones.map(t => `
+                            <tr>
+                                <td>${t.fecha_transaccion || ''}</td>
+                                <td class="account-cell">${t.cuenta_contable || ''}</td>
+                                <td class="truncate-cell truncate-lg" title="${t.nombre_cuenta || ''}">${truncate(t.nombre_cuenta, 35)}</td>
+                                <td>${t.dependencia || ''}</td>
+                                <td class="truncate-cell truncate-md" title="${t.beneficiario || ''}">${truncate(t.beneficiario, 25)}</td>
+                                <td class="truncate-cell truncate-md" title="${t.descripcion || ''}">${truncate(t.descripcion, 30)}</td>
+                                <td>${t.orden_pago || ''}</td>
+                                <td class="money">${formatNumber(t.saldo_inicial)}</td>
+                                <td class="money positive">${formatNumber(t.cargos)}</td>
+                                <td class="money negative">${formatNumber(t.abonos)}</td>
+                                <td class="money"><strong>${formatNumber(t.saldo_final)}</strong></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <div class="policy-footer">
+                    <div class="policy-totals">
+                        <div class="policy-total-item">
+                            <div class="policy-total-label">Total Cargos</div>
+                            <div class="policy-total-value positive">${formatCurrency(data.cargos)}</div>
+                        </div>
+                        <div class="policy-total-item">
+                            <div class="policy-total-label">Total Abonos</div>
+                            <div class="policy-total-value negative">${formatCurrency(data.abonos)}</div>
+                        </div>
+                        <div class="policy-total-item">
+                            <div class="policy-total-label">Diferencia</div>
+                            <div class="policy-total-value">${formatCurrency(Math.abs(balance))}</div>
+                        </div>
+                    </div>
+                    <div class="verification-badge ${isBalanced ? 'balanced' : 'unbalanced'}">
+                        ${isBalanced ? 'Balanceado' : 'Revisar Balance'}
+                    </div>
+                </div>
+            </div>
+        `;
+        policyList.appendChild(card);
+    });
+}
+
+// Toggle policy expansion
+function togglePolicy(header) {
+    const card = header.closest('.policy-card');
+    const body = card.querySelector('.policy-body');
+    const isExpanded = header.classList.contains('expanded');
+
+    if (isExpanded) {
+        header.classList.remove('expanded');
+        body.classList.remove('expanded');
+    } else {
+        header.classList.add('expanded');
+        body.classList.add('expanded');
+    }
+}
+
+// Filters
+function aplicarFiltros() {
+    filtrosActuales = {};
+
+    const poliza = document.getElementById('filtroPoliza').value.trim();
+    if (poliza) filtrosActuales.poliza = poliza;
+
+    const cuenta = document.getElementById('filtroCuenta').value.trim();
+    if (cuenta) filtrosActuales.cuenta_contable = cuenta;
+
+    const beneficiario = document.getElementById('filtroBeneficiario').value.trim();
+    if (beneficiario) filtrosActuales.beneficiario = beneficiario;
+
+    const dependencia = document.getElementById('filtroDependencia').value.trim();
+    if (dependencia) filtrosActuales.dependencia = dependencia;
+
+    const fechaInicio = document.getElementById('filtroFechaInicio').value;
+    if (fechaInicio) filtrosActuales.fecha_inicio = fechaInicio;
+
+    const fechaFin = document.getElementById('filtroFechaFin').value;
+    if (fechaFin) filtrosActuales.fecha_fin = fechaFin;
+
+    const montoMin = document.getElementById('filtroMontoMin').value;
+    if (montoMin) filtrosActuales.monto_minimo = montoMin;
+
+    const montoMax = document.getElementById('filtroMontoMax').value;
+    if (montoMax) filtrosActuales.monto_maximo = montoMax;
+
+    paginaActual = 1;
+    cargarDatos();
+}
+
+function limpiarFiltros() {
+    document.getElementById('filtroPoliza').value = '';
+    document.getElementById('filtroCuenta').value = '';
+    document.getElementById('filtroBeneficiario').value = '';
+    document.getElementById('filtroDependencia').value = '';
+    document.getElementById('filtroFechaInicio').value = '';
+    document.getElementById('filtroFechaFin').value = '';
+    document.getElementById('filtroMontoMin').value = '';
+    document.getElementById('filtroMontoMax').value = '';
+    filtrosActuales = {};
+    paginaActual = 1;
+    cargarDatos();
+}
+
+// Pagination
+function actualizarPaginacion(data) {
+    totalPaginas = data.pages || 1;
+    document.getElementById('paginationInfo').textContent = `Página ${paginaActual} de ${totalPaginas}`;
+    document.getElementById('btnFirstPage').disabled = paginaActual === 1;
+    document.getElementById('btnPrevPage').disabled = paginaActual === 1;
+    document.getElementById('btnNextPage').disabled = paginaActual >= totalPaginas;
+    document.getElementById('btnLastPage').disabled = paginaActual >= totalPaginas;
+    document.getElementById('paginationControls').style.display = 'flex';
+}
+
+function cambiarPagina(delta) {
+    const nuevaPagina = paginaActual + delta;
+    if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas) {
+        paginaActual = nuevaPagina;
+        cargarDatos();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+}
+
+function irAPagina(pagina) {
+    if (pagina === 'last') {
+        paginaActual = totalPaginas;
+    } else {
+        paginaActual = parseInt(pagina);
+    }
+    cargarDatos();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Export functions
+async function exportarExcel() {
+    try {
+        const response = await fetch('/api/reportes/generar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(filtrosActuales)
+        });
+
+        if (!response.ok) throw new Error('Error al generar reporte');
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `auditoria_sipac_${new Date().toISOString().split('T')[0]}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        alert('Error al exportar: ' + error.message);
+    }
+}
+
+function imprimirAuditoria() {
+    // Expand all policies before printing
+    document.querySelectorAll('.policy-body').forEach(body => {
+        body.classList.add('expanded');
+    });
+    window.print();
+}
+
+// UI State management
+function showLoading() {
+    document.getElementById('loadingState').style.display = 'block';
+    document.getElementById('policyList').style.display = 'none';
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('paginationControls').style.display = 'none';
+}
+
+function showContent() {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('policyList').style.display = 'flex';
+    document.getElementById('emptyState').style.display = 'none';
+}
+
+function showEmpty() {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('policyList').style.display = 'none';
+    document.getElementById('emptyState').style.display = 'block';
+    document.getElementById('paginationControls').style.display = 'none';
+}
+
+// Utility functions
+function formatNumber(num) {
+    return (num || 0).toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
+function formatCurrency(num) {
+    return '$' + (num || 0).toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
+function truncate(str, maxLen) {
+    if (!str) return '';
+    return str.length > maxLen ? str.substring(0, maxLen) + '...' : str;
+}
+</script>
+{% endblock %}
