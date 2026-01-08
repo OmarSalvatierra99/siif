@@ -7,84 +7,155 @@
     .consulta-container {
         max-width: 1600px;
         margin: 0 auto;
-        padding: 2rem;
+        padding: 2.5rem 2rem;
+        position: relative;
     }
 
-    .header-flex {
-        text-align: center;
+    .consulta-container::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+            radial-gradient(circle at 10% 10%, rgba(37, 99, 235, 0.12), transparent 40%),
+            radial-gradient(circle at 90% 0%, rgba(0, 40, 85, 0.08), transparent 45%);
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .consulta-container > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    .page-hero {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem;
+        padding: 1.5rem 2rem;
+        border-radius: 18px;
+        background: linear-gradient(120deg, rgba(0, 40, 85, 0.08), rgba(37, 99, 235, 0.08));
+        border: 1px solid rgba(0, 40, 85, 0.12);
         margin-bottom: 2rem;
-        padding-bottom: 1rem;
-        border-bottom: 2px solid var(--color-primary);
     }
 
-    .header-flex h2 {
+    .page-hero h2 {
         color: var(--color-primary);
-        font-size: 1.8rem;
-        margin-bottom: 0.5rem;
-        font-weight: 700;
+        font-size: 2rem;
+        font-weight: 800;
+        margin-bottom: 0.25rem;
+        letter-spacing: -0.02em;
     }
 
-    .header-flex .subtitle {
+    .page-hero .subtitle {
         color: var(--color-muted);
         font-size: 0.95rem;
+        max-width: 560px;
+    }
+
+    .hero-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .hero-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        background: rgba(0, 40, 85, 0.08);
+        color: var(--color-primary);
+        font-weight: 600;
+        font-size: 0.75rem;
+        padding: 0.35rem 0.65rem;
+        border-radius: 999px;
+    }
+
+    .consulta-layout {
+        display: grid;
+        grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+        gap: 2rem;
+        align-items: start;
+    }
+
+    .results-section {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
     }
 
     .filters-section {
         background: var(--color-surface);
-        border: 1px solid var(--color-border);
-        border-radius: var(--radius);
-        padding: 1.5rem;
-        margin-bottom: 2rem;
+        border: 1px solid rgba(0, 40, 85, 0.12);
+        border-radius: 18px;
+        padding: 1.5rem 1.5rem 1.25rem;
+        box-shadow: var(--shadow-sm);
+        position: sticky;
+        top: 1.5rem;
     }
 
     .filters-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1rem;
-        margin-bottom: 1rem;
+        grid-template-columns: 1fr;
+        gap: 0.85rem;
+        margin-top: 1rem;
     }
 
     .filter-group {
         display: flex;
         flex-direction: column;
+        gap: 0.35rem;
     }
 
     .filter-group label {
         font-size: 0.85rem;
         font-weight: 600;
-        margin-bottom: 0.4rem;
         color: var(--color-primary);
     }
 
     .filter-group input,
     .filter-group select {
-        padding: 0.6rem;
-        border: 1px solid var(--color-border);
-        border-radius: 8px;
+        padding: 0.65rem 0.7rem;
+        border: 1px solid rgba(148, 163, 184, 0.7);
+        border-radius: 10px;
         font-size: 0.9rem;
+        background: #f8fafc;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .filter-group input:focus,
+    .filter-group select:focus {
+        outline: none;
+        border-color: rgba(37, 99, 235, 0.8);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+        background: #fff;
     }
 
     .filter-actions {
         display: flex;
         gap: 0.8rem;
-        margin-top: 1rem;
-        justify-content: flex-end;
+        margin-top: 1.5rem;
+        justify-content: space-between;
+        padding-top: 1rem;
+        border-top: 1px dashed rgba(148, 163, 184, 0.6);
     }
 
     .stats-bar {
-        display: flex;
-        gap: 2rem;
-        flex-wrap: wrap;
-        margin-bottom: 2rem;
-        padding: 1rem 1.5rem;
-        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-        border-radius: var(--radius);
-        border: 1px solid #bfdbfe;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
     }
 
     .stat-item {
         display: flex;
         flex-direction: column;
+        padding: 1rem 1.25rem;
+        border-radius: 16px;
+        background: #fff;
+        border: 1px solid rgba(37, 99, 235, 0.12);
+        box-shadow: var(--shadow-sm);
     }
 
     .stat-label {
@@ -105,9 +176,13 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1.25rem;
         flex-wrap: wrap;
         gap: 1rem;
+        padding: 0.75rem 1rem;
+        border-radius: 14px;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
     }
 
     .pagination {
@@ -120,7 +195,7 @@
         padding: 0.5rem 0.75rem;
         border: 1px solid var(--color-border);
         background: var(--color-surface);
-        border-radius: 4px;
+        border-radius: 10px;
         cursor: pointer;
         transition: var(--transition);
         font-size: 0.875rem;
@@ -138,15 +213,15 @@
 
     .table-wrapper {
         background: var(--color-surface);
-        border-radius: var(--radius);
-        border: 1px solid var(--color-border);
+        border-radius: 18px;
+        border: 1px solid rgba(0, 40, 85, 0.12);
         overflow: hidden;
         box-shadow: var(--shadow-sm);
     }
 
     .table-scroll {
         overflow-x: auto;
-        max-height: calc(100vh - 500px);
+        max-height: 65vh;
     }
 
     .tabla-resultados {
@@ -158,7 +233,7 @@
     .tabla-resultados th {
         position: sticky;
         top: 0;
-        background: var(--color-primary);
+        background: linear-gradient(90deg, #002855 0%, #0f3b75 100%);
         color: #fff;
         padding: 0.7rem 0.5rem;
         text-align: left;
@@ -175,11 +250,11 @@
     }
 
     .tabla-resultados tr:nth-child(even) td {
-        background: #f9fafc;
+        background: #f8fafc;
     }
 
     .tabla-resultados tr:hover td {
-        background: #f3f4f6;
+        background: #eef2ff;
     }
 
     .money {
@@ -216,9 +291,19 @@
     }
 
     @media (max-width: 768px) {
-        .filters-grid {
+        .consulta-container {
+            padding: 2rem 1rem;
+        }
+
+        .page-hero {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .consulta-layout {
             grid-template-columns: 1fr;
         }
+
         .filter-actions {
             flex-direction: column;
             width: 100%;
@@ -232,173 +317,185 @@
 
 {% block content %}
 <div class="consulta-container">
-    <div class="header-flex">
-        <h2>Consultar Transacciones</h2>
-        <span class="subtitle">Búsqueda y visualización de transacciones contables</span>
-    </div>
-
-    <div class="filters-section">
-        <h3 style="margin-bottom: 1rem; color: var(--color-primary);">Filtros de Búsqueda</h3>
-        <div class="filters-grid">
-            <div class="filter-group">
-                <label>Cuenta Contable</label>
-                <input type="text" id="filtroCuenta" placeholder="Ej: 32210080500000000600N">
-            </div>
-            <div class="filter-group">
-                <label>Género</label>
-                <input type="text" id="filtroGenero" placeholder="1 carácter" maxlength="1">
-            </div>
-            <div class="filter-group">
-                <label>Grupo</label>
-                <input type="text" id="filtroGrupo" placeholder="1 carácter" maxlength="1">
-            </div>
-            <div class="filter-group">
-                <label>Rubro</label>
-                <input type="text" id="filtroRubro" placeholder="1 carácter" maxlength="1">
-            </div>
-            <div class="filter-group">
-                <label>Cuenta</label>
-                <input type="text" id="filtroCuentaNum" placeholder="2 caracteres" maxlength="2">
-            </div>
-            <div class="filter-group">
-                <label>Subcuenta</label>
-                <input type="text" id="filtroSubcuenta" placeholder="2 caracteres" maxlength="2">
-            </div>
-            <div class="filter-group">
-                <label>Dependencia</label>
-                <input type="text" id="filtroDependencia" placeholder="2 caracteres" maxlength="2">
-            </div>
-            <div class="filter-group">
-                <label>Unidad Responsable</label>
-                <input type="text" id="filtroUnidadResponsable" placeholder="2 caracteres" maxlength="2">
-            </div>
-            <div class="filter-group">
-                <label>Centro de Costo</label>
-                <input type="text" id="filtroCentroCosto" placeholder="2 caracteres" maxlength="2">
-            </div>
-            <div class="filter-group">
-                <label>Proyecto Presupuestario</label>
-                <input type="text" id="filtroProyectoPresupuestario" placeholder="2 caracteres" maxlength="2">
-            </div>
-            <div class="filter-group">
-                <label>Fuente</label>
-                <input type="text" id="filtroFuente" placeholder="1 carácter" maxlength="1">
-            </div>
-            <div class="filter-group">
-                <label>SubFuente</label>
-                <input type="text" id="filtroSubfuente" placeholder="1 carácter" maxlength="1">
-            </div>
-            <div class="filter-group">
-                <label>Tipo de Recurso</label>
-                <input type="text" id="filtroTipoRecurso" placeholder="1 carácter" maxlength="1">
-            </div>
-            <div class="filter-group">
-                <label>Partida Presupuestal</label>
-                <input type="text" id="filtroPartidaPresupuestal" placeholder="4 caracteres" maxlength="4">
-            </div>
-            <div class="filter-group">
-                <label>Nombre de Cuenta</label>
-                <input type="text" id="filtroNombreCuenta" placeholder="Buscar por nombre">
-            </div>
-            <div class="filter-group">
-                <label>Beneficiario</label>
-                <input type="text" id="filtroBeneficiario" placeholder="Buscar beneficiario">
-            </div>
-            <div class="filter-group">
-                <label>Descripción</label>
-                <input type="text" id="filtroDescripcion" placeholder="Buscar descripción">
-            </div>
-            <div class="filter-group">
-                <label>O.P.</label>
-                <input type="text" id="filtroOrdenPago" placeholder="Orden de pago">
-            </div>
-            <div class="filter-group">
-                <label>Póliza</label>
-                <input type="text" id="filtroPoliza" placeholder="Buscar póliza">
-            </div>
-            <div class="filter-group">
-                <label>Fecha Inicio</label>
-                <input type="date" id="filtroFechaInicio">
-            </div>
-            <div class="filter-group">
-                <label>Fecha Fin</label>
-                <input type="date" id="filtroFechaFin">
-            </div>
+    <div class="page-hero">
+        <div>
+            <h2>Consultar Transacciones</h2>
+            <span class="subtitle">Explora el detalle contable, cruza filtros y exporta resultados con precisión.</span>
         </div>
-        <div class="filter-actions">
-            <button class="btn btn-secondary" onclick="limpiarFiltros()">Limpiar Filtros</button>
-            <button class="btn btn-primary" onclick="aplicarFiltros()">Aplicar Filtros</button>
+        <div class="hero-meta">
+            <span class="hero-chip">Actualizado en tiempo real</span>
+            <span class="hero-chip">Filtros avanzados</span>
+            <span class="hero-chip">Exportación directa</span>
         </div>
     </div>
 
-    <div class="stats-bar">
-        <div class="stat-item">
-            <span class="stat-label">Total Registros</span>
-            <span class="stat-value" id="totalRegistros">0</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-label">Cargos Totales</span>
-            <span class="stat-value money positive" id="totalCargos">$0.00</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-label">Abonos Totales</span>
-            <span class="stat-value money negative" id="totalAbonos">$0.00</span>
-        </div>
-    </div>
+    <div class="consulta-layout">
+        <aside class="filters-section">
+            <h3 style="color: var(--color-primary);">Filtros de Búsqueda</h3>
+            <p class="subtitle" style="margin-top: 0.35rem;">Refina tu consulta usando los campos clave del catálogo contable.</p>
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label>Cuenta Contable</label>
+                    <input type="text" id="filtroCuenta" placeholder="Ej: 32210080500000000600N">
+                </div>
+                <div class="filter-group">
+                    <label>Género</label>
+                    <input type="text" id="filtroGenero" placeholder="1 carácter" maxlength="1">
+                </div>
+                <div class="filter-group">
+                    <label>Grupo</label>
+                    <input type="text" id="filtroGrupo" placeholder="1 carácter" maxlength="1">
+                </div>
+                <div class="filter-group">
+                    <label>Rubro</label>
+                    <input type="text" id="filtroRubro" placeholder="1 carácter" maxlength="1">
+                </div>
+                <div class="filter-group">
+                    <label>Cuenta</label>
+                    <input type="text" id="filtroCuentaNum" placeholder="2 caracteres" maxlength="2">
+                </div>
+                <div class="filter-group">
+                    <label>Subcuenta</label>
+                    <input type="text" id="filtroSubcuenta" placeholder="2 caracteres" maxlength="2">
+                </div>
+                <div class="filter-group">
+                    <label>Dependencia</label>
+                    <input type="text" id="filtroDependencia" placeholder="2 caracteres" maxlength="2">
+                </div>
+                <div class="filter-group">
+                    <label>Unidad Responsable</label>
+                    <input type="text" id="filtroUnidadResponsable" placeholder="2 caracteres" maxlength="2">
+                </div>
+                <div class="filter-group">
+                    <label>Centro de Costo</label>
+                    <input type="text" id="filtroCentroCosto" placeholder="2 caracteres" maxlength="2">
+                </div>
+                <div class="filter-group">
+                    <label>Proyecto Presupuestario</label>
+                    <input type="text" id="filtroProyectoPresupuestario" placeholder="2 caracteres" maxlength="2">
+                </div>
+                <div class="filter-group">
+                    <label>Fuente</label>
+                    <input type="text" id="filtroFuente" placeholder="1 carácter" maxlength="1">
+                </div>
+                <div class="filter-group">
+                    <label>SubFuente</label>
+                    <input type="text" id="filtroSubfuente" placeholder="1 carácter" maxlength="1">
+                </div>
+                <div class="filter-group">
+                    <label>Tipo de Recurso</label>
+                    <input type="text" id="filtroTipoRecurso" placeholder="1 carácter" maxlength="1">
+                </div>
+                <div class="filter-group">
+                    <label>Partida Presupuestal</label>
+                    <input type="text" id="filtroPartidaPresupuestal" placeholder="4 caracteres" maxlength="4">
+                </div>
+                <div class="filter-group">
+                    <label>Nombre de Cuenta</label>
+                    <input type="text" id="filtroNombreCuenta" placeholder="Buscar por nombre">
+                </div>
+                <div class="filter-group">
+                    <label>Beneficiario</label>
+                    <input type="text" id="filtroBeneficiario" placeholder="Buscar beneficiario">
+                </div>
+                <div class="filter-group">
+                    <label>Descripción</label>
+                    <input type="text" id="filtroDescripcion" placeholder="Buscar descripción">
+                </div>
+                <div class="filter-group">
+                    <label>O.P.</label>
+                    <input type="text" id="filtroOrdenPago" placeholder="Orden de pago">
+                </div>
+                <div class="filter-group">
+                    <label>Póliza</label>
+                    <input type="text" id="filtroPoliza" placeholder="Buscar póliza">
+                </div>
+                <div class="filter-group">
+                    <label>Fecha Inicio</label>
+                    <input type="date" id="filtroFechaInicio">
+                </div>
+                <div class="filter-group">
+                    <label>Fecha Fin</label>
+                    <input type="date" id="filtroFechaFin">
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button class="btn btn-secondary" onclick="limpiarFiltros()">Limpiar Filtros</button>
+                <button class="btn btn-primary" onclick="aplicarFiltros()">Aplicar Filtros</button>
+            </div>
+        </aside>
 
-    <div class="actions-bar">
-        <div class="pagination">
-            <button id="btnPrevPage" onclick="cambiarPagina(-1)">‹ Anterior</button>
-            <span id="paginaInfo">Página 1</span>
-            <button id="btnNextPage" onclick="cambiarPagina(1)">Siguiente ›</button>
-        </div>
-        <button class="btn btn-success" onclick="exportarExcel()">
-            📥 Exportar a Excel
-        </button>
-    </div>
+        <section class="results-section">
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <span class="stat-label">Total Registros</span>
+                    <span class="stat-value" id="totalRegistros">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Cargos Totales</span>
+                    <span class="stat-value money positive" id="totalCargos">$0.00</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Abonos Totales</span>
+                    <span class="stat-value money negative" id="totalAbonos">$0.00</span>
+                </div>
+            </div>
 
-    <div class="table-wrapper">
-        <div id="loading" class="loading">
-            <div class="spinner"></div>
-            <p>Cargando transacciones...</p>
-        </div>
-        <div class="table-scroll" id="tableContainer" style="display: none;">
-            <table class="tabla-resultados">
-                <thead>
-                    <tr>
-                        <th>Cuenta Contable</th>
-                        <th>Género</th>
-                        <th>Grupo</th>
-                        <th>Rubro</th>
-                        <th>Cuenta</th>
-                        <th>Subcuenta</th>
-                        <th>Dependencia</th>
-                        <th>Unidad Responsable</th>
-                        <th>Centro de Costo</th>
-                        <th>Proyecto Presupuestario</th>
-                        <th>Fuente</th>
-                        <th>SubFuente</th>
-                        <th>Tipo de Recurso</th>
-                        <th>Partida Presupuestal</th>
-                        <th>Nombre de la Cuenta</th>
-                        <th>FECHA</th>
-                        <th>POLIZA</th>
-                        <th>BENEFICIARIO</th>
-                        <th>DESCRIPCION</th>
-                        <th>O.P.</th>
-                        <th>SALDO INICIAL</th>
-                        <th>CARGOS</th>
-                        <th>ABONOS</th>
-                        <th>SALDO FINAL</th>
-                    </tr>
-                </thead>
-                <tbody id="tablaBody">
-                </tbody>
-            </table>
-        </div>
-        <div id="noResults" class="no-results" style="display: none;">
-            <p class="msg-vacio">No se encontraron transacciones</p>
-        </div>
+            <div class="actions-bar">
+                <div class="pagination">
+                    <button id="btnPrevPage" onclick="cambiarPagina(-1)">‹ Anterior</button>
+                    <span id="paginaInfo">Página 1</span>
+                    <button id="btnNextPage" onclick="cambiarPagina(1)">Siguiente ›</button>
+                </div>
+                <button class="btn btn-success" onclick="exportarExcel()">
+                    📥 Exportar a Excel
+                </button>
+            </div>
+
+            <div class="table-wrapper">
+                <div id="loading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Cargando transacciones...</p>
+                </div>
+                <div class="table-scroll" id="tableContainer" style="display: none;">
+                    <table class="tabla-resultados">
+                        <thead>
+                            <tr>
+                                <th>Cuenta Contable</th>
+                                <th>Género</th>
+                                <th>Grupo</th>
+                                <th>Rubro</th>
+                                <th>Cuenta</th>
+                                <th>Subcuenta</th>
+                                <th>Dependencia</th>
+                                <th>Unidad Responsable</th>
+                                <th>Centro de Costo</th>
+                                <th>Proyecto Presupuestario</th>
+                                <th>Fuente</th>
+                                <th>SubFuente</th>
+                                <th>Tipo de Recurso</th>
+                                <th>Partida Presupuestal</th>
+                                <th>Nombre de la Cuenta</th>
+                                <th>FECHA</th>
+                                <th>POLIZA</th>
+                                <th>BENEFICIARIO</th>
+                                <th>DESCRIPCION</th>
+                                <th>O.P.</th>
+                                <th>SALDO INICIAL</th>
+                                <th>CARGOS</th>
+                                <th>ABONOS</th>
+                                <th>SALDO FINAL</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaBody">
+                        </tbody>
+                    </table>
+                </div>
+                <div id="noResults" class="no-results" style="display: none;">
+                    <p class="msg-vacio">No se encontraron transacciones</p>
+                </div>
+            </div>
+        </section>
     </div>
 </div>
 {% endblock %}
