@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}Resumen General - SIPAC{% endblock %}
+
+{% block extra_css %}
+<style>
+    .resumen-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2.5rem 2rem;
+        position: relative;
+    }
+
+    .resumen-hero {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1.5rem;
+        padding: 1.75rem 2rem;
+        border-radius: 20px;
+        background: linear-gradient(120deg, rgba(0, 40, 85, 0.1), rgba(37, 99, 235, 0.08));
+        border: 1px solid rgba(0, 40, 85, 0.12);
+        margin-bottom: 2rem;
+    }
+
+    .resumen-hero h2 {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--color-primary);
+        margin-bottom: 0.4rem;
+        letter-spacing: -0.02em;
+    }
+
+    .resumen-hero p {
+        color: var(--color-muted);
+        font-size: 0.95rem;
+        max-width: 520px;
+    }
+
+    .resumen-panel {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.25rem;
+    }
+
+    .panel-card {
+        background: var(--color-surface);
+        border-radius: 18px;
+        border: 1px solid rgba(37, 99, 235, 0.12);
+        padding: 1.5rem;
+        box-shadow: var(--shadow-sm);
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+
+    .panel-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--color-muted);
+        font-weight: 700;
+    }
+
+    .panel-value {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: var(--color-primary);
+    }
+
+    .panel-subtitle {
+        font-size: 0.85rem;
+        color: var(--color-muted);
+    }
+
+    .status-card {
+        grid-column: span 2;
+        background: #fff;
+        border-radius: 18px;
+        border: 1px solid rgba(148, 163, 184, 0.4);
+        padding: 1.5rem 1.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .status-ok {
+        color: #065f46;
+        background: rgba(16, 185, 129, 0.18);
+        border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .status-warn {
+        color: #92400e;
+        background: rgba(251, 191, 36, 0.18);
+        border: 1px solid rgba(251, 191, 36, 0.4);
+    }
+
+    .status-metric {
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: var(--color-primary);
+    }
+
+    @media (max-width: 900px) {
+        .resumen-hero {
+            flex-direction: column;
+        }
+
+        .status-card {
+            grid-column: span 1;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .resumen-container {
+            padding: 2rem 1rem;
+        }
+
+        .panel-value {
+            font-size: 1.35rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="resumen-container">
+    <div class="resumen-hero">
+        <div>
+            <h2>Resumen General</h2>
+            <p>Vista global de todas las transacciones registradas para validar totales de cargos y abonos.</p>
+        </div>
+        <div class="status-pill status-ok" id="estadoCoincidencia">Coinciden</div>
+    </div>
+
+    <div class="resumen-panel">
+        <div class="panel-card">
+            <span class="panel-label">Total de registros</span>
+            <span class="panel-value" id="totalRegistros">0</span>
+            <span class="panel-subtitle">Transacciones en base de datos</span>
+        </div>
+        <div class="panel-card">
+            <span class="panel-label">Cargos acumulados</span>
+            <span class="panel-value" id="totalCargos">$0.00</span>
+            <span class="panel-subtitle">Suma global de cargos</span>
+        </div>
+        <div class="panel-card">
+            <span class="panel-label">Abonos acumulados</span>
+            <span class="panel-value" id="totalAbonos">$0.00</span>
+            <span class="panel-subtitle">Suma global de abonos</span>
+        </div>
+        <div class="status-card">
+            <div>
+                <span class="panel-label">Diferencia total</span>
+                <div class="status-metric" id="totalDiferencia">$0.00</div>
+                <span class="panel-subtitle">Debe ser cero cuando coincide</span>
+            </div>
+            <div class="status-pill status-ok" id="estadoBalance">Equilibrado</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function cargarResumen() {
+    try {
+        const response = await fetch('/api/transacciones/resumen');
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Error al cargar resumen');
+
+        document.getElementById('totalRegistros').textContent = (data.total_registros || 0).toLocaleString('es-MX');
+        document.getElementById('totalCargos').textContent = formatCurrency(data.total_cargos || 0);
+        document.getElementById('totalAbonos').textContent = formatCurrency(data.total_abonos || 0);
+        document.getElementById('totalDiferencia').textContent = formatCurrency(data.diferencia || 0);
+
+        const estadoBalance = document.getElementById('estadoBalance');
+        const estadoCoincidencia = document.getElementById('estadoCoincidencia');
+        const coincide = !!data.coincide;
+
+        estadoBalance.textContent = coincide ? 'Equilibrado' : 'Desbalanceado';
+        estadoCoincidencia.textContent = coincide ? 'Coinciden' : 'No coinciden';
+        estadoBalance.classList.toggle('status-ok', coincide);
+        estadoBalance.classList.toggle('status-warn', !coincide);
+        estadoCoincidencia.classList.toggle('status-ok', coincide);
+        estadoCoincidencia.classList.toggle('status-warn', !coincide);
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+function formatCurrency(num) {
+    return '$' + (num || 0).toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
+window.addEventListener('DOMContentLoaded', cargarResumen);
+</script>
+{% endblock %}

@@ -51,6 +51,10 @@ def create_app(config_name="default"):
     def reporte_online():
         return render_template("reporte_online.html")
 
+    @app.route("/reporte-resumen")
+    def reporte_resumen():
+        return render_template("reporte_resumen.html")
+
     @app.route("/catalogo-entes")
     def catalogo_entes():
         return render_template("catalogo_entes.html")
@@ -196,63 +200,76 @@ def create_app(config_name="default"):
         try:
             page = request.args.get("page", 1, type=int)
             per_page = request.args.get("per_page", 50, type=int)
-            query = Transaccion.query
+            base_query = Transaccion.query
 
-            if cuenta := request.args.get("cuenta_contable"):
-                query = query.filter(Transaccion.cuenta_contable.like(f"{cuenta}%"))
-            if dependencia := request.args.get("dependencia"):
-                query = query.filter(Transaccion.dependencia == dependencia)
-            if fecha_inicio := request.args.get("fecha_inicio"):
-                query = query.filter(Transaccion.fecha_transaccion >= fecha_inicio)
-            if fecha_fin := request.args.get("fecha_fin"):
-                query = query.filter(Transaccion.fecha_transaccion <= fecha_fin)
-            if poliza := request.args.get("poliza"):
-                query = query.filter(Transaccion.poliza.like(f"%{poliza}%"))
+            def apply_filters(filtered_query):
+                if cuenta := request.args.get("cuenta_contable"):
+                    filtered_query = filtered_query.filter(Transaccion.cuenta_contable.like(f"{cuenta}%"))
+                if dependencia := request.args.get("dependencia"):
+                    filtered_query = filtered_query.filter(Transaccion.dependencia == dependencia)
+                if fecha_inicio := request.args.get("fecha_inicio"):
+                    filtered_query = filtered_query.filter(Transaccion.fecha_transaccion >= fecha_inicio)
+                if fecha_fin := request.args.get("fecha_fin"):
+                    filtered_query = filtered_query.filter(Transaccion.fecha_transaccion <= fecha_fin)
+                if poliza := request.args.get("poliza"):
+                    filtered_query = filtered_query.filter(Transaccion.poliza.like(f"%{poliza}%"))
 
-            # Filtros por componentes de cuenta
-            if genero := request.args.get("genero"):
-                query = query.filter(Transaccion.genero == genero)
-            if grupo := request.args.get("grupo"):
-                query = query.filter(Transaccion.grupo == grupo)
-            if rubro := request.args.get("rubro"):
-                query = query.filter(Transaccion.rubro == rubro)
-            if cuenta_num := request.args.get("cuenta"):
-                query = query.filter(Transaccion.cuenta == cuenta_num)
-            if subcuenta := request.args.get("subcuenta"):
-                query = query.filter(Transaccion.subcuenta == subcuenta)
-            if unidad_responsable := request.args.get("unidad_responsable"):
-                query = query.filter(Transaccion.unidad_responsable == unidad_responsable)
-            if centro_costo := request.args.get("centro_costo"):
-                query = query.filter(Transaccion.centro_costo == centro_costo)
-            if proyecto_presupuestario := request.args.get("proyecto_presupuestario"):
-                query = query.filter(Transaccion.proyecto_presupuestario == proyecto_presupuestario)
-            if fuente := request.args.get("fuente"):
-                query = query.filter(Transaccion.fuente == fuente)
-            if subfuente := request.args.get("subfuente"):
-                query = query.filter(Transaccion.subfuente == subfuente)
-            if tipo_recurso := request.args.get("tipo_recurso"):
-                query = query.filter(Transaccion.tipo_recurso == tipo_recurso)
-            if partida_presupuestal := request.args.get("partida_presupuestal"):
-                query = query.filter(Transaccion.partida_presupuestal == partida_presupuestal)
+                # Filtros por componentes de cuenta
+                if genero := request.args.get("genero"):
+                    filtered_query = filtered_query.filter(Transaccion.genero == genero)
+                if grupo := request.args.get("grupo"):
+                    filtered_query = filtered_query.filter(Transaccion.grupo == grupo)
+                if rubro := request.args.get("rubro"):
+                    filtered_query = filtered_query.filter(Transaccion.rubro == rubro)
+                if cuenta_num := request.args.get("cuenta"):
+                    filtered_query = filtered_query.filter(Transaccion.cuenta == cuenta_num)
+                if subcuenta := request.args.get("subcuenta"):
+                    filtered_query = filtered_query.filter(Transaccion.subcuenta == subcuenta)
+                if unidad_responsable := request.args.get("unidad_responsable"):
+                    filtered_query = filtered_query.filter(Transaccion.unidad_responsable == unidad_responsable)
+                if centro_costo := request.args.get("centro_costo"):
+                    filtered_query = filtered_query.filter(Transaccion.centro_costo == centro_costo)
+                if proyecto_presupuestario := request.args.get("proyecto_presupuestario"):
+                    filtered_query = filtered_query.filter(Transaccion.proyecto_presupuestario == proyecto_presupuestario)
+                if fuente := request.args.get("fuente"):
+                    filtered_query = filtered_query.filter(Transaccion.fuente == fuente)
+                if subfuente := request.args.get("subfuente"):
+                    filtered_query = filtered_query.filter(Transaccion.subfuente == subfuente)
+                if tipo_recurso := request.args.get("tipo_recurso"):
+                    filtered_query = filtered_query.filter(Transaccion.tipo_recurso == tipo_recurso)
+                if partida_presupuestal := request.args.get("partida_presupuestal"):
+                    filtered_query = filtered_query.filter(Transaccion.partida_presupuestal == partida_presupuestal)
 
-            # Filtros de texto con búsqueda parcial
-            if nombre_cuenta := request.args.get("nombre_cuenta"):
-                query = query.filter(Transaccion.nombre_cuenta.like(f"%{nombre_cuenta}%"))
-            if beneficiario := request.args.get("beneficiario"):
-                query = query.filter(Transaccion.beneficiario.like(f"%{beneficiario}%"))
-            if descripcion := request.args.get("descripcion"):
-                query = query.filter(Transaccion.descripcion.like(f"%{descripcion}%"))
-            if orden_pago := request.args.get("orden_pago"):
-                query = query.filter(Transaccion.orden_pago.like(f"%{orden_pago}%"))
+                # Filtros de texto con búsqueda parcial
+                if nombre_cuenta := request.args.get("nombre_cuenta"):
+                    filtered_query = filtered_query.filter(Transaccion.nombre_cuenta.like(f"%{nombre_cuenta}%"))
+                if beneficiario := request.args.get("beneficiario"):
+                    filtered_query = filtered_query.filter(Transaccion.beneficiario.like(f"%{beneficiario}%"))
+                if descripcion := request.args.get("descripcion"):
+                    filtered_query = filtered_query.filter(Transaccion.descripcion.like(f"%{descripcion}%"))
+                if orden_pago := request.args.get("orden_pago"):
+                    filtered_query = filtered_query.filter(Transaccion.orden_pago.like(f"%{orden_pago}%"))
+                return filtered_query
 
-            query = query.order_by(Transaccion.fecha_transaccion.desc())
+            base_query = apply_filters(base_query)
+            query = base_query.order_by(Transaccion.fecha_transaccion.desc())
             paginated = query.paginate(page=page, per_page=per_page, error_out=False)
+
+            totales = base_query.with_entities(
+                func.coalesce(func.sum(Transaccion.cargos), 0),
+                func.coalesce(func.sum(Transaccion.abonos), 0),
+            ).first()
+            total_cargos = float(totales[0] or 0)
+            total_abonos = float(totales[1] or 0)
 
             return jsonify({
                 "transacciones": [t.to_dict() for t in paginated.items],
                 "total": paginated.total,
                 "pages": paginated.pages,
                 "page": page,
+                "total_cargos": total_cargos,
+                "total_abonos": total_abonos,
+                "total_diferencia": total_cargos - total_abonos,
             })
         except Exception as e:
             return jsonify({"error": str(e)}), 500
@@ -264,6 +281,31 @@ def create_app(config_name="default"):
                 Transaccion.dependencia.isnot(None)
             ).order_by(Transaccion.dependencia).all()
             return jsonify({"dependencias": [d[0] for d in deps if d[0]]})
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    @app.route("/api/transacciones/resumen")
+    def get_transacciones_resumen():
+        try:
+            totales = db.session.query(
+                func.count(Transaccion.id),
+                func.coalesce(func.sum(Transaccion.cargos), 0),
+                func.coalesce(func.sum(Transaccion.abonos), 0),
+            ).first()
+
+            total_registros = int(totales[0] or 0)
+            total_cargos = float(totales[1] or 0)
+            total_abonos = float(totales[2] or 0)
+            diferencia = total_cargos - total_abonos
+            coincide = abs(diferencia) < 0.005
+
+            return jsonify({
+                "total_registros": total_registros,
+                "total_cargos": total_cargos,
+                "total_abonos": total_abonos,
+                "diferencia": diferencia,
+                "coincide": coincide,
+            })
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
