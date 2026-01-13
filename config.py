@@ -17,7 +17,7 @@ class Config:
     
     # Archivos
     MAX_CONTENT_LENGTH = 500 * 1024 * 1024  # 500 MB
-    UPLOAD_EXTENSIONS = {'.xlsx', '.xls'}
+    UPLOAD_EXTENSIONS = {'.xlsx', '.xls', '.xlsm'}
     UPLOAD_FOLDER = '/tmp/sipac_uploads'
     
     # Sesiones

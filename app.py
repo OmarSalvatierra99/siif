@@ -114,6 +114,10 @@ def create_app(config_name="default"):
         try:
             files = request.files.getlist("archivo")
             usuario = request.form.get("usuario", "sistema")
+            tipo_archivo = request.form.get("tipo_archivo", "auxiliar").lower()
+
+            if tipo_archivo not in {"auxiliar", "macro"}:
+                return jsonify({"error": "Tipo de archivo no válido"}), 400
 
             if not files or all(f.filename == "" for f in files):
                 return jsonify({"error": "No se subieron archivos"}), 400
@@ -130,6 +134,22 @@ def create_app(config_name="default"):
 
             if not valid_files:
                 return jsonify({"error": "No hay archivos válidos"}), 400
+
+            loaded = _get_loaded_archivos()
+            duplicates = []
+            files_to_process = []
+            for f in valid_files:
+                filename = Path(f.filename).name
+                if filename in loaded:
+                    duplicates.append(filename)
+                else:
+                    files_to_process.append(f)
+
+            if duplicates and not files_to_process:
+                return jsonify({
+                    "error": "Estos archivos ya fueron procesados anteriormente.",
+                    "duplicate_files": duplicates,
+                }), 409
 
             job_id = str(uuid.uuid4())
             with jobs_lock:
@@ -149,7 +169,7 @@ def create_app(config_name="default"):
                         jobs[job_id]["message"] = msg
 
             files_in_memory = []
-            for f in valid_files:
+            for f in files_to_process:
                 f.seek(0)
                 content = io.BytesIO(f.read())
                 files_in_memory.append((f.filename, content))
@@ -158,7 +178,10 @@ def create_app(config_name="default"):
                 try:
                     with app.app_context():
                         lote_id, total = process_files_to_database(
-                            files_in_memory, usuario, progress_callback
+                            files_in_memory,
+                            usuario,
+                            progress_callback,
+                            tipo_archivo=tipo_archivo,
                         )
 
                         with jobs_lock:
@@ -180,7 +203,10 @@ def create_app(config_name="default"):
             thread.daemon = True
             thread.start()
 
-            return jsonify({"job_id": job_id})
+            response_payload = {"job_id": job_id}
+            if duplicates:
+                response_payload["duplicate_files"] = duplicates
+            return jsonify(response_payload)
 
         except Exception as e:
             print(f"❌ Error procesando archivos: {str(e)}")

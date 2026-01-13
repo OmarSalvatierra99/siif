@@ -5,70 +5,55 @@
 {% block extra_css %}
 <style>
     .container {
-        max-width: 900px;
+        max-width: 980px;
         margin: 0 auto;
-        padding: 3rem 2rem;
+        padding: 3.5rem 2rem 4rem;
     }
 
-    .tab-header {
+    .page-header {
         display: flex;
-        gap: 0.75rem;
-        background: var(--background);
-        padding: 0.5rem;
-        border-radius: 999px;
-        border: 1px solid var(--border);
+        flex-direction: column;
+        gap: 0.5rem;
         margin-bottom: 2rem;
     }
 
-    .tab-btn {
-        flex: 1;
-        border: none;
-        background: transparent;
-        padding: 0.75rem 1rem;
-        border-radius: 999px;
-        font-weight: 600;
+    .page-title {
+        font-family: "Fraunces", serif;
+        font-size: 2.25rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .page-subtitle {
         color: var(--text-secondary);
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .tab-btn.active {
-        background: var(--primary);
-        color: #fff;
-        box-shadow: 0 8px 16px rgba(15, 61, 62, 0.2);
-    }
-
-    .tab-panel {
-        display: none;
-    }
-
-    .tab-panel.active {
-        display: block;
+        font-size: 1rem;
+        max-width: 560px;
     }
 
     .upload-card {
         background: var(--surface);
         border-radius: 12px;
         border: 2px dashed var(--border);
-        padding: 3rem 2rem;
+        padding: 2.5rem 2rem;
         text-align: center;
         transition: all 0.3s;
         cursor: pointer;
         margin-bottom: 2rem;
+        position: relative;
     }
 
     .upload-card:hover {
         border-color: var(--primary-light);
-        background: #fafbfc;
+        background: #f9fbfb;
     }
 
     .upload-card.drag-over {
         border-color: var(--primary);
-        background: #eff6ff;
+        background: #eef6f5;
     }
 
     .upload-icon {
-        font-size: 4rem;
+        font-size: 2.75rem;
         margin-bottom: 1rem;
         color: var(--primary);
     }
@@ -85,6 +70,65 @@
         color: var(--text-secondary);
     }
 
+    .file-type-selector {
+        margin: 2rem 0 1.5rem;
+    }
+
+    .file-type-menu {
+        display: inline-flex;
+        padding: 0.35rem;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--background);
+        gap: 0.35rem;
+    }
+
+    .file-type-option {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.6rem 1.1rem;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: color 0.2s, background 0.2s;
+        color: var(--text-secondary);
+        font-weight: 600;
+    }
+
+    .file-type-option input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .file-type-option span {
+        color: inherit;
+        position: relative;
+        z-index: 1;
+    }
+
+    .file-type-option input:checked + span {
+        color: #fff;
+    }
+
+    .file-type-option input:checked + span::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: var(--color-secondary);
+        border-radius: 999px;
+        z-index: -1;
+        box-shadow: 0 10px 20px rgba(18, 50, 74, 0.18);
+    }
+
+    .file-type-hint {
+        margin-top: 0.75rem;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        max-width: 560px;
+    }
+
     #fileInput {
         display: none;
     }
@@ -97,7 +141,7 @@
         background: var(--surface);
         border: 1px solid var(--border);
         border-radius: 8px;
-        padding: 1rem 1.25rem;
+        padding: 0.9rem 1.15rem;
         margin-bottom: 0.75rem;
         display: flex;
         justify-content: space-between;
@@ -153,11 +197,21 @@
         margin-bottom: 2rem;
     }
 
+    .btn-primary {
+        padding: 0.75rem 1.75rem;
+        border-radius: 999px;
+    }
+
+    .btn-outline {
+        padding: 0.7rem 1.5rem;
+        border-radius: 999px;
+    }
+
     .summary-card {
         background: var(--surface);
         border-radius: 12px;
         border: 1px solid var(--border);
-        padding: 1.5rem 2rem;
+        padding: 1.25rem 1.75rem;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -178,7 +232,7 @@
     }
 
     .summary-count {
-        font-size: 2.5rem;
+        font-size: 2.25rem;
         font-weight: 700;
         color: var(--primary);
         min-width: 60px;
@@ -198,7 +252,7 @@
         background: var(--surface);
         border-radius: 8px;
         border: 1px solid var(--border);
-        padding: 1.5rem;
+        padding: 1.25rem 1.5rem;
         margin-bottom: 2rem;
         display: none;
     }
@@ -251,6 +305,12 @@
         color: #991b1b;
     }
 
+    .alert-warning {
+        background: #fff4d8;
+        border: 1px solid #f1c876;
+        color: #7a4b00;
+    }
+
     .alert h4 {
         font-size: 1rem;
         font-weight: 600;
@@ -260,70 +320,110 @@
     .alert p {
         font-size: 0.875rem;
     }
+
+    @media (max-width: 720px) {
+        .container {
+            padding: 2.5rem 1.25rem 3rem;
+        }
+
+        .summary-card {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .summary-count {
+            align-self: flex-end;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .file-type-menu {
+            width: 100%;
+        }
+
+        .file-type-option {
+            flex: 1;
+            justify-content: center;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container">
-    <div class="tab-header">
-        <button class="tab-btn active" data-tab="upload">Archivos Excel</button>
-        <button class="tab-btn" data-tab="process">Procesar archivos Excel</button>
-    </div>
-
-    <div class="tab-panel active" id="tab-upload">
-        <div class="upload-card" id="uploadArea">
-            <div class="upload-icon">📂</div>
-            <div class="upload-title">Selecciona archivos Excel</div>
-            <div class="upload-subtitle">Arrastra archivos aquí o haz clic para seleccionar (.xlsx, .xls)</div>
-            <input type="file" id="fileInput" accept=".xlsx,.xls" multiple>
-        </div>
-
-        <div class="file-list" id="fileListUpload"></div>
-
-        <div class="action-buttons">
-            <button class="btn btn-outline" id="btnClear" style="display:none;" onclick="clearFiles()">
-                Limpiar
-            </button>
-            <button class="btn btn-primary" id="btnToProcess" disabled>
-                Ir a Procesar
-            </button>
+    <div class="page-header">
+        <div class="page-title">Carga de Datos</div>
+        <div class="page-subtitle">
+            Selecciona el tipo de archivo, carga tus auxiliares y procesa la informacion en un solo flujo.
         </div>
     </div>
 
-    <div class="tab-panel" id="tab-process">
-        <div class="summary-card">
-            <div>
-                <div class="summary-title">Archivos listos para procesar</div>
-                <div class="summary-subtitle" id="summaryText">Agrega archivos en la pestaña Archivos Excel.</div>
-            </div>
-            <div class="summary-count" id="summaryCount">0</div>
+    <div class="file-type-selector">
+        <div class="file-type-menu" role="tablist" aria-label="Tipo de archivo">
+            <label class="file-type-option">
+                <input type="radio" name="fileType" value="auxiliar" checked>
+                <span>Auxiliar contable</span>
+            </label>
+            <label class="file-type-option">
+                <input type="radio" name="fileType" value="macro">
+                <span>Macro SIIF</span>
+            </label>
         </div>
-
-        <div class="file-list" id="fileListProcess"></div>
-
-        <div class="action-buttons">
-            <button class="btn btn-outline" id="btnBack">Volver</button>
-            <button class="btn btn-primary" id="btnProcess" disabled onclick="processFiles()">
-                Procesar Archivos
-            </button>
+        <div class="file-type-hint" id="fileTypeHint">
+            Logica actual de carga del sistema.
         </div>
+    </div>
 
-        <div class="alert alert-success" id="successAlert">
-            <h4>✓ Procesamiento Completado</h4>
-            <p id="successMessage"></p>
-        </div>
+    <div class="upload-card" id="uploadArea">
+        <div class="upload-icon">📂</div>
+        <div class="upload-title">Selecciona archivos Excel</div>
+        <div class="upload-subtitle">Arrastra archivos aquí o haz clic para seleccionar (.xlsx, .xls, .xlsm)</div>
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.xlsm" multiple>
+    </div>
 
-        <div class="alert alert-error" id="errorAlert">
-            <h4>✗ Error</h4>
-            <p id="errorMessage"></p>
-        </div>
+    <div class="file-list" id="fileListUpload"></div>
 
-        <div class="progress-section" id="progressSection">
-            <div class="progress-bar-container">
-                <div class="progress-bar" id="progressBar" style="width: 0%"></div>
-            </div>
-            <div class="progress-text" id="progressText">Procesando...</div>
+    <div class="action-buttons">
+        <button class="btn btn-outline" id="btnClear" style="display:none;" onclick="clearFiles()">
+            Limpiar
+        </button>
+        <button class="btn btn-primary" id="btnProcess" disabled onclick="processFiles()">
+            Procesar Archivos
+        </button>
+    </div>
+
+    <div class="summary-card">
+        <div>
+            <div class="summary-title">Archivos listos para procesar</div>
+            <div class="summary-subtitle" id="summaryText">Agrega archivos para iniciar la carga.</div>
         </div>
+        <div class="summary-count" id="summaryCount">0</div>
+    </div>
+
+    <div class="file-list" id="fileListProcess"></div>
+
+    <div class="alert alert-success" id="successAlert">
+        <h4>✓ Procesamiento Completado</h4>
+        <p id="successMessage"></p>
+    </div>
+
+    <div class="alert alert-warning" id="warningAlert">
+        <h4>⚠️ Aviso</h4>
+        <p id="warningMessage"></p>
+    </div>
+
+    <div class="alert alert-error" id="errorAlert">
+        <h4>✗ Error</h4>
+        <p id="errorMessage"></p>
+    </div>
+
+    <div class="progress-section" id="progressSection">
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+        </div>
+        <div class="progress-text" id="progressText">Procesando...</div>
     </div>
 </div>
 {% endblock %}
@@ -332,30 +432,27 @@
 <script>
 let selectedFiles = [];
 
-const tabButtons = document.querySelectorAll('.tab-btn');
-const tabPanels = document.querySelectorAll('.tab-panel');
 const uploadArea = document.getElementById('uploadArea');
 const fileInput = document.getElementById('fileInput');
 const fileListUpload = document.getElementById('fileListUpload');
 const fileListProcess = document.getElementById('fileListProcess');
 const btnProcess = document.getElementById('btnProcess');
 const btnClear = document.getElementById('btnClear');
-const btnToProcess = document.getElementById('btnToProcess');
-const btnBack = document.getElementById('btnBack');
 const progressSection = document.getElementById('progressSection');
 const progressBar = document.getElementById('progressBar');
 const progressText = document.getElementById('progressText');
 const successAlert = document.getElementById('successAlert');
+const warningAlert = document.getElementById('warningAlert');
 const errorAlert = document.getElementById('errorAlert');
 const successMessage = document.getElementById('successMessage');
+const warningMessage = document.getElementById('warningMessage');
 const errorMessage = document.getElementById('errorMessage');
 const summaryCount = document.getElementById('summaryCount');
 const summaryText = document.getElementById('summaryText');
+const fileTypeInputs = document.querySelectorAll('input[name="fileType"]');
+const fileTypeHint = document.getElementById('fileTypeHint');
 
-// Event listeners
-tabButtons.forEach(button => {
-    button.addEventListener('click', () => setActiveTab(button.dataset.tab));
-});
+let selectedFileType = 'auxiliar';
 
 uploadArea.addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', (e) => handleFiles(Array.from(e.target.files)));
@@ -375,22 +472,17 @@ uploadArea.addEventListener('drop', (e) => {
     handleFiles(Array.from(e.dataTransfer.files));
 });
 
-btnToProcess.addEventListener('click', () => setActiveTab('process'));
-btnBack.addEventListener('click', () => setActiveTab('upload'));
-
-function setActiveTab(tabId) {
-    tabButtons.forEach(button => {
-        button.classList.toggle('active', button.dataset.tab === tabId);
+fileTypeInputs.forEach(input => {
+    input.addEventListener('change', (event) => {
+        selectedFileType = event.target.value;
+        updateFileTypeHint();
+        updateSummary();
     });
-
-    tabPanels.forEach(panel => {
-        panel.classList.toggle('active', panel.id === `tab-${tabId}`);
-    });
-}
+});
 
 function handleFiles(files) {
     const excelFiles = files.filter(f =>
-        f.name.endsWith('.xlsx') || f.name.endsWith('.xls')
+        f.name.endsWith('.xlsx') || f.name.endsWith('.xls') || f.name.endsWith('.xlsm')
     );
     selectedFiles = [...selectedFiles, ...excelFiles];
     renderFileLists();
@@ -428,7 +520,7 @@ function renderFileList(listElement, emptyMessage) {
 
 function renderFileLists() {
     renderFileList(fileListUpload, 'No hay archivos cargados todavía.');
-    renderFileList(fileListProcess, 'Agrega archivos en la pestaña Archivos Excel.');
+    renderFileList(fileListProcess, 'Agrega archivos para iniciar la carga.');
     updateSummary();
     updateButtons();
 }
@@ -455,6 +547,7 @@ async function processFiles() {
 
     const formData = new FormData();
     selectedFiles.forEach(file => formData.append('archivo', file));
+    formData.append('tipo_archivo', selectedFileType);
 
     try {
         const response = await fetch('/api/process', {
@@ -462,11 +555,22 @@ async function processFiles() {
             body: formData
         });
 
+        const data = await response.json();
+
         if (!response.ok) {
-            throw new Error('Error al iniciar el procesamiento');
+            let message = data.error || 'Error al iniciar el procesamiento';
+            if (data.duplicate_files && data.duplicate_files.length) {
+                message += ` Archivos: ${data.duplicate_files.join(', ')}`;
+            }
+            showError(message);
+            progressSection.classList.remove('active');
+            btnProcess.disabled = false;
+            return;
         }
 
-        const data = await response.json();
+        if (data.duplicate_files && data.duplicate_files.length) {
+            showWarning(`Estos archivos ya habían sido procesados y se omitieron: ${data.duplicate_files.join(', ')}`);
+        }
         monitorProgress(data.job_id);
     } catch (error) {
         showError(error.message);
@@ -515,6 +619,11 @@ function showSuccess(message) {
     btnProcess.disabled = false;
 }
 
+function showWarning(message) {
+    warningMessage.textContent = message;
+    warningAlert.classList.add('active');
+}
+
 function showError(message) {
     errorMessage.textContent = message;
     errorAlert.classList.add('active');
@@ -522,6 +631,7 @@ function showError(message) {
 
 function hideAlerts() {
     successAlert.classList.remove('active');
+    warningAlert.classList.remove('active');
     errorAlert.classList.remove('active');
 }
 
@@ -529,18 +639,26 @@ function updateSummary() {
     summaryCount.textContent = selectedFiles.length;
 
     if (selectedFiles.length === 0) {
-        summaryText.textContent = 'Agrega archivos en la pestaña Archivos Excel.';
+        summaryText.textContent = 'Agrega archivos para iniciar la carga.';
         return;
     }
 
     const totalBytes = selectedFiles.reduce((sum, file) => sum + file.size, 0);
-    summaryText.textContent = `${formatFileSize(totalBytes)} en total`;
+    const tipoLabel = selectedFileType === 'macro'
+        ? 'Archivos procesados por la macro'
+        : 'Auxiliar contable';
+    summaryText.textContent = `${formatFileSize(totalBytes)} en total · ${tipoLabel}`;
+}
+
+function updateFileTypeHint() {
+    fileTypeHint.textContent = selectedFileType === 'macro'
+        ? 'Estructura generada desde la macro SIIF.'
+        : 'Logica actual de carga del sistema.';
 }
 
 function updateButtons() {
     const hasFiles = selectedFiles.length > 0;
     btnProcess.disabled = !hasFiles;
-    btnToProcess.disabled = !hasFiles;
     btnClear.style.display = hasFiles ? 'inline-flex' : 'none';
 }
 
@@ -551,5 +669,6 @@ function formatFileSize(bytes) {
 }
 
 renderFileLists();
+updateFileTypeHint();
 </script>
 {% endblock %}

@@ -1,6 +1,8 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from io import BytesIO
+import zipfile
+import xml.etree.ElementTree as ET
 from typing import Callable, List, Optional, Tuple
 import logging
 import re
@@ -479,10 +481,245 @@ def _read_one_excel(file_data):
     return df, filename
 
 
+def _select_column(col_map, options):
+    for option in options:
+        option_norm = _norm(option)
+        for col, col_norm in col_map.items():
+            if col_norm == option_norm or col_norm.startswith(option_norm):
+                return col
+    return None
+
+
+def _col_to_index(col):
+    idx = 0
+    for ch in col:
+        idx = idx * 26 + (ord(ch) - ord("A") + 1)
+    return idx
+
+
+def _unique_headers(headers):
+    seen = set()
+    result = []
+    for i, header in enumerate(headers, start=1):
+        name = str(header or "").strip()
+        if not name:
+            name = f"_col_{i}"
+        if name in seen:
+            base = name
+            suffix = 1
+            while f"{base}_{suffix}" in seen:
+                suffix += 1
+            name = f"{base}_{suffix}"
+        seen.add(name)
+        result.append(name)
+    return result
+
+
+def _read_xlsx_xml_to_dataframe(file_content):
+    file_content.seek(0)
+    data = file_content.read()
+    try:
+        z = zipfile.ZipFile(BytesIO(data))
+    except Exception:
+        return None
+
+    if "xl/worksheets/sheet1.xml" not in z.namelist():
+        return None
+
+    shared = []
+    if "xl/sharedStrings.xml" in z.namelist():
+        try:
+            root = ET.fromstring(z.read("xl/sharedStrings.xml"))
+            ns = {"s": root.tag.split("}")[0].strip("{")}
+            for si in root.findall("s:si", ns):
+                texts = []
+                for t in si.findall(".//s:t", ns):
+                    texts.append(t.text or "")
+                shared.append("".join(texts))
+        except Exception:
+            shared = []
+
+    try:
+        sheet_root = ET.fromstring(z.read("xl/worksheets/sheet1.xml"))
+    except Exception:
+        return None
+
+    ns = {"s": sheet_root.tag.split("}")[0].strip("{")}
+    row_dicts = []
+    max_col_idx = 0
+
+    for row in sheet_root.findall(".//s:sheetData/s:row", ns):
+        cells = {}
+        for c in row.findall("s:c", ns):
+            ref = c.attrib.get("r", "")
+            letters = "".join(ch for ch in ref if ch.isalpha())
+            if not letters:
+                continue
+            col_idx = _col_to_index(letters)
+            max_col_idx = max(max_col_idx, col_idx)
+            t = c.attrib.get("t")
+            v = c.find("s:v", ns)
+            val = v.text if v is not None else ""
+
+            if t == "s":
+                try:
+                    val = shared[int(val)]
+                except Exception:
+                    pass
+            elif t == "inlineStr":
+                is_node = c.find("s:is", ns)
+                if is_node is not None:
+                    t_node = is_node.find("s:t", ns)
+                    if t_node is not None and t_node.text is not None:
+                        val = t_node.text
+
+            cells[col_idx] = val
+
+        if cells:
+            row_dicts.append(cells)
+
+    if not row_dicts or max_col_idx == 0:
+        return None
+
+    rows = []
+    for cells in row_dicts:
+        row_list = [""] * max_col_idx
+        for idx, val in cells.items():
+            row_list[idx - 1] = val
+        rows.append(row_list)
+
+    return pd.DataFrame(rows)
+
+
+def _read_one_excel_macro(file_data):
+    """Lee archivos ya procesados por macro y normaliza columnas"""
+    filename, file_content = file_data
+    logger.info(f"Iniciando lectura macro de archivo: {filename}")
+    file_content.seek(0)
+
+    try:
+        xl = pd.ExcelFile(file_content, engine="openpyxl")
+        sheets = xl.sheet_names
+    except Exception as e:
+        logger.error(f"Error al leer archivo macro {filename}: {type(e).__name__} - {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        sheets = []
+        xl = None
+
+    def build_from_raw(raw):
+        if raw.empty or len(raw) < 2:
+            return None
+
+        header_row_idx = None
+        for idx in range(min(30, len(raw))):
+            row_text = " ".join(raw.iloc[idx].fillna("").astype(str).str.lower())
+            if "cuenta" in row_text and "fecha" in row_text and ("poliza" in row_text or "póliza" in row_text):
+                header_row_idx = idx
+                break
+
+        if header_row_idx is None:
+            return None
+
+        headers = _unique_headers(raw.iloc[header_row_idx].fillna("").astype(str).tolist())
+        col_map = {col: _norm(col) for col in headers}
+
+        data = raw.iloc[header_row_idx + 1:].copy()
+        data.columns = headers
+        data = data.dropna(how="all")
+        if data.empty:
+            return None
+
+        cuenta_col = _select_column(col_map, ["cuenta contable", "cuenta", "cta contable"])
+        if not cuenta_col:
+            logger.warning(f"No se encontró columna de cuenta en {filename}")
+            return None
+
+        nombre_col = _select_column(col_map, ["nombre cuenta", "nombre de la cuenta", "descripcion cuenta", "nombre"])
+        fecha_col = _select_column(col_map, ["fecha", "fecha transaccion", "fecha movimiento"])
+        poliza_col = _select_column(col_map, ["poliza", "póliza", "no poliza", "no. poliza", "numero poliza"])
+        beneficiario_col = _select_column(col_map, ["beneficiario", "proveedor", "razon social"])
+        descripcion_col = _select_column(col_map, ["descripcion", "concepto", "detalle", "observaciones"])
+        op_col = _select_column(col_map, ["o.p.", "op", "orden pago", "orden de pago", "orden_pago"])
+        saldo_inicial_col = _select_column(col_map, ["saldo inicial", "saldo inicial cuenta", "saldo ini"])
+        cargos_col = _select_column(col_map, ["cargos", "cargo", "debe"])
+        abonos_col = _select_column(col_map, ["abonos", "abono", "haber"])
+        saldo_final_col = _select_column(col_map, ["saldo final", "saldo final cuenta", "saldo"])
+
+        records = []
+        for _, row in data.iterrows():
+            cuenta_val = str(row.get(cuenta_col, "")).strip() if cuenta_col else ""
+            if not cuenta_val:
+                continue
+
+            nombre_val = str(row.get(nombre_col, "")).strip() if nombre_col else ""
+            if not nombre_val and " - " in cuenta_val:
+                parts = cuenta_val.split(" - ", 1)
+                cuenta_val = parts[0].strip()
+                nombre_val = parts[1].strip()
+
+            fecha_raw = row.get(fecha_col, "") if fecha_col else ""
+            if pd.isna(fecha_raw) or str(fecha_raw).strip() == "":
+                continue
+
+            try:
+                fecha = pd.to_datetime(fecha_raw).strftime("%d/%m/%Y")
+            except Exception:
+                fecha = str(fecha_raw).strip()
+
+            poliza = str(row.get(poliza_col, "")).strip() if poliza_col else ""
+            beneficiario = str(row.get(beneficiario_col, "")).strip() if beneficiario_col else ""
+            descripcion = str(row.get(descripcion_col, "")).strip() if descripcion_col else ""
+            op = str(row.get(op_col, "")).strip() if op_col else ""
+            saldo_inicial = str(row.get(saldo_inicial_col, "")).strip() if saldo_inicial_col else ""
+            cargos = str(row.get(cargos_col, "")).strip() if cargos_col else ""
+            abonos = str(row.get(abonos_col, "")).strip() if abonos_col else ""
+            saldo_final = str(row.get(saldo_final_col, "")).strip() if saldo_final_col else ""
+
+            records.append({
+                "cuenta_contable": cuenta_val,
+                "nombre_cuenta": nombre_val,
+                "fecha": fecha,
+                "poliza": poliza,
+                "beneficiario": beneficiario,
+                "descripcion": descripcion,
+                "orden_pago": op,
+                "saldo_inicial": saldo_inicial,
+                "cargos": cargos,
+                "abonos": abonos,
+                "saldo_final": saldo_final,
+            })
+
+        if not records:
+            return None
+
+        return pd.DataFrame(records)
+
+    for sheet in sheets:
+        try:
+            raw = pd.read_excel(xl, sheet_name=sheet, header=None, dtype=str)
+        except Exception:
+            continue
+        df = build_from_raw(raw)
+        if df is not None and not df.empty:
+            logger.info(f"✓ Extraídas {len(df)} transacciones macro de {filename}")
+            return df, filename
+
+    raw_xml = _read_xlsx_xml_to_dataframe(file_content)
+    if raw_xml is not None:
+        df = build_from_raw(raw_xml)
+        if df is not None and not df.empty:
+            logger.info(f"✓ Extraídas {len(df)} transacciones macro de {filename} (xml)")
+            return df, filename
+
+    logger.warning(f"No se encontraron transacciones macro válidas en {filename}")
+    return pd.DataFrame(), filename
+
+
 def process_files_to_database(
     file_list: List[Tuple[str, BytesIO]],
     usuario: str = "sistema",
-    progress_callback: Optional[Callable[[int, str], None]] = None
+    progress_callback: Optional[Callable[[int, str], None]] = None,
+    tipo_archivo: str = "auxiliar"
 ):
     """
     Procesa archivos Excel y guarda en base de datos
@@ -513,8 +750,9 @@ def process_files_to_database(
         archivos_procesados = []
         archivos_fallidos = []
 
+        reader = _read_one_excel_macro if tipo_archivo == "macro" else _read_one_excel
         with ThreadPoolExecutor(max_workers=min(4, len(file_list))) as ex:
-            futures = {ex.submit(_read_one_excel, f): f for f in file_list}
+            futures = {ex.submit(reader, f): f for f in file_list}
             for f in as_completed(futures):
                 try:
                     df, filename = f.result()
@@ -551,6 +789,26 @@ def process_files_to_database(
             raise ValueError(error_msg)
 
         base = pd.concat(frames, ignore_index=True)
+
+        base["poliza"] = base["poliza"].fillna("").astype(str).str.strip()
+        base["orden_pago"] = base["orden_pago"].fillna("").astype(str).str.strip()
+        invalid_op = {"", "n/a", "na", "n.d.", "nd", "none"}
+        base["orden_pago"] = base["orden_pago"].where(
+            ~base["orden_pago"].str.lower().isin(invalid_op),
+            ""
+        )
+
+        def _first_non_empty(series):
+            for value in series:
+                if value:
+                    return value
+            return ""
+
+        op_por_poliza = base.groupby("poliza")["orden_pago"].apply(_first_non_empty)
+        base["orden_pago"] = base["poliza"].map(op_por_poliza).where(
+            base["poliza"] != "",
+            base["orden_pago"]
+        )
 
         # Dividir cuenta contable
         report(30, "Procesando cuentas contables...")
