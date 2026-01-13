@@ -1,5 +1,5 @@
 /**
- * SIPAC - Sistema de Procesamiento de Auxiliares Contables
+ * SIIF - Sistema de Procesamiento de Auxiliares Contables
  * JavaScript principal
  */
 
@@ -335,7 +335,7 @@ function getFirstDayOfYear() {
 
 // Prevenir el submit de formularios por defecto si no se especifica lo contrario
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('SIPAC - Sistema de Procesamiento de Auxiliares Contables');
+    console.log('SIIF - Sistema de Procesamiento de Auxiliares Contables');
     console.log('JavaScript principal cargado correctamente');
 });
 

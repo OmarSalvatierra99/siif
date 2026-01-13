@@ -41,6 +41,54 @@ def create_app(config_name="default"):
     jobs = {}
     jobs_lock = threading.Lock()
 
+    stats_cache = {
+        "resumen": {"ts": 0, "data": None},
+        "dashboard": {"ts": 0, "data": None},
+    }
+    stats_cache_lock = threading.Lock()
+
+    def _invalidate_stats_cache():
+        with stats_cache_lock:
+            for key in stats_cache:
+                stats_cache[key]["ts"] = 0
+                stats_cache[key]["data"] = None
+
+    def _get_cached_stats(key, ttl, compute_fn):
+        now = time.time()
+        with stats_cache_lock:
+            cached = stats_cache.get(key)
+            if cached and cached["data"] is not None and (now - cached["ts"]) < ttl:
+                return cached["data"]
+
+        data = compute_fn()
+        with stats_cache_lock:
+            stats_cache[key] = {"ts": now, "data": data}
+        return data
+
+    def _get_example_files():
+        example_dir = Path("example")
+        if not example_dir.exists():
+            return []
+        files = []
+        for pattern in ("*.xlsx", "*.xls", "*.xlsm"):
+            files.extend(sorted(example_dir.glob(pattern)))
+        return files
+
+    def _get_loaded_archivos():
+        loaded = set()
+        for (archivos,) in db.session.query(LoteCarga.archivos).all():
+            if not archivos:
+                continue
+            for archivo in archivos:
+                if archivo:
+                    loaded.add(Path(archivo).name)
+
+        for (archivo_origen,) in db.session.query(Transaccion.archivo_origen).distinct().all():
+            if archivo_origen:
+                loaded.add(Path(archivo_origen).name)
+
+        return loaded
+
     # ==================== RUTAS PRINCIPALES ====================
 
     @app.route("/")
@@ -121,6 +169,7 @@ def create_app(config_name="default"):
                             jobs[job_id]["message"] = (
                                 f"✅ {total:,} registros guardados en BD"
                             )
+                        _invalidate_stats_cache()
 
                 except Exception as e:
                     with jobs_lock:
@@ -145,6 +194,103 @@ def create_app(config_name="default"):
                 ),
                 500,
             )
+
+    @app.route("/api/example/missing")
+    def example_missing():
+        try:
+            example_files = _get_example_files()
+            loaded = _get_loaded_archivos()
+
+            missing = [f.name for f in example_files if f.name not in loaded]
+
+            return jsonify({
+                "example_total": len(example_files),
+                "loaded_total": len(loaded),
+                "missing": missing,
+            })
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    @app.route("/api/example/process", methods=["POST"])
+    def process_example():
+        try:
+            include_loaded = request.args.get("include_loaded", "false").lower() in (
+                "1",
+                "true",
+                "yes",
+            )
+            usuario = "sistema"
+            if request.is_json:
+                usuario = request.json.get("usuario", usuario)
+            else:
+                usuario = request.form.get("usuario", usuario)
+
+            example_files = _get_example_files()
+            if not example_files:
+                return jsonify({"error": "No hay archivos en example/"}), 400
+
+            loaded = _get_loaded_archivos()
+            files_to_process = [
+                f for f in example_files if include_loaded or f.name not in loaded
+            ]
+
+            if not files_to_process:
+                return jsonify({"message": "No hay archivos pendientes por cargar"}), 200
+
+            files_in_memory = []
+            for path in files_to_process:
+                with path.open("rb") as handle:
+                    files_in_memory.append((path.name, io.BytesIO(handle.read())))
+
+            job_id = str(uuid.uuid4())
+            with jobs_lock:
+                jobs[job_id] = {
+                    "progress": 0,
+                    "message": "Iniciando...",
+                    "done": False,
+                    "error": None,
+                    "lote_id": None,
+                    "total_registros": 0,
+                }
+
+            def progress_callback(pct, msg):
+                with jobs_lock:
+                    if job_id in jobs:
+                        jobs[job_id]["progress"] = pct
+                        jobs[job_id]["message"] = msg
+
+            def process_files():
+                try:
+                    with app.app_context():
+                        lote_id, total = process_files_to_database(
+                            files_in_memory, usuario, progress_callback
+                        )
+
+                        with jobs_lock:
+                            jobs[job_id]["lote_id"] = lote_id
+                            jobs[job_id]["total_registros"] = total
+                            jobs[job_id]["done"] = True
+                            jobs[job_id]["progress"] = 100
+                            jobs[job_id]["message"] = (
+                                f"✅ {total:,} registros guardados en BD"
+                            )
+
+                except Exception as e:
+                    with jobs_lock:
+                        jobs[job_id]["error"] = str(e)
+                        jobs[job_id]["done"] = True
+
+            thread = threading.Thread(target=process_files)
+            thread.daemon = True
+            thread.start()
+
+            return jsonify({
+                "job_id": job_id,
+                "archivos": [p.name for p in files_to_process],
+            })
+
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
     # ==================== STREAM DE PROGRESO ====================
 
@@ -200,6 +346,11 @@ def create_app(config_name="default"):
         try:
             page = request.args.get("page", 1, type=int)
             per_page = request.args.get("per_page", 50, type=int)
+            include_totals = request.args.get("include_totals", "false").lower() in (
+                "1",
+                "true",
+                "yes",
+            )
             base_query = Transaccion.query
 
             def apply_filters(filtered_query):
@@ -255,22 +406,27 @@ def create_app(config_name="default"):
             query = base_query.order_by(Transaccion.fecha_transaccion.desc())
             paginated = query.paginate(page=page, per_page=per_page, error_out=False)
 
-            totales = base_query.with_entities(
-                func.coalesce(func.sum(Transaccion.cargos), 0),
-                func.coalesce(func.sum(Transaccion.abonos), 0),
-            ).first()
-            total_cargos = float(totales[0] or 0)
-            total_abonos = float(totales[1] or 0)
-
-            return jsonify({
+            response_payload = {
                 "transacciones": [t.to_dict() for t in paginated.items],
                 "total": paginated.total,
                 "pages": paginated.pages,
                 "page": page,
-                "total_cargos": total_cargos,
-                "total_abonos": total_abonos,
-                "total_diferencia": total_cargos - total_abonos,
-            })
+            }
+
+            if include_totals:
+                totales = base_query.with_entities(
+                    func.coalesce(func.sum(Transaccion.cargos), 0),
+                    func.coalesce(func.sum(Transaccion.abonos), 0),
+                ).first()
+                total_cargos = float(totales[0] or 0)
+                total_abonos = float(totales[1] or 0)
+                response_payload.update({
+                    "total_cargos": total_cargos,
+                    "total_abonos": total_abonos,
+                    "total_diferencia": total_cargos - total_abonos,
+                })
+
+            return jsonify(response_payload)
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
@@ -287,25 +443,29 @@ def create_app(config_name="default"):
     @app.route("/api/transacciones/resumen")
     def get_transacciones_resumen():
         try:
-            totales = db.session.query(
-                func.count(Transaccion.id),
-                func.coalesce(func.sum(Transaccion.cargos), 0),
-                func.coalesce(func.sum(Transaccion.abonos), 0),
-            ).first()
+            def compute_resumen():
+                totales = db.session.query(
+                    func.count(Transaccion.id),
+                    func.coalesce(func.sum(Transaccion.cargos), 0),
+                    func.coalesce(func.sum(Transaccion.abonos), 0),
+                ).first()
 
-            total_registros = int(totales[0] or 0)
-            total_cargos = float(totales[1] or 0)
-            total_abonos = float(totales[2] or 0)
-            diferencia = total_cargos - total_abonos
-            coincide = abs(diferencia) < 0.005
+                total_registros = int(totales[0] or 0)
+                total_cargos = float(totales[1] or 0)
+                total_abonos = float(totales[2] or 0)
+                diferencia = total_cargos - total_abonos
+                coincide = abs(diferencia) < 0.005
 
-            return jsonify({
-                "total_registros": total_registros,
-                "total_cargos": total_cargos,
-                "total_abonos": total_abonos,
-                "diferencia": diferencia,
-                "coincide": coincide,
-            })
+                return {
+                    "total_registros": total_registros,
+                    "total_cargos": total_cargos,
+                    "total_abonos": total_abonos,
+                    "diferencia": diferencia,
+                    "coincide": coincide,
+                }
+
+            payload = _get_cached_stats("resumen", 30, compute_resumen)
+            return jsonify(payload)
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
@@ -409,45 +569,50 @@ def create_app(config_name="default"):
     @app.route("/api/dashboard/stats")
     def dashboard_stats():
         try:
-            total_transacciones = db.session.query(func.count(Transaccion.id)).scalar()
-            total_cuentas = db.session.query(
-                func.count(func.distinct(Transaccion.cuenta_contable))
-            ).scalar()
-            total_dependencias = db.session.query(
-                func.count(func.distinct(Transaccion.dependencia))
-            ).scalar()
+            def compute_dashboard():
+                stats = db.session.query(
+                    func.count(Transaccion.id),
+                    func.count(func.distinct(Transaccion.cuenta_contable)),
+                    func.count(func.distinct(Transaccion.dependencia)),
+                    func.coalesce(func.sum(Transaccion.cargos), 0),
+                    func.coalesce(func.sum(Transaccion.abonos), 0),
+                ).first()
 
-            suma_cargos = db.session.query(func.sum(Transaccion.cargos)).scalar() or 0
-            suma_abonos = db.session.query(func.sum(Transaccion.abonos)).scalar() or 0
+                total_transacciones = int(stats[0] or 0)
+                total_cuentas = int(stats[1] or 0)
+                total_dependencias = int(stats[2] or 0)
+                suma_cargos = float(stats[3] or 0)
+                suma_abonos = float(stats[4] or 0)
 
-            ultimos_lotes = (
-                LoteCarga.query.order_by(LoteCarga.fecha_carga.desc()).limit(5).all()
-            )
-
-            transacciones_mes = (
-                db.session.query(
-                    func.date_trunc("month", Transaccion.fecha_transaccion).label("mes"),
-                    func.count(Transaccion.id).label("total"),
+                ultimos_lotes = (
+                    LoteCarga.query.order_by(LoteCarga.fecha_carga.desc()).limit(5).all()
                 )
-                .group_by("mes")
-                .order_by("mes")
-                .all()
-            )
 
-            return jsonify(
-                {
+                transacciones_mes = (
+                    db.session.query(
+                        func.date_trunc("month", Transaccion.fecha_transaccion).label("mes"),
+                        func.count(Transaccion.id).label("total"),
+                    )
+                    .group_by("mes")
+                    .order_by("mes")
+                    .all()
+                )
+
+                return {
                     "total_transacciones": total_transacciones,
                     "total_cuentas": total_cuentas,
                     "total_dependencias": total_dependencias,
-                    "suma_cargos": float(suma_cargos),
-                    "suma_abonos": float(suma_abonos),
+                    "suma_cargos": suma_cargos,
+                    "suma_abonos": suma_abonos,
                     "ultimos_lotes": [l.to_dict() for l in ultimos_lotes],
                     "transacciones_mes": [
                         {"mes": str(mes), "total": total}
                         for mes, total in transacciones_mes
                     ],
                 }
-            )
+
+            payload = _get_cached_stats("dashboard", 30, compute_dashboard)
+            return jsonify(payload)
         except Exception as e:
             print(f"❌ Error en dashboard/stats: {str(e)}")
             return (
@@ -557,7 +722,7 @@ if __name__ == "__main__":
     app = create_app("development")
 
     print("\n" + "=" * 50)
-    print("SIPAC - Sistema de Procesamiento de Auxiliares Contables")
+    print("SIIF - Sistema de Procesamiento de Auxiliares Contables")
     print("=" * 50)
     print(f"✓ Servidor iniciado en puerto {config['development'].PORT}")
     print("\nPáginas disponibles:")

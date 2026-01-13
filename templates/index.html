@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Carga de Datos - SIPAC{% endblock %}
+{% block title %}Carga de Datos - SIIF{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -8,6 +8,42 @@
         max-width: 900px;
         margin: 0 auto;
         padding: 3rem 2rem;
+    }
+
+    .tab-header {
+        display: flex;
+        gap: 0.75rem;
+        background: var(--background);
+        padding: 0.5rem;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        margin-bottom: 2rem;
+    }
+
+    .tab-btn {
+        flex: 1;
+        border: none;
+        background: transparent;
+        padding: 0.75rem 1rem;
+        border-radius: 999px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+        background: var(--primary);
+        color: #fff;
+        box-shadow: 0 8px 16px rgba(15, 61, 62, 0.2);
+    }
+
+    .tab-panel {
+        display: none;
+    }
+
+    .tab-panel.active {
+        display: block;
     }
 
     .upload-card {
@@ -117,6 +153,47 @@
         margin-bottom: 2rem;
     }
 
+    .summary-card {
+        background: var(--surface);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        padding: 1.5rem 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        gap: 1rem;
+    }
+
+    .summary-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.35rem;
+    }
+
+    .summary-subtitle {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    .summary-count {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--primary);
+        min-width: 60px;
+        text-align: right;
+    }
+
+    .empty-state {
+        background: var(--background);
+        border-radius: 10px;
+        padding: 1.25rem;
+        text-align: center;
+        color: var(--text-secondary);
+        border: 1px dashed var(--border);
+    }
+
     .progress-section {
         background: var(--surface);
         border-radius: 8px;
@@ -188,39 +265,65 @@
 
 {% block content %}
 <div class="container">
-    <div class="upload-card" id="uploadArea">
-        <div class="upload-icon">📂</div>
-        <div class="upload-title">Selecciona archivos Excel</div>
-        <div class="upload-subtitle">Arrastra archivos aquí o haz clic para seleccionar (.xlsx, .xls)</div>
-        <input type="file" id="fileInput" accept=".xlsx,.xls" multiple>
+    <div class="tab-header">
+        <button class="tab-btn active" data-tab="upload">Archivos Excel</button>
+        <button class="tab-btn" data-tab="process">Procesar archivos Excel</button>
     </div>
 
-    <div class="file-list" id="fileList"></div>
-
-    <div class="action-buttons">
-        <button class="btn btn-outline" id="btnClear" style="display:none;" onclick="clearFiles()">
-            Limpiar
-        </button>
-        <button class="btn btn-primary" id="btnProcess" disabled onclick="processFiles()">
-            Procesar Archivos
-        </button>
-    </div>
-
-    <div class="alert alert-success" id="successAlert">
-        <h4>✓ Procesamiento Completado</h4>
-        <p id="successMessage"></p>
-    </div>
-
-    <div class="alert alert-error" id="errorAlert">
-        <h4>✗ Error</h4>
-        <p id="errorMessage"></p>
-    </div>
-
-    <div class="progress-section" id="progressSection">
-        <div class="progress-bar-container">
-            <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+    <div class="tab-panel active" id="tab-upload">
+        <div class="upload-card" id="uploadArea">
+            <div class="upload-icon">📂</div>
+            <div class="upload-title">Selecciona archivos Excel</div>
+            <div class="upload-subtitle">Arrastra archivos aquí o haz clic para seleccionar (.xlsx, .xls)</div>
+            <input type="file" id="fileInput" accept=".xlsx,.xls" multiple>
         </div>
-        <div class="progress-text" id="progressText">Procesando...</div>
+
+        <div class="file-list" id="fileListUpload"></div>
+
+        <div class="action-buttons">
+            <button class="btn btn-outline" id="btnClear" style="display:none;" onclick="clearFiles()">
+                Limpiar
+            </button>
+            <button class="btn btn-primary" id="btnToProcess" disabled>
+                Ir a Procesar
+            </button>
+        </div>
+    </div>
+
+    <div class="tab-panel" id="tab-process">
+        <div class="summary-card">
+            <div>
+                <div class="summary-title">Archivos listos para procesar</div>
+                <div class="summary-subtitle" id="summaryText">Agrega archivos en la pestaña Archivos Excel.</div>
+            </div>
+            <div class="summary-count" id="summaryCount">0</div>
+        </div>
+
+        <div class="file-list" id="fileListProcess"></div>
+
+        <div class="action-buttons">
+            <button class="btn btn-outline" id="btnBack">Volver</button>
+            <button class="btn btn-primary" id="btnProcess" disabled onclick="processFiles()">
+                Procesar Archivos
+            </button>
+        </div>
+
+        <div class="alert alert-success" id="successAlert">
+            <h4>✓ Procesamiento Completado</h4>
+            <p id="successMessage"></p>
+        </div>
+
+        <div class="alert alert-error" id="errorAlert">
+            <h4>✗ Error</h4>
+            <p id="errorMessage"></p>
+        </div>
+
+        <div class="progress-section" id="progressSection">
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+            </div>
+            <div class="progress-text" id="progressText">Procesando...</div>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -229,11 +332,16 @@
 <script>
 let selectedFiles = [];
 
+const tabButtons = document.querySelectorAll('.tab-btn');
+const tabPanels = document.querySelectorAll('.tab-panel');
 const uploadArea = document.getElementById('uploadArea');
 const fileInput = document.getElementById('fileInput');
-const fileList = document.getElementById('fileList');
+const fileListUpload = document.getElementById('fileListUpload');
+const fileListProcess = document.getElementById('fileListProcess');
 const btnProcess = document.getElementById('btnProcess');
 const btnClear = document.getElementById('btnClear');
+const btnToProcess = document.getElementById('btnToProcess');
+const btnBack = document.getElementById('btnBack');
 const progressSection = document.getElementById('progressSection');
 const progressBar = document.getElementById('progressBar');
 const progressText = document.getElementById('progressText');
@@ -241,8 +349,14 @@ const successAlert = document.getElementById('successAlert');
 const errorAlert = document.getElementById('errorAlert');
 const successMessage = document.getElementById('successMessage');
 const errorMessage = document.getElementById('errorMessage');
+const summaryCount = document.getElementById('summaryCount');
+const summaryText = document.getElementById('summaryText');
 
 // Event listeners
+tabButtons.forEach(button => {
+    button.addEventListener('click', () => setActiveTab(button.dataset.tab));
+});
+
 uploadArea.addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', (e) => handleFiles(Array.from(e.target.files)));
 
@@ -261,25 +375,37 @@ uploadArea.addEventListener('drop', (e) => {
     handleFiles(Array.from(e.dataTransfer.files));
 });
 
+btnToProcess.addEventListener('click', () => setActiveTab('process'));
+btnBack.addEventListener('click', () => setActiveTab('upload'));
+
+function setActiveTab(tabId) {
+    tabButtons.forEach(button => {
+        button.classList.toggle('active', button.dataset.tab === tabId);
+    });
+
+    tabPanels.forEach(panel => {
+        panel.classList.toggle('active', panel.id === `tab-${tabId}`);
+    });
+}
+
 function handleFiles(files) {
     const excelFiles = files.filter(f =>
         f.name.endsWith('.xlsx') || f.name.endsWith('.xls')
     );
     selectedFiles = [...selectedFiles, ...excelFiles];
-    renderFileList();
+    renderFileLists();
 }
 
-function renderFileList() {
-    fileList.innerHTML = '';
+function renderFileList(listElement, emptyMessage) {
+    listElement.innerHTML = '';
 
     if (selectedFiles.length === 0) {
-        btnProcess.disabled = true;
-        btnClear.style.display = 'none';
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.textContent = emptyMessage;
+        listElement.appendChild(empty);
         return;
     }
-
-    btnProcess.disabled = false;
-    btnClear.style.display = 'inline-flex';
 
     selectedFiles.forEach((file, index) => {
         const item = document.createElement('div');
@@ -296,19 +422,26 @@ function renderFileList() {
                 ✕
             </button>
         `;
-        fileList.appendChild(item);
+        listElement.appendChild(item);
     });
+}
+
+function renderFileLists() {
+    renderFileList(fileListUpload, 'No hay archivos cargados todavía.');
+    renderFileList(fileListProcess, 'Agrega archivos en la pestaña Archivos Excel.');
+    updateSummary();
+    updateButtons();
 }
 
 function removeFile(index) {
     selectedFiles.splice(index, 1);
-    renderFileList();
+    renderFileLists();
 }
 
 function clearFiles() {
     selectedFiles = [];
     fileInput.value = '';
-    renderFileList();
+    renderFileLists();
     hideAlerts();
 }
 
@@ -392,10 +525,31 @@ function hideAlerts() {
     errorAlert.classList.remove('active');
 }
 
+function updateSummary() {
+    summaryCount.textContent = selectedFiles.length;
+
+    if (selectedFiles.length === 0) {
+        summaryText.textContent = 'Agrega archivos en la pestaña Archivos Excel.';
+        return;
+    }
+
+    const totalBytes = selectedFiles.reduce((sum, file) => sum + file.size, 0);
+    summaryText.textContent = `${formatFileSize(totalBytes)} en total`;
+}
+
+function updateButtons() {
+    const hasFiles = selectedFiles.length > 0;
+    btnProcess.disabled = !hasFiles;
+    btnToProcess.disabled = !hasFiles;
+    btnClear.style.display = hasFiles ? 'inline-flex' : 'none';
+}
+
 function formatFileSize(bytes) {
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
 }
+
+renderFileLists();
 </script>
 {% endblock %}

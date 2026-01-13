@@ -2,7 +2,7 @@
 
 {% block title %}Dashboard{% endblock %}
 
-{% block header_title %}SIPAC - Dashboard{% endblock %}
+{% block header_title %}SIIF - Dashboard{% endblock %}
 
 {% block nav_links %}
 <a href="/" style="color: white; margin-right: 1rem;">Cargar Archivos</a>
@@ -166,6 +166,7 @@ async function cargarTransacciones(page = 1) {
         const params = new URLSearchParams({
             page: page,
             per_page: 50,
+            include_totals: 0,
             ...filtrosActuales
         });
 

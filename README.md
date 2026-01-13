@@ -1,6 +1,6 @@
 # SIIF
 
-Aplicación Flask para carga y consulta de auxiliares contables (SIIF/SIPAC).
+Aplicación Flask para carga y consulta de auxiliares contables (SIIF).
 
 ## Requisitos
 - Python 3.10+
@@ -12,7 +12,7 @@ Aplicación Flask para carga y consulta de auxiliares contables (SIIF/SIPAC).
 2. Instala dependencias:
    `pip install -r requirements.txt`
 3. Exporta variables de entorno mínimas:
-   `export DATABASE_URL=postgresql://sipac_user:sipac_password@localhost:5432/sipac_db`
+   `export DATABASE_URL=postgresql://siif_user:siif_password@localhost:5432/siif_db`
    `export SECRET_KEY=dev`
 4. Ejecuta:
    `python app.py`

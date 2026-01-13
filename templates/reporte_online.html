@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Consultar Transacciones - SIPAC{% endblock %}
+{% block title %}Consultar Transacciones - SIIF{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -670,12 +670,17 @@ let registrosPorPagina = 100;
 let totalPaginas = 0;
 let filtrosActuales = {};
 let vistaCompacta = true;
+let totalsKey = null;
 
 async function cargarTransacciones() {
     try {
+        const filtrosKey = JSON.stringify(filtrosActuales || {});
+        const includeTotals = totalsKey !== filtrosKey;
+
         const params = new URLSearchParams({
             page: paginaActual,
             per_page: registrosPorPagina,
+            include_totals: includeTotals ? 1 : 0,
             ...filtrosActuales
         });
 
@@ -686,6 +691,9 @@ async function cargarTransacciones() {
         renderizarTabla(data.transacciones);
         actualizarEstadisticas(data);
         actualizarPaginacion();
+        if (includeTotals) {
+            totalsKey = filtrosKey;
+        }
 
         document.getElementById('loading').style.display = 'none';
         document.getElementById('tableContainer').style.display = 'block';
@@ -754,11 +762,13 @@ function renderizarTabla(transacciones) {
 function actualizarEstadisticas(data) {
     document.getElementById('totalRegistros').textContent = (data.total || 0).toLocaleString('es-MX');
 
-    const totalCargos = parseFloat(data.total_cargos || 0);
-    const totalAbonos = parseFloat(data.total_abonos || 0);
+    if (data.total_cargos !== undefined && data.total_abonos !== undefined) {
+        const totalCargos = parseFloat(data.total_cargos || 0);
+        const totalAbonos = parseFloat(data.total_abonos || 0);
 
-    document.getElementById('totalCargos').textContent = formatCurrency(totalCargos);
-    document.getElementById('totalAbonos').textContent = formatCurrency(totalAbonos);
+        document.getElementById('totalCargos').textContent = formatCurrency(totalCargos);
+        document.getElementById('totalAbonos').textContent = formatCurrency(totalAbonos);
+    }
 
     const total = data.total || 0;
     const inicio = total === 0 ? 0 : (paginaActual - 1) * registrosPorPagina + 1;
@@ -782,6 +792,8 @@ function cambiarPagina(delta) {
 
 function aplicarFiltros() {
     filtrosActuales = {};
+    totalsKey = null;
+    paginaActual = 1;
 
     const cuenta = document.getElementById('filtroCuenta').value.trim();
     if (cuenta) filtrosActuales.cuenta_contable = cuenta;
