@@ -1,0 +1,426 @@
+{% extends "base.html" %}
+
+{% block title %}Catálogo de Fuentes de Financiamiento - SIIF{% endblock %}
+
+{% block extra_css %}
+<style>
+    .catalogo-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        background: var(--color-surface);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-md);
+        padding: 2rem;
+    }
+
+    .header-flex {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--color-primary);
+    }
+
+    .header-flex h2 {
+        color: var(--color-primary);
+        font-size: 1.8rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .header-flex .subtitle {
+        color: var(--color-muted);
+        font-size: 0.95rem;
+    }
+
+    .search-section {
+        background: #f8fafc;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        padding: 1.2rem;
+        margin-bottom: 2rem;
+    }
+
+    .filter-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .chip {
+        padding: 0.45rem 1rem;
+        border-radius: 999px;
+        border: 1px solid var(--color-border);
+        background: white;
+        color: var(--color-muted);
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: var(--transition);
+    }
+
+    .chip.active {
+        background: var(--color-primary);
+        color: white;
+        border-color: var(--color-primary);
+    }
+
+    .search-box {
+        position: relative;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 3rem;
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        font-size: 0.95rem;
+        transition: var(--transition);
+        background: white;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: var(--color-accent);
+        box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--color-muted);
+        font-size: 1.25rem;
+    }
+
+    .stats-bar {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+        padding: 1rem 1.5rem;
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border-radius: var(--radius);
+        border: 1px solid #bfdbfe;
+        justify-content: center;
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-label {
+        display: block;
+        font-size: 0.8rem;
+        color: var(--color-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.3rem;
+    }
+
+    .stat-value {
+        display: block;
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: var(--color-primary);
+    }
+
+    .table-wrapper {
+        background: white;
+        border-radius: var(--radius);
+        border: 1px solid var(--color-border);
+        overflow: hidden;
+    }
+
+    .table-scroll {
+        overflow-x: auto;
+    }
+
+    .tabla-resultados {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+
+    .tabla-resultados th {
+        background: var(--color-primary);
+        color: white;
+        padding: 1rem 0.75rem;
+        text-align: left;
+        font-weight: 600;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .tabla-resultados td {
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    .tabla-resultados tr:hover {
+        background: #f8fafc;
+    }
+
+    .no-results {
+        padding: 2rem;
+        text-align: center;
+        color: var(--color-muted);
+    }
+
+    .loading {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--color-muted);
+    }
+
+    @media (max-width: 768px) {
+        .catalogo-container {
+            padding: 1rem;
+        }
+        .tabla-resultados th,
+        .tabla-resultados td {
+            font-size: 0.8rem;
+            padding: 0.5rem;
+        }
+        .stats-bar {
+            flex-wrap: wrap;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="catalogo-container">
+    <div class="header-flex">
+        <h2>Catálogo de Fuentes de Financiamiento</h2>
+        <span class="subtitle">Consulta de claves, descripciones y fondos asociados</span>
+    </div>
+
+    <div class="search-section">
+        <div class="filter-chips">
+            <button class="chip active" data-ramo="TODOS" onclick="filtrarPorRamo('TODOS')">
+                📋 Todos
+            </button>
+            <button class="chip" data-ramo="CON_RAMO" onclick="filtrarPorRamo('CON_RAMO')">
+                🧾 Con Ramo Federal
+            </button>
+            <button class="chip" data-ramo="SIN_RAMO" onclick="filtrarPorRamo('SIN_RAMO')">
+                🚫 Sin Ramo Federal
+            </button>
+        </div>
+        <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input
+                type="text"
+                class="search-input"
+                id="searchInput"
+                placeholder="Buscar por FF, fuente, descripción, alfa o fondo..."
+                autocomplete="off"
+            >
+        </div>
+    </div>
+
+    <div class="stats-bar">
+        <div class="stat-item">
+            <span class="stat-label">Total</span>
+            <span class="stat-value" id="totalFuentes">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Con Ramo</span>
+            <span class="stat-value" id="totalConRamo">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Sin Ramo</span>
+            <span class="stat-value" id="totalSinRamo">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Mostrando</span>
+            <span class="stat-value" id="mostrandoFuentes">0</span>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Cargando catálogo...</p>
+        </div>
+        <div class="table-scroll" id="tableContainer" style="display: none;">
+            <table class="tabla-resultados">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>FF</th>
+                        <th>Fuente de Financiamiento</th>
+                        <th>ID</th>
+                        <th>Alfa</th>
+                        <th>Descripción</th>
+                        <th>Ramo Federal</th>
+                        <th>Fondo de Ingreso</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaBody">
+                </tbody>
+            </table>
+        </div>
+        <div id="noResults" class="no-results" style="display: none;">
+            <p class="msg-vacio">No se encontraron registros en el catálogo de fuentes.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let todasLasFuentes = [];
+let fuentesFiltradas = [];
+let ramoActual = 'TODOS';
+
+async function cargarFuentes() {
+    try {
+        const response = await fetch('/api/fuentes');
+        const data = await response.json();
+
+        todasLasFuentes = data.fuentes || [];
+        fuentesFiltradas = [...todasLasFuentes];
+
+        actualizarEstadisticas();
+        renderizarTabla();
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('tableContainer').style.display = 'block';
+    } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('loading').innerHTML = `
+            <div class="no-results">
+                <p class="msg-vacio">⚠️ Error al cargar el catálogo</p>
+            </div>
+        `;
+    }
+}
+
+function formatValue(value) {
+    if (value === null || value === undefined || value === '') {
+        return '-';
+    }
+    if (typeof value === 'number') {
+        return Number.isInteger(value) ? value.toString() : value.toString();
+    }
+    return value;
+}
+
+function tieneRamo(valor) {
+    if (valor === null || valor === undefined || valor === '') {
+        return false;
+    }
+    if (typeof valor === 'number') {
+        return valor !== 0;
+    }
+    const str = String(valor).trim();
+    return str !== '' && str !== '0';
+}
+
+function renderizarTabla() {
+    const tbody = document.getElementById('tablaBody');
+    const noResults = document.getElementById('noResults');
+    const tableContainer = document.getElementById('tableContainer');
+
+    tbody.innerHTML = '';
+
+    if (fuentesFiltradas.length === 0) {
+        tableContainer.style.display = 'none';
+        noResults.style.display = 'block';
+        return;
+    }
+
+    tableContainer.style.display = 'block';
+    noResults.style.display = 'none';
+
+    const fragment = document.createDocumentFragment();
+
+    fuentesFiltradas.forEach((fuente, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><strong>${index + 1}</strong></td>
+            <td><strong>${formatValue(fuente.ff)}</strong></td>
+            <td>${formatValue(fuente.fuente)}</td>
+            <td>${formatValue(fuente.id_fuente)}</td>
+            <td>${formatValue(fuente.alfa)}</td>
+            <td>${formatValue(fuente.descripcion)}</td>
+            <td>${formatValue(fuente.ramo_federal)}</td>
+            <td>${formatValue(fuente.fondo_ingreso)}</td>
+        `;
+        fragment.appendChild(row);
+    });
+
+    tbody.appendChild(fragment);
+    actualizarEstadisticas();
+}
+
+function filtrarPorRamo(ramo) {
+    ramoActual = ramo;
+
+    document.querySelectorAll('.chip').forEach(chip => {
+        chip.classList.remove('active');
+        if (chip.dataset.ramo === ramo) {
+            chip.classList.add('active');
+        }
+    });
+
+    aplicarFiltros();
+}
+
+function aplicarFiltros() {
+    const busqueda = document.getElementById('searchInput').value.toLowerCase().trim();
+
+    let resultado = todasLasFuentes;
+    if (ramoActual === 'CON_RAMO') {
+        resultado = resultado.filter(item => tieneRamo(item.ramo_federal));
+    } else if (ramoActual === 'SIN_RAMO') {
+        resultado = resultado.filter(item => !tieneRamo(item.ramo_federal));
+    }
+
+    if (busqueda) {
+        resultado = resultado.filter(item => {
+            return (
+                String(item.ff || '').toLowerCase().includes(busqueda) ||
+                String(item.fuente || '').toLowerCase().includes(busqueda) ||
+                String(item.descripcion || '').toLowerCase().includes(busqueda) ||
+                String(item.alfa || '').toLowerCase().includes(busqueda) ||
+                String(item.fondo_ingreso || '').toLowerCase().includes(busqueda) ||
+                String(item.id_fuente || '').toLowerCase().includes(busqueda)
+            );
+        });
+    }
+
+    fuentesFiltradas = resultado;
+    renderizarTabla();
+}
+
+function actualizarEstadisticas() {
+    const totalConRamo = todasLasFuentes.filter(item => tieneRamo(item.ramo_federal)).length;
+    const totalSinRamo = todasLasFuentes.length - totalConRamo;
+
+    document.getElementById('totalFuentes').textContent = todasLasFuentes.length;
+    document.getElementById('totalConRamo').textContent = totalConRamo;
+    document.getElementById('totalSinRamo').textContent = totalSinRamo;
+    document.getElementById('mostrandoFuentes').textContent = fuentesFiltradas.length;
+}
+
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+document.getElementById('searchInput').addEventListener('input',
+    debounce(() => aplicarFiltros(), 300)
+);
+
+window.addEventListener('DOMContentLoaded', cargarFuentes);
+</script>
+{% endblock %}

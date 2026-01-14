@@ -107,6 +107,10 @@ def create_app(config_name="default"):
     def catalogo_entes():
         return render_template("catalogo_entes.html")
 
+    @app.route("/catalogo-fuentes")
+    def catalogo_fuentes():
+        return render_template("catalogo_fuentes.html")
+
     # ==================== API DE CARGA ====================
 
     @app.route("/api/process", methods=["POST"])
@@ -712,6 +716,45 @@ def create_app(config_name="default"):
             return jsonify({"success": True})
         except Exception as e:
             db.session.rollback()
+            return jsonify({"error": str(e)}), 500
+
+    # ==================== API CATÁLOGO DE FUENTES ====================
+
+    @app.route("/api/fuentes")
+    def get_fuentes():
+        try:
+            catalogo_path = Path(app.root_path) / "catalogos" / "Fuentes_de_Financiamientos.xlsx"
+            if not catalogo_path.exists():
+                return jsonify({"error": "No se encontró el archivo de catálogo"}), 404
+
+            df = pd.read_excel(catalogo_path)
+            df = df.rename(columns={
+                "FF": "ff",
+                "FUENTE DE FINANCIAMIENTO": "fuente",
+                "ID": "id_fuente",
+                "ALFA": "alfa",
+                "DESCRIPCION": "descripcion",
+                "RAMO FEDERAL": "ramo_federal",
+                "FONDO DE INGRESO": "fondo_ingreso",
+            })
+            df = df[
+                [
+                    "ff",
+                    "fuente",
+                    "id_fuente",
+                    "alfa",
+                    "descripcion",
+                    "ramo_federal",
+                    "fondo_ingreso",
+                ]
+            ]
+            df = df.astype(object).where(pd.notna(df), None)
+
+            return jsonify({
+                "fuentes": df.to_dict(orient="records"),
+                "total": len(df),
+            })
+        except Exception as e:
             return jsonify({"error": str(e)}), 500
 
     # ==================== ERRORES ====================
