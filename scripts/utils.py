@@ -1,6 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from io import BytesIO
+import hashlib
 import zipfile
 import xml.etree.ElementTree as ET
 from typing import Callable, List, Optional, Tuple
@@ -61,6 +62,7 @@ class Transaccion(db.Model):
     cargos = db.Column(db.Numeric(15, 2), default=0)
     abonos = db.Column(db.Numeric(15, 2), default=0)
     saldo_final = db.Column(db.Numeric(15, 2), default=0)
+    hash_registro = db.Column(db.String(64), unique=True, index=True)
 
     # Índices compuestos para consultas comunes
     __table_args__ = (
@@ -254,6 +256,52 @@ def _to_numeric_fast(s):
         s.astype(str).str.replace(r"[^\d\.-]", "", regex=True),
         errors="coerce"
     ).fillna(0.0)
+
+
+def _format_amount(val):
+    try:
+        return f"{float(val):.2f}"
+    except Exception:
+        return "0.00"
+
+
+def _hash_transaccion_row(row):
+    # Exclude saldo fields since they are recalculated and can differ across sources.
+    parts = [
+        _norm(row.get("cuenta_contable")),
+        _norm(row.get("nombre_cuenta")),
+        _norm(row.get("genero")),
+        _norm(row.get("grupo")),
+        _norm(row.get("rubro")),
+        _norm(row.get("cuenta")),
+        _norm(row.get("subcuenta")),
+        _norm(row.get("dependencia")),
+        _norm(row.get("unidad_responsable")),
+        _norm(row.get("centro_costo")),
+        _norm(row.get("proyecto_presupuestario")),
+        _norm(row.get("fuente")),
+        _norm(row.get("subfuente")),
+        _norm(row.get("tipo_recurso")),
+        _norm(row.get("partida_presupuestal")),
+        _norm(row.get("poliza")),
+        _norm(row.get("beneficiario")),
+        _norm(row.get("descripcion")),
+        _norm(row.get("orden_pago")),
+        _format_amount(row.get("cargos")),
+        _format_amount(row.get("abonos")),
+    ]
+
+    fecha = row.get("fecha_transaccion")
+    if pd.isna(fecha):
+        parts.append("")
+    else:
+        try:
+            parts.append(fecha.strftime("%Y-%m-%d"))
+        except Exception:
+            parts.append(str(fecha))
+
+    fingerprint = "|".join(parts).encode("utf-8")
+    return hashlib.sha256(fingerprint).hexdigest()
 
 
 def _read_one_excel(file_data):
@@ -863,6 +911,36 @@ def process_files_to_database(
             base["fecha"], format="%d/%m/%Y", errors="coerce"
         )
 
+        # Generar hash por registro para evitar duplicados
+        report(70, "Generando firmas de registros...")
+        base["hash_registro"] = base.apply(_hash_transaccion_row, axis=1)
+
+        total_before_dedupe = len(base)
+        base = base.drop_duplicates(subset=["hash_registro"])
+
+        existing_hashes = set()
+        hash_list = base["hash_registro"].dropna().unique().tolist()
+        for i in range(0, len(hash_list), 900):
+            batch = hash_list[i:i + 900]
+            existing_hashes.update(
+                h for (h,) in db.session.query(Transaccion.hash_registro)
+                .filter(Transaccion.hash_registro.in_(batch))
+                .all()
+            )
+
+        if existing_hashes:
+            base = base[~base["hash_registro"].isin(existing_hashes)]
+
+        skipped_duplicates = total_before_dedupe - len(base)
+
+        if base.empty:
+            lote.total_registros = 0
+            lote.estado = 'completado'
+            lote.mensaje = "No se insertaron registros nuevos (todos duplicados)."
+            db.session.commit()
+            report(100, "✅ No se insertaron registros nuevos (todos duplicados).")
+            return lote_id, 0
+
         # Insertar en base de datos en lotes
         report(80, f"Insertando {len(base):,} registros en base de datos...")
         logger.info(f"Iniciando inserción de {len(base)} registros en lotes de {1000}")
@@ -902,7 +980,8 @@ def process_files_to_database(
                     saldo_inicial=row['saldo_inicial'],
                     cargos=row['cargos'],
                     abonos=row['abonos'],
-                    saldo_final=row['saldo_final']
+                    saldo_final=row['saldo_final'],
+                    hash_registro=row['hash_registro']
                 )
                 transacciones.append(trans)
 
@@ -927,7 +1006,15 @@ def process_files_to_database(
         # Actualizar lote
         lote.total_registros = len(base)
         lote.estado = 'completado'
-        lote.mensaje = f'Procesados {len(base):,} registros de {len(archivos_procesados)} archivos'
+        if skipped_duplicates:
+            lote.mensaje = (
+                f'Procesados {len(base):,} registros nuevos de {len(archivos_procesados)} archivos '
+                f'({skipped_duplicates:,} duplicados omitidos)'
+            )
+        else:
+            lote.mensaje = (
+                f'Procesados {len(base):,} registros de {len(archivos_procesados)} archivos'
+            )
         db.session.commit()
 
         report(100, f"✅ Completado: {len(base):,} registros insertados en BD")
