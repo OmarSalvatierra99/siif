@@ -318,8 +318,8 @@
             <table class="tabla-resultados">
                 <thead>
                     <tr>
-                        <th>#</th>
                         <th>Clave</th>
+                        <th>DD</th>
                         <th>Nombre</th>
                         <th>Siglas</th>
                         <th>Ámbito</th>
@@ -391,8 +391,8 @@ function renderizarTabla() {
         const ambitoBadge = getAmbitoBadgeClass(ente.ambito);
 
         row.innerHTML = `
-            <td><strong>${index + 1}</strong></td>
             <td><strong>${ente.codigo || '-'}</strong></td>
+            <td><strong>${ente.dd || '-'}</strong></td>
             <td>${ente.nombre}</td>
             <td><strong>${ente.siglas || '-'}</strong></td>
             <td><span class="badge ${ambitoBadge}">${ente.ambito || '-'}</span></td>
@@ -463,6 +463,7 @@ function aplicarFiltros() {
                 ente.nombre.toLowerCase().includes(busqueda) ||
                 ente.clave.toLowerCase().includes(busqueda) ||
                 (ente.codigo && ente.codigo.toLowerCase().includes(busqueda)) ||
+                (ente.dd && ente.dd.toLowerCase().includes(busqueda)) ||
                 (ente.siglas && ente.siglas.toLowerCase().includes(busqueda)) ||
                 (ente.tipo && ente.tipo.toLowerCase().includes(busqueda))
             );

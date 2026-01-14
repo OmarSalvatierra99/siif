@@ -1,13 +1,13 @@
 from flask import Flask, render_template, request, jsonify, Response, send_file, session
 from flask_cors import CORS
-import io, os, time, json, threading, uuid, logging
+import io, os, time, json, threading, uuid, logging, re
 from pathlib import Path
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
 from config import config
 from scripts.utils import db, Transaccion, LoteCarga, Usuario, ReporteGenerado, Ente
 from scripts.utils import process_files_to_database
-from sqlalchemy import func, and_, or_
+from sqlalchemy import func, and_, or_, inspect, text
 import pandas as pd
 
 
@@ -32,6 +32,133 @@ def create_app(config_name="default"):
         try:
             db.create_all()
             print("✓ Base de datos conectada")
+
+            def _normalize_nombre(value):
+                s = str(value or "").strip().lower()
+                rep = {"á": "a", "é": "e", "í": "i", "ó": "o", "ú": "u", "ü": "u", "ñ": "n"}
+                for k, v in rep.items():
+                    s = s.replace(k, v)
+                s = re.sub(r"\s+", " ", s)
+                return s
+
+            def _ensure_entes_dd_column():
+                inspector = inspect(db.engine)
+                if "entes" not in inspector.get_table_names():
+                    return
+                columns = {col["name"] for col in inspector.get_columns("entes")}
+                if "dd" in columns:
+                    return
+                db.session.execute(text("ALTER TABLE entes ADD COLUMN dd VARCHAR(10)"))
+                db.session.commit()
+
+            def _seed_entes_dd():
+                dd_rules = [
+                    (_normalize_nombre("PODER LEGISLATIVO DEL ESTADO DE TLAXCALA"), "01"),
+                    (_normalize_nombre("PODER JUDICIAL DEL ESTADO DE TLAXCALA"), "02"),
+                    (_normalize_nombre("UNIVERSIDAD AUTÓNOMA DE TLAXCALA"), "3"),
+                    (_normalize_nombre("DESPACHO DE LA GOBERNADORA"), "4"),
+                    (_normalize_nombre("SECRETARÍA DE GOBIERNO"), "5"),
+                    (_normalize_nombre("OFICIALÍA MAYOR DE GOBIERNO"), "6"),
+                    (_normalize_nombre("SECRETARÍA DE FINANZAS"), "8"),
+                    (_normalize_nombre("SECRETARÍA DE DESARROLLO ECONÓMICO"), "0B"),
+                    (_normalize_nombre("SECRETARÍA DE TURISMO"), "0C"),
+                    (_normalize_nombre("SECRETARÍA DE INFRAESTRUCTURA"), "0D"),
+                    (_normalize_nombre("SECRETARÍA DE EDUCACIÓN PÚBLICA"), "0E"),
+                    (_normalize_nombre("SECRETARÍA DE MOVILIDAD Y TRANSPORTE"), "0F"),
+                    (_normalize_nombre("O.P.D SALUD DE TLAXCALA"), "0G"),
+                    (_normalize_nombre("SECRETARÍA ANTICORRUPCIÓN Y BUEN GOBIERNO"), "0H"),
+                    (_normalize_nombre("SECRETARÍA DE IMPULSO AGROPECUARIO"), "0I"),
+                    (_normalize_nombre("COORDINACIÓN DE COMUNICACIÓN"), "0K"),
+                    (_normalize_nombre("SECRETARÍA DE MEDIO AMBIENTE"), "0L"),
+                    (_normalize_nombre("COMISIÓN ESTATAL DE DERECHOS HUMANOS"), "0N"),
+                    (_normalize_nombre("INSTITUTO TLAXCALTECA DE ELECCIONES"), "0O"),
+                    (_normalize_nombre("COORDINACIÓN ESTATAL DE PROTECCIÓN CIVIL"), "0P"),
+                    (_normalize_nombre("CONSEJO ESTATAL DE POBLACIÓN"), "0Q"),
+                    (_normalize_nombre("SECRETARIADO EJECUTIVO DEL SISTEMA ESTATAL DE SEGURIDAD PÚBLICA"), "0R"),
+                    (_normalize_nombre("EL COLEGIO DE TLAXCALA A.C."), "1A"),
+                    (_normalize_nombre("CENTRO DE CONCILIACIÓN LABORAL DEL ESTADO DE TLAXCALA"), "20"),
+                    (_normalize_nombre("SECRETARÍA DE BIENESTAR"), "21"),
+                    (_normalize_nombre("SECRETARÍA DE TRABAJO Y COMPETITIVIDAD"), "22"),
+                    (_normalize_nombre("MUNICIPIOS"), "0A"),
+                    (_normalize_nombre("TRIBUNAL DE JUSTICIA ADMINISTRATIVA"), "23"),
+                    (_normalize_nombre("PROCURADURÍA DE PROTECCIÓN AL AMBIENTE DEL ESTADO DE TLAXCALA"), "24"),
+                    (_normalize_nombre("COMISIÓN ESTATAL DEL AGUA Y SANEAMIENTO DEL ESTADO DE TLAXCALA"), "25"),
+                    (_normalize_nombre("INSTITUTO DE FAUNA SILVESTRE PARA EL ESTADO DE TLAXCALA"), "26"),
+                    (_normalize_nombre("UNIVERSIDAD INTERCULTURAL DE TLAXCALA"), "27"),
+                    (_normalize_nombre("ARCHIVO GENERAL E HISTÓRICO DEL ESTADO DE TLAXCALA"), "28"),
+                    (_normalize_nombre("FISCALÍA GENERAL DE JUSTICIA DEL ESTADO DE TLAXCALA"), "2A"),
+                    (_normalize_nombre("CONSEJERÍA JURÍDICA DEL EJECUTIVO"), "2B"),
+                    (_normalize_nombre("ALL MUNICIPIOS"), "0A"),
+                ]
+                dd_siglas_map = {
+                    _normalize_nombre("CORACYT"): "0X",
+                    _normalize_nombre("COLTLAX"): "1A",
+                    _normalize_nombre("CEAVIT"): "1H",
+                    _normalize_nombre("FOMTLAX"): "0W",
+                    _normalize_nombre("ICATLAX"): "1K",
+                    _normalize_nombre("ITST"): "16",
+                    _normalize_nombre("ITIFE"): "14",
+                    _normalize_nombre("SFP"): "0H",
+                    _normalize_nombre("UPT"): "15",
+                    _normalize_nombre("SMET"): "1C",
+                    _normalize_nombre("SOTyV"): "1Q",
+                    _normalize_nombre("SSC"): "1R",
+                    _normalize_nombre("CGPI"): "1Y",
+                    _normalize_nombre("ITDT"): "0Y",
+                    _normalize_nombre("ITAES"): "1F",
+                    _normalize_nombre("CEAM"): "1G",
+                    _normalize_nombre("CAT"): "1X",
+                    _normalize_nombre("ITJ"): "1I",
+                    _normalize_nombre("ITEA"): "18",
+                    _normalize_nombre("OPD"): "0G",
+                    _normalize_nombre("SEDIF"): "1D",
+                    _normalize_nombre("USET"): "1M",
+                    _normalize_nombre("UTT"): "17",
+                    _normalize_nombre("TCyA"): "1P",
+                    _normalize_nombre("SESAET"): "1Z",
+                    _normalize_nombre("COBAT"): "13",
+                    _normalize_nombre("CECYTE"): "12",
+                    _normalize_nombre("IDET"): "10",
+                    _normalize_nombre("FIDECIX"): "0U",
+                    _normalize_nombre("IDC"): "0S",
+                    _normalize_nombre("SECRETARÍA DE CULTURA"): "0Z",
+                    _normalize_nombre("OPD_SALUD"): "06",
+                    _normalize_nombre("UPTREP"): "1U",
+                    _normalize_nombre("TET"): "1W",
+                    _normalize_nombre("IAIP"): "1O",
+                    _normalize_nombre("CONALEP"): "1N",
+                    _normalize_nombre("CRI-ESCUELA"): "06",
+                    _normalize_nombre("SC"): "0Z",
+                    _normalize_nombre("LA_LIBERTAD"): "0Z",
+                    _normalize_nombre("PCET"): "06",
+                }
+                entes = Ente.query.all()
+                changed = False
+                for ente in entes:
+                    normalized_nombre = _normalize_nombre(ente.nombre)
+                    dd = None
+                    for needle, dd_value in dd_rules:
+                        if needle and needle in normalized_nombre:
+                            dd = dd_value
+                            break
+                    if not dd and ente.ambito and ente.ambito.strip().upper() == "MUNICIPAL":
+                        dd = "0A"
+                    if not dd and ente.siglas:
+                        dd = dd_siglas_map.get(_normalize_nombre(ente.siglas))
+                    if dd and len(dd) == 1 and dd.isdigit():
+                        dd = dd.zfill(2)
+                    if not dd and ente.dd:
+                        current_dd = str(ente.dd).strip()
+                        if len(current_dd) == 1 and current_dd.isdigit():
+                            dd = current_dd.zfill(2)
+                    if dd and ente.dd != dd:
+                        ente.dd = dd
+                        changed = True
+                if changed:
+                    db.session.commit()
+
+            _ensure_entes_dd_column()
+            _seed_entes_dd()
         except Exception as e:
             print(f"❌ Error al conectar con la base de datos: {str(e)}")
             print(f"   Verifica: DATABASE_URL en .env")
@@ -677,6 +804,7 @@ def create_app(config_name="default"):
             ente = Ente(
                 clave=data['clave'],
                 codigo=data['codigo'],
+                dd=data.get('dd', ''),
                 nombre=data['nombre'],
                 siglas=data.get('siglas', ''),
                 tipo=data.get('tipo', ''),
@@ -700,6 +828,7 @@ def create_app(config_name="default"):
             ente.siglas = data.get('siglas', ente.siglas)
             ente.tipo = data.get('tipo', ente.tipo)
             ente.ambito = data.get('ambito', ente.ambito)
+            ente.dd = data.get('dd', ente.dd)
 
             db.session.commit()
             return jsonify({"success": True, "ente": ente.to_dict()})

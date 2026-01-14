@@ -189,6 +189,7 @@ class Ente(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     clave = db.Column(db.String(20), unique=True, nullable=False, index=True)
     codigo = db.Column(db.String(50), nullable=False)
+    dd = db.Column(db.String(10))
     nombre = db.Column(db.String(255), nullable=False)
     siglas = db.Column(db.String(50))
     tipo = db.Column(db.String(100))
@@ -201,6 +202,7 @@ class Ente(db.Model):
             'id': self.id,
             'clave': self.clave,
             'codigo': self.codigo,
+            'dd': self.dd,
             'nombre': self.nombre,
             'siglas': self.siglas,
             'tipo': self.tipo,

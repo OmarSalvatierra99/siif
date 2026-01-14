@@ -247,7 +247,6 @@
             <table class="tabla-resultados">
                 <thead>
                     <tr>
-                        <th>#</th>
                         <th>FF</th>
                         <th>Fuente de Financiamiento</th>
                         <th>ID</th>
@@ -339,7 +338,6 @@ function renderizarTabla() {
     fuentesFiltradas.forEach((fuente, index) => {
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td><strong>${index + 1}</strong></td>
             <td><strong>${formatValue(fuente.ff)}</strong></td>
             <td>${formatValue(fuente.fuente)}</td>
             <td>${formatValue(fuente.id_fuente)}</td>
