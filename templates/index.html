@@ -555,7 +555,19 @@ async function processFiles() {
             body: formData
         });
 
-        const data = await response.json();
+        const contentType = response.headers.get('content-type') || '';
+        let data = null;
+        if (contentType.includes('application/json')) {
+            data = await response.json();
+        } else {
+            const text = await response.text();
+            const preview = text.replace(/\s+/g, ' ').slice(0, 160);
+            throw new Error(
+                preview
+                    ? `Respuesta inesperada del servidor: ${preview}`
+                    : 'Respuesta inesperada del servidor'
+            );
+        }
 
         if (!response.ok) {
             let message = data.error || 'Error al iniciar el procesamiento';

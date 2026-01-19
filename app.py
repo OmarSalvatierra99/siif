@@ -905,6 +905,20 @@ def create_app(config_name="default"):
             404,
         )
 
+    @app.errorhandler(405)
+    def method_not_allowed(e):
+        return (
+            jsonify(
+                {
+                    "error": "Método no permitido",
+                    "detalle": str(e.description)
+                    if hasattr(e, "description")
+                    else "Método no permitido",
+                }
+            ),
+            405,
+        )
+
     @app.errorhandler(500)
     def internal_error(e):
         print(f"❌ Error 500: {str(e)}")
