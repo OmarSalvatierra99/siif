@@ -114,6 +114,7 @@ class LoteCarga(db.Model):
     fecha_carga = db.Column(db.DateTime, default=datetime.utcnow)
     usuario = db.Column(db.String(100))
     archivos = db.Column(db.JSON)  # Lista de archivos procesados
+    tipo_archivo = db.Column(db.String(20))
     total_registros = db.Column(db.Integer, default=0)
     estado = db.Column(db.String(20), default='procesando')  # procesando, completado, error
     mensaje = db.Column(db.Text)
@@ -125,6 +126,7 @@ class LoteCarga(db.Model):
             'fecha_carga': self.fecha_carga.isoformat() if self.fecha_carga else None,
             'usuario': self.usuario,
             'archivos': self.archivos,
+            'tipo_archivo': self.tipo_archivo,
             'total_registros': self.total_registros,
             'estado': self.estado,
             'mensaje': self.mensaje
@@ -775,9 +777,9 @@ def process_files_to_database(
     Procesa archivos Excel y guarda en base de datos
     Retorna el lote_id para tracking
     """
-    def report(p, m):
+    def report(p, m, current_file=None):
         if progress_callback:
-            progress_callback(p, m)
+            progress_callback(p, m, current_file)
         else:
             print(f"[{p}%] {m}")
 
@@ -788,6 +790,7 @@ def process_files_to_database(
         lote_id=lote_id,
         usuario=usuario,
         archivos=[f[0] for f in file_list],
+        tipo_archivo=tipo_archivo,
         estado='procesando'
     )
     db.session.add(lote)
@@ -799,11 +802,14 @@ def process_files_to_database(
         frames = []
         archivos_procesados = []
         archivos_fallidos = []
+        total_files = len(file_list)
+        completed_files = 0
 
         reader = _read_one_excel_macro if tipo_archivo == "macro" else _read_one_excel
         with ThreadPoolExecutor(max_workers=min(4, len(file_list))) as ex:
             futures = {ex.submit(reader, f): f for f in file_list}
             for f in as_completed(futures):
+                completed_files += 1
                 try:
                     df, filename = f.result()
                     if not df.empty:
@@ -811,9 +817,13 @@ def process_files_to_database(
                         frames.append(df)
                         archivos_procesados.append(filename)
                         logger.info(f"Archivo procesado exitosamente: {filename}")
+                        progress_pct = 5 + int((completed_files / total_files) * 20)
+                        report(progress_pct, f"Archivo procesado: {filename}", filename)
                     else:
                         archivos_fallidos.append(filename)
                         logger.warning(f"Archivo no generó registros: {filename}")
+                        progress_pct = 5 + int((completed_files / total_files) * 20)
+                        report(progress_pct, f"Archivo sin registros: {filename}", filename)
                 except Exception as e:
                     file_info = futures[f]
                     logger.error(
@@ -821,6 +831,8 @@ def process_files_to_database(
                     )
                     logger.error(f"Traceback: {traceback.format_exc()}")
                     archivos_fallidos.append(file_info[0])
+                    progress_pct = 5 + int((completed_files / total_files) * 20)
+                    report(progress_pct, f"Error en archivo: {file_info[0]}", file_info[0])
                     continue
 
         logger.info(

@@ -276,10 +276,122 @@
         border-radius: 9999px;
     }
 
-    .progress-text {
-        text-align: center;
+    .progress-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .progress-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .progress-subtitle {
         font-size: 0.875rem;
         color: var(--text-secondary);
+        margin-top: 0.35rem;
+    }
+
+    .progress-percent {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--primary);
+    }
+
+    .progress-meta {
+        margin-top: 0.75rem;
+        padding: 0.85rem 1rem;
+        border-radius: 10px;
+        background: var(--background);
+        border: 1px dashed var(--border);
+    }
+
+    .progress-file-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-secondary);
+        margin-bottom: 0.35rem;
+    }
+
+    .progress-file {
+        font-size: 0.9rem;
+        color: var(--text-primary);
+        font-weight: 600;
+        word-break: break-word;
+    }
+
+    .processed-card {
+        background: var(--surface);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        padding: 1.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .processed-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .processed-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .processed-subtitle {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin-top: 0.35rem;
+    }
+
+    .processed-table {
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+    }
+
+    .processed-row {
+        display: grid;
+        grid-template-columns: 1.4fr 1fr;
+        gap: 1rem;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--border);
+        align-items: center;
+        font-size: 0.9rem;
+        color: var(--text-primary);
+    }
+
+    .processed-row:last-child {
+        border-bottom: none;
+    }
+
+    .processed-head {
+        background: var(--background);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-secondary);
+        font-weight: 600;
+    }
+
+    .processed-empty {
+        margin-top: 0.85rem;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    .btn-small {
+        padding: 0.45rem 1rem;
+        font-size: 0.8rem;
     }
 
     .alert {
@@ -420,10 +532,44 @@
     </div>
 
     <div class="progress-section" id="progressSection">
+        <div class="progress-header">
+            <div>
+                <div class="progress-title">Procesando archivos</div>
+                <div class="progress-subtitle" id="progressMessage">Preparando carga...</div>
+            </div>
+            <div class="progress-percent" id="progressPercent">0%</div>
+        </div>
         <div class="progress-bar-container">
             <div class="progress-bar" id="progressBar" style="width: 0%"></div>
         </div>
-        <div class="progress-text" id="progressText">Procesando...</div>
+        <div class="progress-meta">
+            <div class="progress-file-label">Archivo actual</div>
+            <div class="progress-file" id="progressFile">—</div>
+        </div>
+    </div>
+
+    <div class="processed-card">
+        <div class="processed-header">
+            <div>
+                <div class="processed-title">Archivos procesados</div>
+                <div class="processed-subtitle">
+                    Listado de archivos cargados y el metodo de procesamiento.
+                </div>
+            </div>
+            <button class="btn btn-outline btn-small" id="btnRefreshProcessed" type="button">
+                Actualizar
+            </button>
+        </div>
+        <div class="processed-table">
+            <div class="processed-row processed-head">
+                <div>Archivo</div>
+                <div>Metodo</div>
+            </div>
+            <div id="processedTableBody"></div>
+        </div>
+        <div class="processed-empty" id="processedEmpty">
+            Aun no hay archivos procesados.
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -440,7 +586,9 @@ const btnProcess = document.getElementById('btnProcess');
 const btnClear = document.getElementById('btnClear');
 const progressSection = document.getElementById('progressSection');
 const progressBar = document.getElementById('progressBar');
-const progressText = document.getElementById('progressText');
+const progressMessage = document.getElementById('progressMessage');
+const progressPercent = document.getElementById('progressPercent');
+const progressFile = document.getElementById('progressFile');
 const successAlert = document.getElementById('successAlert');
 const warningAlert = document.getElementById('warningAlert');
 const errorAlert = document.getElementById('errorAlert');
@@ -451,6 +599,9 @@ const summaryCount = document.getElementById('summaryCount');
 const summaryText = document.getElementById('summaryText');
 const fileTypeInputs = document.querySelectorAll('input[name="fileType"]');
 const fileTypeHint = document.getElementById('fileTypeHint');
+const processedTableBody = document.getElementById('processedTableBody');
+const processedEmpty = document.getElementById('processedEmpty');
+const btnRefreshProcessed = document.getElementById('btnRefreshProcessed');
 
 let selectedFileType = 'auxiliar';
 
@@ -478,6 +629,10 @@ fileTypeInputs.forEach(input => {
         updateFileTypeHint();
         updateSummary();
     });
+});
+
+btnRefreshProcessed.addEventListener('click', () => {
+    loadProcessedFiles();
 });
 
 function handleFiles(files) {
@@ -537,17 +692,18 @@ function clearFiles() {
     hideAlerts();
 }
 
-async function processFiles() {
+async function processFiles(force = false) {
     if (selectedFiles.length === 0) return;
 
     btnProcess.disabled = true;
     hideAlerts();
     progressSection.classList.add('active');
-    updateProgress(0, 'Iniciando procesamiento...');
+    updateProgress(0, 'Iniciando procesamiento...', null);
 
     const formData = new FormData();
     selectedFiles.forEach(file => formData.append('archivo', file));
     formData.append('tipo_archivo', selectedFileType);
+    formData.append('allow_duplicates', force ? 'true' : 'false');
 
     try {
         const response = await fetch('/api/process', {
@@ -570,6 +726,23 @@ async function processFiles() {
         }
 
         if (!response.ok) {
+            if (
+                response.status === 409 &&
+                data &&
+                Array.isArray(data.duplicate_files) &&
+                data.duplicate_files.length
+            ) {
+                const shouldRetry = confirm(
+                    `Estos archivos ya fueron procesados: ${data.duplicate_files.join(', ')}. ` +
+                    '¿Deseas reprocesarlos de todos modos?'
+                );
+                progressSection.classList.remove('active');
+                btnProcess.disabled = false;
+                if (shouldRetry) {
+                    return processFiles(true);
+                }
+                return;
+            }
             let message = data.error || 'Error al iniciar el procesamiento';
             if (data.duplicate_files && data.duplicate_files.length) {
                 message += ` Archivos: ${data.duplicate_files.join(', ')}`;
@@ -581,7 +754,10 @@ async function processFiles() {
         }
 
         if (data.duplicate_files && data.duplicate_files.length) {
-            showWarning(`Estos archivos ya habían sido procesados y se omitieron: ${data.duplicate_files.join(', ')}`);
+            const warningLabel = force
+                ? 'Reprocesando archivos ya cargados'
+                : 'Estos archivos ya habían sido procesados y se omitieron';
+            showWarning(`${warningLabel}: ${data.duplicate_files.join(', ')}`);
         }
         monitorProgress(data.job_id);
     } catch (error) {
@@ -593,18 +769,22 @@ async function processFiles() {
 
 function monitorProgress(jobId) {
     const eventSource = new EventSource(`/api/progress/${jobId}`);
+    let finished = false;
 
     eventSource.onmessage = (event) => {
         const data = JSON.parse(event.data);
 
-        updateProgress(data.progress, data.message);
+        updateProgress(data.progress, data.message, data.current_file);
 
         if (data.done && !data.error) {
+            finished = true;
             eventSource.close();
             progressSection.classList.remove('active');
             showSuccess(`Se procesaron ${(data.total_registros || 0).toLocaleString('es-MX')} registros correctamente`);
             clearFiles();
+            loadProcessedFiles();
         } else if (data.error) {
+            finished = true;
             eventSource.close();
             progressSection.classList.remove('active');
             showError(data.error);
@@ -613,6 +793,9 @@ function monitorProgress(jobId) {
     };
 
     eventSource.onerror = () => {
+        if (finished) {
+            return;
+        }
         eventSource.close();
         progressSection.classList.remove('active');
         showError('Error de conexión con el servidor');
@@ -620,9 +803,11 @@ function monitorProgress(jobId) {
     };
 }
 
-function updateProgress(percent, message) {
+function updateProgress(percent, message, currentFile) {
     progressBar.style.width = percent + '%';
-    progressText.textContent = message;
+    progressMessage.textContent = message;
+    progressPercent.textContent = `${Math.round(percent)}%`;
+    progressFile.textContent = currentFile || '—';
 }
 
 function showSuccess(message) {
@@ -662,6 +847,57 @@ function updateSummary() {
     summaryText.textContent = `${formatFileSize(totalBytes)} en total · ${tipoLabel}`;
 }
 
+function formatMetodo(tipo) {
+    if (tipo === 'macro') return 'Macro SIIF';
+    if (tipo === 'auxiliar') return 'Auxiliar contable';
+    return 'Auxiliar contable';
+}
+
+function renderProcessedFiles(items) {
+    processedTableBody.innerHTML = '';
+    if (!items.length) {
+        processedEmpty.textContent = 'Aun no hay archivos procesados.';
+        processedEmpty.style.display = 'block';
+        return;
+    }
+
+    processedEmpty.style.display = 'none';
+    const fragment = document.createDocumentFragment();
+    items.forEach((item) => {
+        const row = document.createElement('div');
+        row.className = 'processed-row';
+
+        const archivo = document.createElement('div');
+        archivo.textContent = item.archivo || '—';
+
+        const metodo = document.createElement('div');
+        metodo.textContent = formatMetodo(item.tipo_archivo);
+
+        row.appendChild(archivo);
+        row.appendChild(metodo);
+        fragment.appendChild(row);
+    });
+    processedTableBody.appendChild(fragment);
+}
+
+async function loadProcessedFiles() {
+    processedEmpty.textContent = 'Cargando archivos procesados...';
+    processedEmpty.style.display = 'block';
+    try {
+        const response = await fetch('/api/archivos-procesados');
+        if (!response.ok) {
+            throw new Error('No se pudieron cargar los archivos procesados');
+        }
+        const data = await response.json();
+        const items = Array.isArray(data.archivos) ? data.archivos : [];
+        renderProcessedFiles(items);
+    } catch (error) {
+        processedTableBody.innerHTML = '';
+        processedEmpty.textContent = 'No se pudo cargar la lista de archivos procesados.';
+        processedEmpty.style.display = 'block';
+    }
+}
+
 function updateFileTypeHint() {
     fileTypeHint.textContent = selectedFileType === 'macro'
         ? 'Estructura generada desde la macro SIIF.'
@@ -682,5 +918,6 @@ function formatFileSize(bytes) {
 
 renderFileLists();
 updateFileTypeHint();
+loadProcessedFiles();
 </script>
 {% endblock %}

@@ -51,6 +51,18 @@ def create_app(config_name="default"):
                 db.session.execute(text("ALTER TABLE entes ADD COLUMN dd VARCHAR(10)"))
                 db.session.commit()
 
+            def _ensure_lotes_tipo_archivo_column():
+                inspector = inspect(db.engine)
+                if "lotes_carga" not in inspector.get_table_names():
+                    return
+                columns = {col["name"] for col in inspector.get_columns("lotes_carga")}
+                if "tipo_archivo" in columns:
+                    return
+                db.session.execute(
+                    text("ALTER TABLE lotes_carga ADD COLUMN tipo_archivo VARCHAR(20)")
+                )
+                db.session.commit()
+
             def _seed_entes_dd():
                 dd_rules = [
                     (_normalize_nombre("PODER LEGISLATIVO DEL ESTADO DE TLAXCALA"), "01"),
@@ -158,6 +170,7 @@ def create_app(config_name="default"):
                     db.session.commit()
 
             _ensure_entes_dd_column()
+            _ensure_lotes_tipo_archivo_column()
             _seed_entes_dd()
         except Exception as e:
             print(f"❌ Error al conectar con la base de datos: {str(e)}")
@@ -246,6 +259,11 @@ def create_app(config_name="default"):
             files = request.files.getlist("archivo")
             usuario = request.form.get("usuario", "sistema")
             tipo_archivo = request.form.get("tipo_archivo", "auxiliar").lower()
+            allow_duplicates = request.form.get("allow_duplicates", "false").lower() in (
+                "1",
+                "true",
+                "yes",
+            )
 
             if tipo_archivo not in {"auxiliar", "macro"}:
                 return jsonify({"error": "Tipo de archivo no válido"}), 400
@@ -276,11 +294,13 @@ def create_app(config_name="default"):
                 else:
                     files_to_process.append(f)
 
-            if duplicates and not files_to_process:
+            if duplicates and not files_to_process and not allow_duplicates:
                 return jsonify({
                     "error": "Estos archivos ya fueron procesados anteriormente.",
                     "duplicate_files": duplicates,
                 }), 409
+            if allow_duplicates:
+                files_to_process = valid_files
 
             job_id = str(uuid.uuid4())
             with jobs_lock:
@@ -289,15 +309,18 @@ def create_app(config_name="default"):
                     "message": "Iniciando...",
                     "done": False,
                     "error": None,
+                    "current_file": None,
                     "lote_id": None,
                     "total_registros": 0,
                 }
 
-            def progress_callback(pct, msg):
+            def progress_callback(pct, msg, current_file=None):
                 with jobs_lock:
                     if job_id in jobs:
                         jobs[job_id]["progress"] = pct
                         jobs[job_id]["message"] = msg
+                        if current_file is not None:
+                            jobs[job_id]["current_file"] = current_file
 
             files_in_memory = []
             for f in files_to_process:
@@ -406,15 +429,18 @@ def create_app(config_name="default"):
                     "message": "Iniciando...",
                     "done": False,
                     "error": None,
+                    "current_file": None,
                     "lote_id": None,
                     "total_registros": 0,
                 }
 
-            def progress_callback(pct, msg):
+            def progress_callback(pct, msg, current_file=None):
                 with jobs_lock:
                     if job_id in jobs:
                         jobs[job_id]["progress"] = pct
                         jobs[job_id]["message"] = msg
+                        if current_file is not None:
+                            jobs[job_id]["current_file"] = current_file
 
             def process_files():
                 try:
@@ -474,6 +500,7 @@ def create_app(config_name="default"):
                 message = job.get("message", "")
                 done = job.get("done", False)
                 error = job.get("error", None)
+                current_file = job.get("current_file")
                 lote_id = job.get("lote_id")
                 total_registros = job.get("total_registros", 0)
 
@@ -483,6 +510,7 @@ def create_app(config_name="default"):
                         "message": message,
                         "done": done,
                         "error": error,
+                        "current_file": current_file,
                         "lote_id": lote_id,
                         "total_registros": total_registros,
                     }
@@ -495,6 +523,56 @@ def create_app(config_name="default"):
                 time.sleep(0.2)
 
         return Response(generate(), mimetype="text/event-stream")
+
+    @app.route("/api/archivos-procesados")
+    def archivos_procesados():
+        try:
+            lotes = LoteCarga.query.order_by(LoteCarga.fecha_carga.desc()).all()
+            archivos = []
+            archivos_map = {}
+            for lote in lotes:
+                tipo_archivo = getattr(lote, "tipo_archivo", None)
+                if not lote.archivos:
+                    continue
+                for archivo in lote.archivos:
+                    if not archivo:
+                        continue
+                    nombre = Path(archivo).name
+                    if nombre in archivos_map:
+                        continue
+                    payload = {
+                        "archivo": nombre,
+                        "tipo_archivo": tipo_archivo,
+                        "fecha_carga": (
+                            lote.fecha_carga.isoformat() if lote.fecha_carga else None
+                        ),
+                        "lote_id": lote.lote_id,
+                    }
+                    archivos_map[nombre] = payload
+                    archivos.append(payload)
+
+            loaded = _get_loaded_archivos()
+            for example_file in _get_example_files():
+                nombre = example_file.name
+                if nombre not in loaded or nombre in archivos_map:
+                    continue
+                archivos.append({
+                    "archivo": nombre,
+                    "tipo_archivo": "auxiliar",
+                    "fecha_carga": None,
+                    "lote_id": None,
+                })
+            return jsonify({"archivos": archivos})
+        except Exception as e:
+            return (
+                jsonify(
+                    {
+                        "error": "Error al obtener archivos procesados",
+                        "detalle": str(e),
+                    }
+                ),
+                500,
+            )
 
     # ==================== API DE CONSULTAS ====================
 
