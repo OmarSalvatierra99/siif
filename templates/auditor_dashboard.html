@@ -124,6 +124,10 @@
         <button id="btnFirstPage" onclick="irAPagina(1)">Primera</button>
         <button id="btnPrevPage" onclick="cambiarPagina(-1)">Anterior</button>
         <span class="pagination-info" id="paginationInfo">Página 1 de 1</span>
+        <div class="page-jump">
+            <input type="number" id="pageInput" min="1" inputmode="numeric" aria-label="Ir a la página">
+            <button type="button" onclick="irAPaginaIngresada()">Ir</button>
+        </div>
         <button id="btnNextPage" onclick="cambiarPagina(1)">Siguiente</button>
         <button id="btnLastPage" onclick="irAPagina('last')">Última</button>
     </div>
@@ -139,6 +143,14 @@ const registrosPorPagina = 20;
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
+    const pageInput = document.getElementById('pageInput');
+    if (pageInput) {
+        pageInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                irAPaginaIngresada();
+            }
+        });
+    }
     cargarDatos();
 });
 
@@ -415,6 +427,12 @@ function actualizarPaginacion(data) {
     document.getElementById('btnPrevPage').disabled = paginaActual === 1;
     document.getElementById('btnNextPage').disabled = paginaActual >= totalPaginas;
     document.getElementById('btnLastPage').disabled = paginaActual >= totalPaginas;
+    const pageInput = document.getElementById('pageInput');
+    if (pageInput) {
+        pageInput.max = totalPaginas;
+        pageInput.value = paginaActual;
+        pageInput.disabled = totalPaginas <= 1;
+    }
     document.getElementById('paginationControls').style.display = 'flex';
 }
 
@@ -435,6 +453,24 @@ function irAPagina(pagina) {
     }
     cargarDatos();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function irAPaginaIngresada() {
+    const pageInput = document.getElementById('pageInput');
+    if (!pageInput) return;
+    const pageValue = parseInt(pageInput.value, 10);
+    if (Number.isNaN(pageValue)) {
+        pageInput.value = paginaActual;
+        return;
+    }
+    const target = Math.min(Math.max(pageValue, 1), totalPaginas);
+    if (target !== paginaActual) {
+        paginaActual = target;
+        cargarDatos();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+        pageInput.value = paginaActual;
+    }
 }
 
 // Export functions

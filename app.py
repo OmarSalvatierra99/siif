@@ -1,19 +1,49 @@
-from flask import Flask, render_template, request, jsonify, Response, send_file, session
+from flask import Flask, render_template, request, jsonify, Response, send_file, session, redirect, url_for
 from flask_cors import CORS
 import io, os, time, json, threading, uuid, logging, re
 from pathlib import Path
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
+from werkzeug.security import check_password_hash
 from config import config
 from scripts.utils import db, Transaccion, LoteCarga, Usuario, ReporteGenerado, Ente
 from scripts.utils import process_files_to_database
 from sqlalchemy import func, and_, or_, inspect, text
 import pandas as pd
 
+LOGIN_USERNAME = "luis"
+LOGIN_PASSWORD_HASH = (
+    "scrypt:32768:8:1$OFdKr01lIdNYcYKb$8c7de1ee6cae23d50b4697936bc47ac25102ce3f245e4544360bb2009d1d174438b388d3dbb6ef07182762c6680eabbc191aa1d4ce4c3a8fc9b1b0c3a516954b"
+)
+
 
 def create_app(config_name="default"):
     app = Flask(__name__)
     app.config.from_object(config[config_name])
+
+    def _is_authenticated():
+        return session.get("auth_user") == LOGIN_USERNAME
+
+    def _safe_next_url(raw_url):
+        url = (raw_url or "").strip()
+        if not url.startswith("/") or url.startswith("//"):
+            return ""
+        return url
+
+    @app.before_request
+    def require_login():
+        if request.method == "OPTIONS":
+            return None
+        if request.endpoint in {"login", "logout", "static"}:
+            return None
+        if request.path.startswith("/static/") or request.endpoint is None:
+            return None
+        if _is_authenticated():
+            return None
+        if request.path.startswith("/api/"):
+            return jsonify({"error": "Sesión requerida"}), 401
+        next_url = request.full_path.rstrip("?")
+        return redirect(url_for("login", next=next_url))
 
     # Configurar logging
     log_dir = Path('log')
@@ -204,6 +234,33 @@ def create_app(config_name="default"):
         with stats_cache_lock:
             stats_cache[key] = {"ts": now, "data": data}
         return data
+
+    @app.route("/login", methods=["GET", "POST"])
+    def login():
+        if _is_authenticated():
+            return redirect(url_for("index"))
+
+        error = None
+        next_url = _safe_next_url(request.values.get("next", ""))
+
+        if request.method == "POST":
+            username = request.form.get("username", "").strip().lower()
+            password = request.form.get("password", "")
+
+            if username != LOGIN_USERNAME or not check_password_hash(LOGIN_PASSWORD_HASH, password):
+                error = "Usuario o contraseña incorrectos."
+            else:
+                session.clear()
+                session.permanent = True
+                session["auth_user"] = LOGIN_USERNAME
+                return redirect(next_url or url_for("index"))
+
+        return render_template("login.html", error=error, next_url=next_url)
+
+    @app.get("/logout")
+    def logout():
+        session.clear()
+        return redirect(url_for("login"))
 
     def _get_example_files():
         example_dir = Path("example")

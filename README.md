@@ -1,20 +1,18 @@
-# SIIF
+# SIIF — Financial Data Intake
 
-Aplicación Flask para carga y consulta de auxiliares contables (SIIF).
+SIIF helps teams upload and review official financial data before processing.
+SIIF ayuda a cargar y revisar datos financieros oficiales antes de procesar.
 
-## Requisitos
-- Python 3.10+
-- PostgreSQL
+🔗 **Live / En vivo:** https://siif.omar-xyz.shop
+🌐 **Language / Idioma:** English / Espanol
 
-## Configuración rápida
-1. Crea y activa un entorno virtual:
-   `python -m venv venv && source venv/bin/activate`
-2. Instala dependencias:
-   `pip install -r requirements.txt`
-3. Exporta variables de entorno mínimas:
-   `export DATABASE_URL=postgresql://siif_user:siif_password@localhost:5432/siif_db`
-   `export SECRET_KEY=dev`
-4. Ejecuta:
-   `python app.py`
+---
 
-El servidor se inicia en `http://localhost:5009` (configurable con `PORT`).
+## Highlights / Lo mas importante
+- Upload official data files / Cargar archivos oficiales
+- Validate and review submissions / Validar y revisar envios
+- Download processed results / Descargar resultados procesados
+
+---
+
+© 2026 Omar Gabriel Salvatierra Garcia

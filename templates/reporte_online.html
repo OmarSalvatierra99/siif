@@ -219,6 +219,41 @@
         align-items: center;
     }
 
+    .page-jump {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .page-jump input {
+        width: 70px;
+        padding: 0.5rem 0.6rem;
+        border: 1px solid var(--color-border);
+        background: var(--color-surface);
+        border-radius: 10px;
+        font-size: 0.85rem;
+    }
+
+    .page-jump input:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .page-jump button {
+        padding: 0.5rem 0.6rem;
+        border: 1px solid var(--color-border);
+        background: var(--color-surface);
+        border-radius: 10px;
+        cursor: pointer;
+        transition: var(--transition);
+        font-size: 0.85rem;
+    }
+
+    .page-jump button:hover:not(:disabled) {
+        background: var(--color-bg);
+        border-color: var(--color-primary);
+    }
+
     .pagination button {
         padding: 0.5rem 0.75rem;
         border: 1px solid var(--color-border);
@@ -482,7 +517,7 @@
     <div class="consulta-layout">
         <section class="filters-section">
             <h3 style="color: var(--color-primary);">Filtros de Búsqueda</h3>
-            <p class="subtitle" style="margin-top: 0.35rem;">Refina tu consulta usando los campos clave del catálogo contable.</p>
+            <p class="subtitle" style="margin-top: 0.35rem;">Elige tu busqueda usando los campos clave del catálogo contable.</p>
             <div class="filters-grid">
                 <div class="filter-group">
                     <label>Cuenta Contable</label>
@@ -490,55 +525,55 @@
                 </div>
                 <div class="filter-group">
                     <label>Género</label>
-                    <input type="text" id="filtroGenero" placeholder="1 carácter" maxlength="1">
+                    <input type="text" id="filtroGenero" placeholder="Ej: 1,2" maxlength="20">
                 </div>
                 <div class="filter-group">
                     <label>Grupo</label>
-                    <input type="text" id="filtroGrupo" placeholder="1 carácter" maxlength="1">
+                    <input type="text" id="filtroGrupo" placeholder="Ej: 1,2" maxlength="20">
                 </div>
                 <div class="filter-group">
                     <label>Rubro</label>
-                    <input type="text" id="filtroRubro" placeholder="1 carácter" maxlength="1">
+                    <input type="text" id="filtroRubro" placeholder="Ej: 1,2" maxlength="20">
                 </div>
                 <div class="filter-group">
                     <label>Cuenta</label>
-                    <input type="text" id="filtroCuentaNum" placeholder="2 caracteres" maxlength="2">
+                    <input type="text" id="filtroCuentaNum" placeholder="Ej: 01,02" maxlength="20">
                 </div>
                 <div class="filter-group">
                     <label>Subcuenta</label>
-                    <input type="text" id="filtroSubcuenta" placeholder="2 caracteres" maxlength="2">
+                    <input type="text" id="filtroSubcuenta" placeholder="Ej: 01,02" maxlength="20">
                 </div>
                 <div class="filter-group">
                     <label>Dependencia</label>
-                    <input type="text" id="filtroDependencia" placeholder="2 caracteres" maxlength="2">
+                    <input type="text" id="filtroDependencia" placeholder="Ej: 01,02" maxlength="20">
                 </div>
                 <div class="filter-group">
                     <label>Unidad Responsable</label>
-                    <input type="text" id="filtroUnidadResponsable" placeholder="2 caracteres" maxlength="2">
+                    <input type="text" id="filtroUnidadResponsable" placeholder="Ej: 01,02" maxlength="20">
                 </div>
                 <div class="filter-group">
                     <label>Centro de Costo</label>
-                    <input type="text" id="filtroCentroCosto" placeholder="2 caracteres" maxlength="2">
+                    <input type="text" id="filtroCentroCosto" placeholder="Ej: 01,02" maxlength="20">
                 </div>
                 <div class="filter-group">
                     <label>Proyecto Presupuestario</label>
-                    <input type="text" id="filtroProyectoPresupuestario" placeholder="2 caracteres" maxlength="2">
+                    <input type="text" id="filtroProyectoPresupuestario" placeholder="Ej: 01,02" maxlength="20">
                 </div>
                 <div class="filter-group">
                     <label>Fuente</label>
-                    <input type="text" id="filtroFuente" placeholder="1 carácter" maxlength="1">
+                    <input type="text" id="filtroFuente" placeholder="Ej: 1,2" maxlength="20">
                 </div>
                 <div class="filter-group">
                     <label>SubFuente</label>
-                    <input type="text" id="filtroSubfuente" placeholder="1 carácter" maxlength="1">
+                    <input type="text" id="filtroSubfuente" placeholder="Ej: 1,2" maxlength="20">
                 </div>
                 <div class="filter-group">
                     <label>Tipo de Recurso</label>
-                    <input type="text" id="filtroTipoRecurso" placeholder="1 carácter" maxlength="1">
+                    <input type="text" id="filtroTipoRecurso" placeholder="Ej: 1,2" maxlength="20">
                 </div>
                 <div class="filter-group">
                     <label>Partida Presupuestal</label>
-                    <input type="text" id="filtroPartidaPresupuestal" placeholder="4 caracteres" maxlength="4">
+                    <input type="text" id="filtroPartidaPresupuestal" placeholder="Ej: 1000,2000" maxlength="20">
                 </div>
                 <div class="filter-group">
                     <label>Nombre de Cuenta</label>
@@ -654,6 +689,10 @@
                 <div class="pagination">
                     <button id="btnPrevPage" onclick="cambiarPagina(-1)">‹ Anterior</button>
                     <span id="paginaInfo">Página 1</span>
+                    <div class="page-jump">
+                        <input type="number" id="pageInput" min="1" inputmode="numeric" aria-label="Ir a la página">
+                        <button type="button" onclick="irAPaginaIngresada()">Ir</button>
+                    </div>
                     <button id="btnNextPage" onclick="cambiarPagina(1)">Siguiente ›</button>
                 </div>
                 <span class="range-info" id="rangoInfo">Mostrando 0 - 0</span>
@@ -780,6 +819,12 @@ function actualizarPaginacion() {
     document.getElementById('paginaInfo').textContent = `Página ${paginaActual} de ${totalPaginas}`;
     document.getElementById('btnPrevPage').disabled = paginaActual === 1;
     document.getElementById('btnNextPage').disabled = paginaActual === totalPaginas;
+    const pageInput = document.getElementById('pageInput');
+    if (pageInput) {
+        pageInput.max = totalPaginas;
+        pageInput.value = paginaActual;
+        pageInput.disabled = totalPaginas <= 1;
+    }
 }
 
 function cambiarPagina(delta) {
@@ -787,6 +832,23 @@ function cambiarPagina(delta) {
     if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas) {
         paginaActual = nuevaPagina;
         cargarTransacciones();
+    }
+}
+
+function irAPaginaIngresada() {
+    const pageInput = document.getElementById('pageInput');
+    if (!pageInput) return;
+    const pageValue = parseInt(pageInput.value, 10);
+    if (Number.isNaN(pageValue)) {
+        pageInput.value = paginaActual;
+        return;
+    }
+    const target = Math.min(Math.max(pageValue, 1), totalPaginas);
+    if (target !== paginaActual) {
+        paginaActual = target;
+        cargarTransacciones();
+    } else {
+        pageInput.value = paginaActual;
     }
 }
 
@@ -932,6 +994,14 @@ window.addEventListener('DOMContentLoaded', () => {
     const tabla = document.querySelector('.tabla-resultados');
     if (tabla) {
         tabla.classList.toggle('compact', vistaCompacta);
+    }
+    const pageInput = document.getElementById('pageInput');
+    if (pageInput) {
+        pageInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                irAPaginaIngresada();
+            }
+        });
     }
     cargarTransacciones();
 });
