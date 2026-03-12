@@ -9,20 +9,28 @@ from config import config
 from scripts.utils import db, Transaccion, LoteCarga, Usuario, ReporteGenerado, Ente
 from scripts.utils import process_files_to_database
 from sqlalchemy import func, and_, or_, inspect, text
+from sqlalchemy.exc import IntegrityError
 import pandas as pd
-
-LOGIN_USERNAME = "luis"
-LOGIN_PASSWORD_HASH = (
-    "scrypt:32768:8:1$OFdKr01lIdNYcYKb$8c7de1ee6cae23d50b4697936bc47ac25102ce3f245e4544360bb2009d1d174438b388d3dbb6ef07182762c6680eabbc191aa1d4ce4c3a8fc9b1b0c3a516954b"
-)
-
 
 def create_app(config_name="default"):
     app = Flask(__name__)
     app.config.from_object(config[config_name])
 
+    def _get_active_user(username):
+        normalized = (username or "").strip().lower()
+        if not normalized:
+            return None
+        return (
+            Usuario.query
+            .filter(
+                func.lower(Usuario.username) == normalized,
+                Usuario.activo.is_(True)
+            )
+            .first()
+        )
+
     def _is_authenticated():
-        return session.get("auth_user") == LOGIN_USERNAME
+        return _get_active_user(session.get("auth_user")) is not None
 
     def _safe_next_url(raw_url):
         url = (raw_url or "").strip()
@@ -38,6 +46,8 @@ def create_app(config_name="default"):
             return None
         if request.path.startswith("/static/") or request.endpoint is None:
             return None
+        if session.get("auth_user") and not _is_authenticated():
+            session.clear()
         if _is_authenticated():
             return None
         if request.path.startswith("/api/"):
@@ -92,6 +102,67 @@ def create_app(config_name="default"):
                     text("ALTER TABLE lotes_carga ADD COLUMN tipo_archivo VARCHAR(20)")
                 )
                 db.session.commit()
+
+            def _catalog_value(value):
+                if pd.isna(value):
+                    return ""
+                if isinstance(value, float):
+                    if value.is_integer():
+                        return str(int(value))
+                    return str(value).rstrip("0").rstrip(".")
+                return str(value).strip()
+
+            def _catalog_codigo(value):
+                return _catalog_value(value).rstrip(".")
+
+            def _seed_entes_catalogo():
+                if Ente.query.count() > 0:
+                    return
+
+                catalog_specs = [
+                    ("Estatales.xlsx", "EST", "ESTATAL"),
+                    ("Municipales.xlsx", "MUN", "MUNICIPAL"),
+                ]
+                pending_entes = []
+
+                for filename, prefix, ambito in catalog_specs:
+                    catalog_path = Path(app.root_path) / "catalogos" / filename
+                    if not catalog_path.exists():
+                        continue
+
+                    df = pd.read_excel(catalog_path, dtype=object)
+                    for row in df.to_dict(orient="records"):
+                        codigo = _catalog_codigo(row.get("NUM"))
+                        nombre = _catalog_value(row.get("NOMBRE"))
+                        if not codigo or not nombre:
+                            continue
+
+                        pending_entes.append({
+                            "clave": f"{prefix}-{codigo}",
+                            "codigo": codigo,
+                            "dd": "0A" if ambito == "MUNICIPAL" else "",
+                            "nombre": nombre,
+                            "siglas": _catalog_value(row.get("SIGLAS")),
+                            "tipo": _catalog_value(row.get("CLASIFICACION")),
+                            "ambito": ambito,
+                            "activo": True,
+                        })
+
+                if not pending_entes:
+                    return
+
+                for payload in pending_entes:
+                    db.session.add(Ente(**payload))
+
+                try:
+                    db.session.commit()
+                except IntegrityError:
+                    db.session.rollback()
+                    for payload in pending_entes:
+                        if Ente.query.filter_by(clave=payload["clave"]).first():
+                            continue
+                        db.session.add(Ente(**payload))
+                    db.session.commit()
 
             def _seed_entes_dd():
                 dd_rules = [
@@ -201,6 +272,7 @@ def create_app(config_name="default"):
 
             _ensure_entes_dd_column()
             _ensure_lotes_tipo_archivo_column()
+            _seed_entes_catalogo()
             _seed_entes_dd()
         except Exception as e:
             print(f"❌ Error al conectar con la base de datos: {str(e)}")
@@ -242,20 +314,49 @@ def create_app(config_name="default"):
 
         error = None
         next_url = _safe_next_url(request.values.get("next", ""))
+        user_priority = {"luis": 0, "juan": 1}
+        usuarios_activos = sorted(
+            Usuario.query.filter(Usuario.activo.is_(True)).all(),
+            key=lambda usuario: (
+                user_priority.get((usuario.username or "").strip().lower(), 99),
+                (usuario.nombre_completo or usuario.username or "").strip().lower(),
+                (usuario.username or "").strip().lower(),
+            ),
+        )
+        selected_username = ""
+        selected_display = "usuario"
 
         if request.method == "POST":
-            username = request.form.get("username", "").strip().lower()
-            password = request.form.get("password", "")
+            selected_username = request.form.get("username", "").strip().lower()
+            for usuario_activo in usuarios_activos:
+                current_username = (usuario_activo.username or "").strip().lower()
+                if current_username == selected_username:
+                    selected_display = usuario_activo.nombre_completo or usuario_activo.username
+                    break
 
-            if username != LOGIN_USERNAME or not check_password_hash(LOGIN_PASSWORD_HASH, password):
+        if request.method == "POST":
+            username = selected_username
+            password = request.form.get("password", "")
+            user = _get_active_user(username)
+
+            if not usuarios_activos:
+                error = "No hay usuarios activos configurados."
+            elif not user or not user.password_hash or not check_password_hash(user.password_hash, password):
                 error = "Usuario o contraseña incorrectos."
             else:
                 session.clear()
                 session.permanent = True
-                session["auth_user"] = LOGIN_USERNAME
+                session["auth_user"] = user.username
                 return redirect(next_url or url_for("index"))
 
-        return render_template("login.html", error=error, next_url=next_url)
+        return render_template(
+            "login.html",
+            error=error,
+            next_url=next_url,
+            usuarios_activos=usuarios_activos,
+            selected_username=selected_username,
+            selected_display=selected_display,
+        )
 
     @app.get("/logout")
     def logout():

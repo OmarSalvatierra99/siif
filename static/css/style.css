@@ -772,10 +772,15 @@ footer p,
 }
 
 .login-password-panel {
+    display: none;
     border: 1px solid #dfe7e1;
     border-radius: 12px;
     background: #fafcfb;
     padding: 0.9rem;
+}
+
+.login-password-panel.is-visible {
+    display: block;
 }
 
 .login-password-title {
@@ -816,6 +821,13 @@ footer p,
     align-items: center;
     gap: 0.5rem;
     text-align: left;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.login-access-user:hover {
+    border-color: var(--color-accent);
+    background: #f5f9f6;
 }
 
 .login-access-user.is-selected {
