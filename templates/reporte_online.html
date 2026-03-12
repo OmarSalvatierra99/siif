@@ -6,8 +6,9 @@
 <style>
     .consulta-container {
         max-width: 1600px;
+        width: 100%;
         margin: 0 auto;
-        padding: 2.5rem 2rem;
+        padding: 2.5rem 2rem 0;
         position: relative;
     }
 
@@ -16,8 +17,8 @@
         position: absolute;
         inset: 0;
         background:
-            radial-gradient(circle at 10% 10%, rgba(37, 99, 235, 0.12), transparent 40%),
-            radial-gradient(circle at 90% 0%, rgba(0, 40, 85, 0.08), transparent 45%);
+            radial-gradient(circle at 10% 10%, rgba(31, 59, 44, 0.08), transparent 40%),
+            radial-gradient(circle at 95% 0%, rgba(31, 90, 57, 0.08), transparent 42%);
         pointer-events: none;
         z-index: 0;
     }
@@ -27,160 +28,542 @@
         z-index: 1;
     }
 
-    .page-hero {
+    .consulta-layout,
+    .results-section {
         display: flex;
-        align-items: center;
-        justify-content: space-between;
+        flex-direction: column;
         gap: 1.5rem;
-        padding: 1.5rem 2rem;
-        border-radius: 18px;
-        background: linear-gradient(120deg, rgba(0, 40, 85, 0.08), rgba(37, 99, 235, 0.08));
-        border: 1px solid rgba(0, 40, 85, 0.12);
-        margin-bottom: 2rem;
+    }
+
+    .page-hero,
+    .filters-section,
+    .active-filters-bar,
+    .table-wrapper {
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.94);
+        border: 1px solid rgba(31, 59, 44, 0.12);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .page-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.7fr) minmax(280px, 0.9fr);
+        gap: 1.25rem;
+        padding: 1.75rem;
+        margin-bottom: 1.75rem;
+        overflow: hidden;
+    }
+
+    .hero-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+    }
+
+    .hero-kicker,
+    .section-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        width: fit-content;
+        padding: 0.35rem 0.7rem;
+        border-radius: 999px;
+        background: rgba(31, 59, 44, 0.08);
+        color: var(--color-primary);
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
     }
 
     .page-hero h2 {
         color: var(--color-primary);
-        font-size: 2rem;
+        font-size: clamp(2rem, 2.4vw, 2.5rem);
         font-weight: 800;
-        margin-bottom: 0.25rem;
-        letter-spacing: -0.02em;
+        margin: 0;
+        letter-spacing: -0.03em;
     }
 
     .page-hero .subtitle {
+        max-width: 680px;
         color: var(--color-muted);
-        font-size: 0.95rem;
-        max-width: 560px;
+        font-size: 1rem;
+        line-height: 1.65;
+    }
+
+    .hero-panel {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1.1rem;
+        border-radius: 18px;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fbf8 100%);
+        border: 1px solid rgba(31, 59, 44, 0.08);
+    }
+
+    .hero-stats {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.8rem;
+    }
+
+    .hero-stat {
+        padding: 0.95rem 1rem;
+        border-radius: 16px;
+        background: rgba(31, 59, 44, 0.05);
+        border: 1px solid rgba(31, 59, 44, 0.08);
+    }
+
+    .hero-stat-label {
+        display: block;
+        color: var(--color-muted);
+        font-size: 0.74rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 0.3rem;
+    }
+
+    .hero-stat strong {
+        color: var(--color-primary);
+        font-size: 1.4rem;
+        line-height: 1;
     }
 
     .hero-meta {
         display: flex;
         flex-wrap: wrap;
         gap: 0.5rem;
-        align-items: center;
     }
 
     .hero-chip {
         display: inline-flex;
         align-items: center;
         gap: 0.35rem;
-        background: rgba(0, 40, 85, 0.08);
+        background: #ffffff;
+        border: 1px solid rgba(31, 59, 44, 0.12);
         color: var(--color-primary);
         font-weight: 600;
-        font-size: 0.75rem;
-        padding: 0.35rem 0.65rem;
+        font-size: 0.78rem;
+        padding: 0.45rem 0.75rem;
         border-radius: 999px;
     }
 
-    .consulta-layout {
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-    }
-
-    .results-section {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
-
     .filters-section {
-        background: var(--color-surface);
-        border: 1px solid rgba(0, 40, 85, 0.12);
-        border-radius: 18px;
-        padding: 1.5rem 1.5rem 1.25rem;
-        box-shadow: var(--shadow-sm);
+        padding: 1.6rem;
+    }
+
+    .section-heading {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1.25rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .section-heading h3 {
+        color: var(--color-primary);
+        font-size: 1.4rem;
+        margin: 0.45rem 0 0.35rem;
+    }
+
+    .section-heading p {
+        max-width: 720px;
+        color: var(--color-muted);
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .section-summary {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 0.6rem;
+        min-width: 260px;
+    }
+
+    .summary-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.5rem 0.8rem;
+        border-radius: 999px;
+        background: rgba(31, 59, 44, 0.06);
+        color: var(--color-primary);
+        border: 1px solid rgba(31, 59, 44, 0.08);
+        font-size: 0.82rem;
+        font-weight: 600;
+        white-space: nowrap;
     }
 
     .filters-grid {
         display: grid;
-        grid-template-columns: repeat(4, minmax(160px, 1fr));
-        gap: 0.85rem 1rem;
-        margin-top: 1rem;
+        grid-template-columns: repeat(4, minmax(180px, 1fr));
+        gap: 1rem;
+    }
+
+    .filter-group-heading {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1.05rem;
+        border-radius: 16px;
+        background: linear-gradient(180deg, #fbfdfb 0%, #f5f9f5 100%);
+        border: 1px solid rgba(31, 59, 44, 0.08);
+        margin-top: 0.1rem;
+    }
+
+    .filter-group-heading:first-child {
+        margin-top: 0;
+    }
+
+    .filter-group-heading h4 {
+        color: var(--color-primary);
+        font-size: 1rem;
+        margin: 0.35rem 0 0.2rem;
+    }
+
+    .filter-group-heading p {
+        color: var(--color-muted);
+        font-size: 0.88rem;
+        line-height: 1.55;
+        margin: 0;
     }
 
     .filter-group {
         display: flex;
         flex-direction: column;
-        gap: 0.35rem;
+        gap: 0.42rem;
+        padding: 0.95rem 1rem;
+        border-radius: 16px;
+        background: #ffffff;
+        border: 1px solid rgba(31, 59, 44, 0.08);
+        box-shadow: 0 4px 14px rgba(31, 59, 44, 0.04);
     }
 
     .filter-group label {
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: var(--color-primary);
+        color: var(--color-muted);
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
     }
 
     .filter-group input,
     .filter-group select {
-        padding: 0.65rem 0.7rem;
-        border: 1px solid rgba(148, 163, 184, 0.7);
-        border-radius: 10px;
-        font-size: 0.9rem;
-        background: #f8fafc;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        width: 100%;
+        min-height: 44px;
+        padding: 0.75rem 0.8rem;
+        border: 1px solid rgba(31, 59, 44, 0.16);
+        border-radius: 12px;
+        font-size: 0.92rem;
+        background: #ffffff;
+        color: var(--color-text);
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    .filter-group input::placeholder {
+        color: #7a867e;
     }
 
     .filter-group input:focus,
     .filter-group select:focus {
         outline: none;
-        border-color: rgba(37, 99, 235, 0.8);
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
-        background: #fff;
+        border-color: rgba(31, 59, 44, 0.72);
+        box-shadow: 0 0 0 3px rgba(31, 59, 44, 0.14);
+        background: #ffffff;
+    }
+
+    .filter-group--date {
+        justify-content: flex-start;
+    }
+
+    .filter-combobox {
+        position: relative;
+    }
+
+    .filter-combobox input {
+        padding-right: 4.2rem;
+    }
+
+    .combo-selected {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        padding-top: 0.5rem;
+    }
+
+    .combo-selected[hidden] {
+        display: none;
+    }
+
+    .combo-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        appearance: none;
+        border: 1px solid rgba(31, 59, 44, 0.18);
+        background: rgba(31, 59, 44, 0.08);
+        color: var(--color-primary);
+        border-radius: 999px;
+        padding: 0.25rem 0.6rem;
+        font-size: 0.74rem;
+        font-family: inherit;
+        line-height: 1.2;
+        text-align: left;
+        cursor: pointer;
+        transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .combo-chip:hover {
+        background: rgba(31, 59, 44, 0.12);
+        border-color: rgba(31, 59, 44, 0.24);
+    }
+
+    .combo-chip-label {
+        max-width: 180px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .combo-chip-remove {
+        font-size: 0.7rem;
+        opacity: 0.82;
+        text-transform: uppercase;
+    }
+
+    .filter-combobox.is-open input {
+        border-color: rgba(31, 59, 44, 0.72);
+        box-shadow: 0 0 0 3px rgba(31, 59, 44, 0.14);
+        background: #ffffff;
+    }
+
+    .combo-toggle,
+    .combo-clear {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        border: none;
+        background: transparent;
+        color: var(--color-muted);
+        width: 1.8rem;
+        height: 1.8rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .combo-toggle:hover,
+    .combo-clear:hover {
+        background: rgba(31, 59, 44, 0.08);
+        color: var(--color-primary);
+    }
+
+    .combo-clear {
+        right: 2.15rem;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .filter-combobox.has-value .combo-clear,
+    .filter-combobox.has-selection .combo-clear {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .combo-toggle {
+        right: 0.4rem;
+    }
+
+    .combo-menu {
+        position: absolute;
+        top: calc(100% + 0.4rem);
+        left: 0;
+        right: 0;
+        background: #ffffff;
+        border: 1px solid rgba(31, 59, 44, 0.16);
+        border-radius: 16px;
+        box-shadow: 0 18px 36px rgba(31, 59, 44, 0.14);
+        overflow: hidden;
+        z-index: 40;
+    }
+
+    .combo-status {
+        padding: 0.7rem 0.85rem;
+        font-size: 0.78rem;
+        color: var(--color-muted);
+        background: #f7faf8;
+        border-bottom: 1px solid rgba(31, 59, 44, 0.08);
+    }
+
+    .combo-options {
+        max-height: 260px;
+        overflow-y: auto;
+    }
+
+    .combo-option {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1rem minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 0.75rem;
+        border: none;
+        background: #ffffff;
+        padding: 0.75rem 0.85rem;
+        text-align: left;
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+
+    .combo-option:hover {
+        background: #f4f8f5;
+    }
+
+    .combo-option.is-active {
+        background: rgba(31, 59, 44, 0.09);
+    }
+
+    .combo-option-check {
+        width: 1rem;
+        height: 1rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        border: 1px solid rgba(31, 59, 44, 0.28);
+        background: #ffffff;
+        color: transparent;
+        font-size: 0.62rem;
+        font-weight: 700;
+        transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    }
+
+    .combo-option.is-active .combo-option-check {
+        border-color: rgba(31, 59, 44, 0.95);
+        background: rgba(31, 59, 44, 0.95);
+        color: #ffffff;
+    }
+
+    .combo-option-main {
+        min-width: 0;
+    }
+
+    .combo-option-main strong {
+        display: block;
+        color: var(--color-primary);
+        font-size: 0.86rem;
+        font-weight: 600;
+        word-break: break-word;
+    }
+
+    .combo-option-meta {
+        flex-shrink: 0;
+        color: var(--color-muted);
+        font-size: 0.72rem;
+        white-space: nowrap;
+    }
+
+    .filter-help {
+        min-height: 1rem;
+        color: var(--color-muted);
+        font-size: 0.76rem;
+        line-height: 1.4;
+    }
+
+    .filter-help.is-empty {
+        color: var(--color-warning);
     }
 
     .filter-actions {
         display: flex;
-        gap: 0.8rem;
-        margin-top: 1.5rem;
+        align-items: center;
         justify-content: space-between;
-        padding-top: 1rem;
-        border-top: 1px dashed rgba(148, 163, 184, 0.6);
+        gap: 1rem;
+        margin-top: 1.4rem;
+        padding-top: 1.25rem;
+        border-top: 1px dashed rgba(31, 59, 44, 0.18);
+    }
+
+    .filter-actions-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+
+    .filter-actions-meta strong {
+        color: var(--color-primary);
+        font-size: 0.95rem;
+    }
+
+    .filter-actions-meta span {
+        color: var(--color-muted);
+        font-size: 0.82rem;
+    }
+
+    .filter-actions-buttons,
+    .toolbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .consulta-btn-secondary {
+        box-shadow: none;
     }
 
     .stats-bar {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: 1rem;
-        margin-bottom: 1.5rem;
     }
 
     .stat-item {
         display: flex;
         flex-direction: column;
-        padding: 1rem 1.25rem;
-        border-radius: 16px;
-        background: #fff;
-        border: 1px solid rgba(37, 99, 235, 0.12);
+        gap: 0.28rem;
+        padding: 1.1rem 1.2rem;
+        border-radius: 18px;
+        background: linear-gradient(180deg, #ffffff 0%, #fbfdfb 100%);
+        border: 1px solid rgba(31, 59, 44, 0.12);
+        border-top: 4px solid rgba(31, 59, 44, 0.22);
         box-shadow: var(--shadow-sm);
     }
 
+    .stat-item--cargos {
+        border-top-color: rgba(31, 90, 57, 0.48);
+    }
+
+    .stat-item--abonos {
+        border-top-color: rgba(155, 44, 44, 0.38);
+    }
+
     .stat-label {
-        font-size: 0.75rem;
         color: var(--color-muted);
+        font-size: 0.75rem;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        margin-bottom: 0.25rem;
     }
 
     .stat-value {
-        font-size: 1.25rem;
-        font-weight: 700;
         color: var(--color-primary);
+        font-size: clamp(1.45rem, 1.8vw, 1.8rem);
+        font-weight: 700;
+        line-height: 1.15;
     }
 
     .stat-note {
-        font-size: 0.7rem;
         color: var(--color-muted);
-        margin-top: 0.4rem;
+        font-size: 0.78rem;
     }
 
-    .table-header {
+    .results-toolbar {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: space-between;
         gap: 1rem;
-        margin-bottom: 0.75rem;
         flex-wrap: wrap;
     }
 
@@ -191,32 +574,351 @@
     }
 
     .table-title h3 {
-        font-size: 1.15rem;
-        font-weight: 700;
         color: var(--color-primary);
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin: 0;
     }
 
     .table-title p {
-        font-size: 0.85rem;
         color: var(--color-muted);
+        font-size: 0.88rem;
+        line-height: 1.55;
+        margin: 0;
+        max-width: 780px;
     }
 
-    .actions-group {
-        display: flex;
+    .density-toggle {
+        display: inline-flex;
         align-items: center;
-        gap: 0.75rem;
+        gap: 0.2rem;
+        padding: 0.25rem;
+        border-radius: 999px;
+        background: #ffffff;
+        border: 1px solid rgba(31, 59, 44, 0.12);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .density-toggle button {
+        border: none;
+        background: transparent;
+        color: var(--color-muted);
+        font-size: 0.82rem;
+        font-weight: 700;
+        padding: 0.55rem 0.9rem;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .density-toggle button:hover {
+        color: var(--color-primary);
+    }
+
+    .density-toggle button.is-active {
+        background: var(--color-accent);
+        color: #ffffff;
+        box-shadow: 0 8px 18px rgba(31, 59, 44, 0.18);
+    }
+
+    .active-filters-bar {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1.1rem;
+    }
+
+    .active-filters-bar[hidden] {
+        display: none;
+    }
+
+    .active-filters-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        min-width: 170px;
+    }
+
+    .active-filters-copy strong {
+        color: var(--color-primary);
+        font-size: 0.95rem;
+    }
+
+    .active-filters-copy span {
+        color: var(--color-muted);
+        font-size: 0.8rem;
+    }
+
+    .active-filters-list {
+        display: flex;
+        flex: 1;
         flex-wrap: wrap;
+        gap: 0.55rem;
+    }
+
+    .active-filter-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        max-width: 100%;
+        border: 1px solid rgba(31, 59, 44, 0.14);
+        background: rgba(31, 59, 44, 0.06);
+        color: var(--color-primary);
+        border-radius: 999px;
+        padding: 0.42rem 0.75rem;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .active-filter-chip:hover {
+        background: rgba(31, 59, 44, 0.1);
+        border-color: rgba(31, 59, 44, 0.24);
+        transform: translateY(-1px);
+    }
+
+    .active-filter-label {
+        color: var(--color-muted);
+        font-size: 0.74rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .active-filter-value {
+        max-width: 180px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-weight: 700;
+    }
+
+    .active-filter-remove {
+        color: var(--color-muted);
+        font-size: 0.78rem;
+        font-weight: 700;
+    }
+
+    .text-action {
+        border: none;
+        background: transparent;
+        color: var(--color-primary);
+        font-size: 0.84rem;
+        font-weight: 700;
+        cursor: pointer;
+        padding: 0.35rem 0;
+    }
+
+    .text-action:hover {
+        text-decoration: underline;
+    }
+
+    .table-wrapper {
+        overflow: hidden;
+    }
+
+    .table-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1.2rem;
+        border-bottom: 1px solid rgba(31, 59, 44, 0.08);
+        background: linear-gradient(180deg, #ffffff 0%, #fafcfb 100%);
+    }
+
+    .table-header strong {
+        color: var(--color-primary);
+        font-size: 0.96rem;
+    }
+
+    .table-header-note {
+        color: var(--color-muted);
+        font-size: 0.8rem;
+    }
+
+    .table-scroll {
+        overflow-x: auto;
+        overflow-y: visible;
+    }
+
+    .tabla-resultados {
+        width: 100%;
+        min-width: 1750px;
+        border-collapse: collapse;
+        font-size: 0.78rem;
+    }
+
+    .tabla-resultados th,
+    .tabla-resultados td {
+        white-space: nowrap;
+    }
+
+    .tabla-resultados th.col-cuenta,
+    .tabla-resultados td.col-cuenta {
+        min-width: 210px;
+    }
+
+    .tabla-resultados th.col-fecha,
+    .tabla-resultados td.col-fecha {
+        min-width: 120px;
+    }
+
+    .tabla-resultados th.sticky-col,
+    .tabla-resultados td.sticky-col {
+        position: sticky;
+        left: 0;
+        z-index: 2;
+    }
+
+    .tabla-resultados th.sticky-right,
+    .tabla-resultados td.sticky-right {
+        position: sticky;
+        right: 0;
+        z-index: 2;
+    }
+
+    .tabla-resultados th {
+        position: sticky;
+        top: 0;
+        background: linear-gradient(90deg, #1f3b2c 0%, #2d5640 100%);
+        color: #ffffff;
+        padding: 0.85rem 0.7rem;
+        text-align: left;
+        font-weight: 700;
+        font-size: 0.72rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        z-index: 10;
+    }
+
+    .tabla-resultados th.sticky-col {
+        background: linear-gradient(90deg, #183223 0%, #234735 100%);
+        box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.08);
+        z-index: 11;
+    }
+
+    .tabla-resultados th.sticky-right {
+        background: linear-gradient(270deg, #183223 0%, #234735 100%);
+        box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.08);
+        z-index: 11;
+    }
+
+    .tabla-resultados td {
+        border-bottom: 1px solid rgba(31, 59, 44, 0.08);
+        padding: 0.78rem 0.7rem;
+        font-size: 0.78rem;
+        color: var(--color-text);
+        background: #ffffff;
+        transition: background 0.18s ease;
+    }
+
+    .tabla-resultados td.sticky-col {
+        background: #f9fbf9;
+        box-shadow: inset -1px 0 0 rgba(31, 59, 44, 0.08);
+    }
+
+    .tabla-resultados td.sticky-right {
+        background: #f5f8f5;
+        box-shadow: inset 1px 0 0 rgba(31, 59, 44, 0.08);
+    }
+
+    .money-col {
+        background: rgba(232, 240, 235, 0.35);
+    }
+
+    .tabla-resultados tr:nth-child(even) td {
+        background: #fbfdfb;
+    }
+
+    .tabla-resultados tr:nth-child(even) td.sticky-col {
+        background: #f6faf7;
+    }
+
+    .tabla-resultados tr:nth-child(even) td.sticky-right {
+        background: #f1f6f2;
+    }
+
+    .tabla-resultados tr:hover td {
+        background: #eef4f0;
+    }
+
+    .tabla-resultados tr:hover td.sticky-col {
+        background: #e9f0eb;
+    }
+
+    .tabla-resultados tr:hover td.sticky-right {
+        background: #e7efe9;
+    }
+
+    .tabla-resultados.compact th,
+    .tabla-resultados.compact td {
+        padding: 0.52rem 0.5rem;
+        font-size: 0.71rem;
+    }
+
+    .cell-account strong,
+    .cell-policy strong,
+    .cell-date strong {
+        color: var(--color-primary);
+        font-weight: 700;
+    }
+
+    .cell-beneficiary,
+    .cell-description {
+        max-width: 240px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .cell-description {
+        max-width: 280px;
+    }
+
+    .table-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+        padding: 1rem 0.3rem 0;
     }
 
     .range-info {
-        font-size: 0.8rem;
         color: var(--color-muted);
+        font-size: 0.84rem;
     }
 
     .pagination {
         display: flex;
+        flex-wrap: wrap;
         gap: 0.5rem;
         align-items: center;
+    }
+
+    .pagination button,
+    .page-jump button {
+        padding: 0.55rem 0.85rem;
+        border: 1px solid rgba(31, 59, 44, 0.12);
+        background: #ffffff;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: var(--transition);
+        font-size: 0.86rem;
+        font-weight: 600;
+        color: var(--color-primary);
+    }
+
+    .pagination button:hover:not(:disabled),
+    .page-jump button:hover:not(:disabled) {
+        background: #f5f9f5;
+        border-color: rgba(31, 59, 44, 0.28);
+    }
+
+    .pagination button:disabled,
+    .page-jump button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
     }
 
     .page-jump {
@@ -226,12 +928,12 @@
     }
 
     .page-jump input {
-        width: 70px;
-        padding: 0.5rem 0.6rem;
-        border: 1px solid var(--color-border);
-        background: var(--color-surface);
-        border-radius: 10px;
-        font-size: 0.85rem;
+        width: 76px;
+        padding: 0.55rem 0.65rem;
+        border: 1px solid rgba(31, 59, 44, 0.12);
+        background: #ffffff;
+        border-radius: 12px;
+        font-size: 0.86rem;
     }
 
     .page-jump input:disabled {
@@ -239,246 +941,102 @@
         cursor: not-allowed;
     }
 
-    .page-jump button {
-        padding: 0.5rem 0.6rem;
-        border: 1px solid var(--color-border);
-        background: var(--color-surface);
-        border-radius: 10px;
-        cursor: pointer;
-        transition: var(--transition);
-        font-size: 0.85rem;
-    }
-
-    .page-jump button:hover:not(:disabled) {
-        background: var(--color-bg);
-        border-color: var(--color-primary);
-    }
-
-    .pagination button {
-        padding: 0.5rem 0.75rem;
-        border: 1px solid var(--color-border);
-        background: var(--color-surface);
-        border-radius: 10px;
-        cursor: pointer;
-        transition: var(--transition);
-        font-size: 0.875rem;
-    }
-
-    .pagination button:hover:not(:disabled) {
-        background: var(--color-bg);
-        border-color: var(--color-primary);
-    }
-
-    .pagination button:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-
-    .table-wrapper {
-        background: var(--color-surface);
-        border-radius: 18px;
-        border: 1px solid rgba(0, 40, 85, 0.12);
-        overflow: hidden;
-        box-shadow: var(--shadow-sm);
-    }
-
-    .table-scroll {
-        overflow-x: auto;
-        max-height: none;
-    }
-
-    .tabla-resultados {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.75rem;
-    }
-
-    .tabla-resultados th.col-cuenta,
-    .tabla-resultados td.col-cuenta {
-        min-width: 170px;
-    }
-
-    .tabla-resultados th.col-fecha,
-    .tabla-resultados td.col-fecha {
-        min-width: 110px;
-    }
-
-    .tabla-resultados th.sticky-col,
-    .tabla-resultados td.sticky-col {
-        position: sticky;
-        left: 0;
-        background: #f8fafc;
-        z-index: 2;
-    }
-
-    .tabla-resultados th.sticky-col {
-        background: linear-gradient(90deg, #002855 0%, #0f3b75 100%);
-        z-index: 3;
-    }
-
-    .tabla-resultados th.sticky-right,
-    .tabla-resultados td.sticky-right {
-        position: sticky;
-        right: 0;
-        background: #f1f5f9;
-        z-index: 2;
-    }
-
-    .tabla-resultados th.sticky-right {
-        background: linear-gradient(270deg, #002855 0%, #0f3b75 100%);
-        z-index: 3;
-    }
-
-    .money-col {
-        background: #f8fafc;
-    }
-
-    .tabla-resultados.compact td,
-    .tabla-resultados.compact th {
-        padding: 0.45rem 0.4rem;
-        font-size: 0.7rem;
-    }
-
-    .tabla-resultados th {
-        position: sticky;
-        top: 0;
-        background: linear-gradient(90deg, #002855 0%, #0f3b75 100%);
-        color: #fff;
-        padding: 0.7rem 0.5rem;
-        text-align: left;
-        font-weight: 600;
-        font-size: 0.7rem;
-        white-space: nowrap;
-        z-index: 10;
-    }
-
-    .tabla-resultados td {
-        border-bottom: 1px solid var(--color-border);
-        padding: 0.6rem 0.5rem;
-        font-size: 0.75rem;
-    }
-
-    .tabla-resultados tr:nth-child(even) td {
-        background: #f8fafc;
-    }
-
-    .tabla-resultados tr:hover td {
-        background: #eef2ff;
-    }
-
-    .table-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 1rem;
-        flex-wrap: wrap;
-        padding: 0.75rem 0.25rem;
-    }
-
     .money {
         text-align: right;
-        font-family: 'Courier New', monospace;
-        font-weight: 500;
+        font-family: "Courier New", monospace;
+        font-weight: 600;
     }
 
     .positive {
-        color: #059669;
+        color: var(--color-success);
     }
 
     .negative {
-        color: #dc2626;
+        color: var(--color-error);
     }
 
-    .loading {
-        text-align: center;
-        padding: 3rem 2rem;
-        color: var(--color-muted);
-    }
-
+    .loading,
     .no-results {
-        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.7rem;
+        min-height: 220px;
         padding: 3rem 2rem;
+        text-align: center;
         color: var(--color-muted);
     }
 
     .msg-vacio {
-        text-align: center;
         color: var(--color-muted);
-        margin-top: 2rem;
         font-size: 0.95rem;
+        margin: 0;
     }
 
-    @media (max-width: 768px) {
-        .consulta-container {
-            padding: 2rem 1rem;
-        }
-
-        .page-hero {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
+    @media (max-width: 1280px) {
         .filters-grid {
-            grid-template-columns: repeat(2, minmax(140px, 1fr));
-        }
-
-        .filter-actions {
-            flex-direction: column;
-            width: 100%;
-        }
-        .filter-actions button {
-            width: 100%;
-        }
-
-        .actions-bar {
-            gap: 0.6rem;
-        }
-
-        .table-scroll {
-            max-height: none;
-        }
-    }
-
-    @media (max-width: 520px) {
-        .filters-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .table-header {
-            flex-direction: column;
-            align-items: flex-start;
+            grid-template-columns: repeat(3, minmax(180px, 1fr));
         }
     }
 
     @media (max-width: 980px) {
+        .page-hero {
+            grid-template-columns: 1fr;
+        }
+
+        .section-heading,
+        .filter-group-heading,
+        .results-toolbar,
+        .active-filters-bar,
+        .table-header,
+        .table-footer {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .section-summary {
+            justify-content: flex-start;
+        }
+
+        .filters-grid {
+            grid-template-columns: repeat(2, minmax(160px, 1fr));
+        }
+
+        .tabla-resultados {
+            min-width: 100%;
+        }
+
         .tabla-resultados thead {
             display: none;
         }
 
         .tabla-resultados tr {
             display: block;
-            margin: 0 0 0.85rem;
-            border: 1px solid rgba(148, 163, 184, 0.45);
-            border-radius: 14px;
+            margin: 0 0 0.9rem;
+            border: 1px solid rgba(31, 59, 44, 0.12);
+            border-radius: 16px;
             overflow: hidden;
-            background: #fff;
+            background: #ffffff;
+            box-shadow: 0 10px 24px rgba(31, 59, 44, 0.05);
         }
 
         .tabla-resultados td {
             display: flex;
             justify-content: space-between;
             gap: 1rem;
-            padding: 0.65rem 0.85rem;
-            border-bottom: 1px dashed rgba(148, 163, 184, 0.35);
+            white-space: normal;
+            padding: 0.75rem 0.95rem;
+            border-bottom: 1px dashed rgba(31, 59, 44, 0.12);
         }
 
         .tabla-resultados td::before {
             content: attr(data-label);
-            font-weight: 600;
             color: var(--color-muted);
-            text-transform: uppercase;
             font-size: 0.7rem;
-            letter-spacing: 0.04em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .tabla-resultados td:last-child {
@@ -486,15 +1044,67 @@
         }
 
         .tabla-resultados th.sticky-col,
-        .tabla-resultados td.sticky-col {
-            position: static;
-            background: #fff;
-        }
-
+        .tabla-resultados td.sticky-col,
         .tabla-resultados th.sticky-right,
         .tabla-resultados td.sticky-right {
             position: static;
-            background: #fff;
+            box-shadow: none;
+        }
+
+        .tabla-resultados td.sticky-col,
+        .tabla-resultados td.sticky-right,
+        .tabla-resultados tr:nth-child(even) td,
+        .tabla-resultados tr:hover td {
+            background: #ffffff;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .consulta-container {
+            padding-top: 1.5rem;
+        }
+
+        .page-hero,
+        .filters-section {
+            padding: 1.2rem;
+        }
+
+        .hero-stats,
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .filter-actions,
+        .filter-actions-buttons,
+        .toolbar-actions,
+        .pagination {
+            width: 100%;
+        }
+
+        .filter-actions,
+        .filter-actions-buttons {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .toolbar-actions {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .density-toggle {
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        .density-toggle button,
+        .filter-actions-buttons .btn,
+        .toolbar-actions .btn {
+            width: 100%;
+        }
+
+        .active-filter-chip {
+            max-width: 100%;
         }
     }
 </style>
@@ -503,144 +1113,353 @@
 {% block content %}
 <div class="consulta-container">
     <div class="page-hero">
-        <div>
+        <div class="hero-copy">
+            <span class="hero-kicker">Consulta operativa</span>
             <h2>Consultar Transacciones</h2>
-            <span class="subtitle">Explora el detalle contable, cruza filtros y exporta resultados con precisión.</span>
+            <span class="subtitle">Explora el detalle contable, cruza filtros con más claridad y revisa resultados sin salir de esta misma vista.</span>
         </div>
-        <div class="hero-meta">
-            <span class="hero-chip">Actualizado en tiempo real</span>
-            <span class="hero-chip">Filtros avanzados</span>
-            <span class="hero-chip">Exportación directa</span>
+        <div class="hero-panel">
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <span class="hero-stat-label">Criterios activos</span>
+                    <strong id="heroFiltersCount">0</strong>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat-label">Registros visibles</span>
+                    <strong id="heroResultCount">0</strong>
+                </div>
+            </div>
+            <div class="hero-meta">
+                <span class="hero-chip">Consulta detallada</span>
+                <span class="hero-chip">Selección múltiple</span>
+                <span class="hero-chip">Exportación directa</span>
+            </div>
         </div>
     </div>
 
     <div class="consulta-layout">
         <section class="filters-section">
-            <h3 style="color: var(--color-primary);">Filtros de Búsqueda</h3>
-            <p class="subtitle" style="margin-top: 0.35rem;">Elige tu busqueda usando los campos clave del catálogo contable.</p>
+            <div class="section-heading">
+                <div>
+                    <h3>Filtros</h3>
+                </div>
+            </div>
             <div class="filters-grid">
                 <div class="filter-group">
                     <label>Cuenta Contable</label>
-                    <input type="text" id="filtroCuenta" placeholder="Ej: 32210080500000000600N">
+                    <div class="filter-combobox" data-filter-combobox="cuenta_contable" data-filter-kind="facet">
+                        <input type="text" id="filtroCuenta" placeholder="Ej: 32210080500000000600N" autocomplete="off">
+                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Cuenta Contable">x</button>
+                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Cuenta Contable">v</button>
+                        <div class="combo-menu" data-filter-menu hidden>
+                            <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                            <div class="combo-options" data-filter-options></div>
+                        </div>
+                    </div>
+                    <span class="filter-help" data-filter-help="cuenta_contable">Sin filtro</span>
                 </div>
                 <div class="filter-group">
                     <label>Género</label>
-                    <input type="text" id="filtroGenero" placeholder="Ej: 1,2" maxlength="20">
+                    <div class="filter-combobox" data-filter-combobox="genero" data-filter-kind="facet">
+                        <input type="text" id="filtroGenero" placeholder="Selecciona género" autocomplete="off">
+                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Género">x</button>
+                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Género">v</button>
+                        <div class="combo-menu" data-filter-menu hidden>
+                            <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                            <div class="combo-options" data-filter-options></div>
+                        </div>
+                    </div>
+                    <span class="filter-help" data-filter-help="genero">Sin filtro</span>
                 </div>
                 <div class="filter-group">
                     <label>Grupo</label>
-                    <input type="text" id="filtroGrupo" placeholder="Ej: 1,2" maxlength="20">
+                    <div class="filter-combobox" data-filter-combobox="grupo" data-filter-kind="facet">
+                        <input type="text" id="filtroGrupo" placeholder="Selecciona grupo" autocomplete="off">
+                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Grupo">x</button>
+                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Grupo">v</button>
+                        <div class="combo-menu" data-filter-menu hidden>
+                            <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                            <div class="combo-options" data-filter-options></div>
+                        </div>
+                    </div>
+                    <span class="filter-help" data-filter-help="grupo">Sin filtro</span>
                 </div>
                 <div class="filter-group">
                     <label>Rubro</label>
-                    <input type="text" id="filtroRubro" placeholder="Ej: 1,2" maxlength="20">
+                    <div class="filter-combobox" data-filter-combobox="rubro" data-filter-kind="facet">
+                        <input type="text" id="filtroRubro" placeholder="Selecciona rubro" autocomplete="off">
+                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Rubro">x</button>
+                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Rubro">v</button>
+                        <div class="combo-menu" data-filter-menu hidden>
+                            <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                            <div class="combo-options" data-filter-options></div>
+                        </div>
+                    </div>
+                    <span class="filter-help" data-filter-help="rubro">Sin filtro</span>
                 </div>
                 <div class="filter-group">
                     <label>Cuenta</label>
-                    <input type="text" id="filtroCuentaNum" placeholder="Ej: 01,02" maxlength="20">
+                    <div class="filter-combobox" data-filter-combobox="cuenta" data-filter-kind="facet">
+                        <input type="text" id="filtroCuentaNum" placeholder="Selecciona cuenta" autocomplete="off">
+                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Cuenta">x</button>
+                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Cuenta">v</button>
+                        <div class="combo-menu" data-filter-menu hidden>
+                            <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                            <div class="combo-options" data-filter-options></div>
+                        </div>
+                    </div>
+                    <span class="filter-help" data-filter-help="cuenta">Sin filtro</span>
                 </div>
                 <div class="filter-group">
                     <label>Subcuenta</label>
-                    <input type="text" id="filtroSubcuenta" placeholder="Ej: 01,02" maxlength="20">
+                    <div class="filter-combobox" data-filter-combobox="subcuenta" data-filter-kind="facet">
+                        <input type="text" id="filtroSubcuenta" placeholder="Selecciona subcuenta" autocomplete="off">
+                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Subcuenta">x</button>
+                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Subcuenta">v</button>
+                        <div class="combo-menu" data-filter-menu hidden>
+                            <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                            <div class="combo-options" data-filter-options></div>
+                        </div>
+                    </div>
+                    <span class="filter-help" data-filter-help="subcuenta">Sin filtro</span>
                 </div>
                 <div class="filter-group">
                     <label>Dependencia</label>
-                    <input type="text" id="filtroDependencia" placeholder="Ej: 01,02" maxlength="20">
+                    <div class="filter-combobox" data-filter-combobox="dependencia" data-filter-kind="facet">
+                        <input type="text" id="filtroDependencia" placeholder="Selecciona dependencia" autocomplete="off">
+                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Dependencia">x</button>
+                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Dependencia">v</button>
+                        <div class="combo-menu" data-filter-menu hidden>
+                            <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                            <div class="combo-options" data-filter-options></div>
+                        </div>
+                    </div>
+                    <span class="filter-help" data-filter-help="dependencia">Sin filtro</span>
                 </div>
                 <div class="filter-group">
                     <label>Unidad Responsable</label>
-                    <input type="text" id="filtroUnidadResponsable" placeholder="Ej: 01,02" maxlength="20">
+                    <div class="filter-combobox" data-filter-combobox="unidad_responsable" data-filter-kind="facet">
+                        <input type="text" id="filtroUnidadResponsable" placeholder="Selecciona unidad responsable" autocomplete="off">
+                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Unidad Responsable">x</button>
+                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Unidad Responsable">v</button>
+                        <div class="combo-menu" data-filter-menu hidden>
+                            <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                            <div class="combo-options" data-filter-options></div>
+                        </div>
+                    </div>
+                    <span class="filter-help" data-filter-help="unidad_responsable">Sin filtro</span>
                 </div>
                 <div class="filter-group">
                     <label>Centro de Costo</label>
-                    <input type="text" id="filtroCentroCosto" placeholder="Ej: 01,02" maxlength="20">
+                    <div class="filter-combobox" data-filter-combobox="centro_costo" data-filter-kind="facet">
+                        <input type="text" id="filtroCentroCosto" placeholder="Selecciona centro de costo" autocomplete="off">
+                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Centro de Costo">x</button>
+                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Centro de Costo">v</button>
+                        <div class="combo-menu" data-filter-menu hidden>
+                            <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                            <div class="combo-options" data-filter-options></div>
+                        </div>
+                    </div>
+                    <span class="filter-help" data-filter-help="centro_costo">Sin filtro</span>
                 </div>
                 <div class="filter-group">
                     <label>Proyecto Presupuestario</label>
-                    <input type="text" id="filtroProyectoPresupuestario" placeholder="Ej: 01,02" maxlength="20">
+                    <div class="filter-combobox" data-filter-combobox="proyecto_presupuestario" data-filter-kind="facet">
+                        <input type="text" id="filtroProyectoPresupuestario" placeholder="Selecciona proyecto" autocomplete="off">
+                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Proyecto Presupuestario">x</button>
+                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Proyecto Presupuestario">v</button>
+                        <div class="combo-menu" data-filter-menu hidden>
+                            <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                            <div class="combo-options" data-filter-options></div>
+                        </div>
+                    </div>
+                    <span class="filter-help" data-filter-help="proyecto_presupuestario">Sin filtro</span>
                 </div>
                 <div class="filter-group">
                     <label>Fuente</label>
-                    <input type="text" id="filtroFuente" placeholder="Ej: 1,2" maxlength="20">
+                    <div class="filter-combobox" data-filter-combobox="fuente" data-filter-kind="facet">
+                        <input type="text" id="filtroFuente" placeholder="Selecciona fuente" autocomplete="off">
+                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Fuente">x</button>
+                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Fuente">v</button>
+                        <div class="combo-menu" data-filter-menu hidden>
+                            <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                            <div class="combo-options" data-filter-options></div>
+                        </div>
+                    </div>
+                    <span class="filter-help" data-filter-help="fuente">Sin filtro</span>
                 </div>
                 <div class="filter-group">
                     <label>SubFuente</label>
-                    <input type="text" id="filtroSubfuente" placeholder="Ej: 1,2" maxlength="20">
+                    <div class="filter-combobox" data-filter-combobox="subfuente" data-filter-kind="facet">
+                        <input type="text" id="filtroSubfuente" placeholder="Selecciona subfuente" autocomplete="off">
+                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar SubFuente">x</button>
+                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de SubFuente">v</button>
+                        <div class="combo-menu" data-filter-menu hidden>
+                            <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                            <div class="combo-options" data-filter-options></div>
+                        </div>
+                    </div>
+                    <span class="filter-help" data-filter-help="subfuente">Sin filtro</span>
                 </div>
                 <div class="filter-group">
                     <label>Tipo de Recurso</label>
-                    <input type="text" id="filtroTipoRecurso" placeholder="Ej: 1,2" maxlength="20">
+                    <div class="filter-combobox" data-filter-combobox="tipo_recurso" data-filter-kind="facet">
+                        <input type="text" id="filtroTipoRecurso" placeholder="Selecciona tipo de recurso" autocomplete="off">
+                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Tipo de Recurso">x</button>
+                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Tipo de Recurso">v</button>
+                        <div class="combo-menu" data-filter-menu hidden>
+                            <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                            <div class="combo-options" data-filter-options></div>
+                        </div>
+                    </div>
+                    <span class="filter-help" data-filter-help="tipo_recurso">Sin filtro</span>
                 </div>
                 <div class="filter-group">
                     <label>Partida Presupuestal</label>
-                    <input type="text" id="filtroPartidaPresupuestal" placeholder="Ej: 1000,2000" maxlength="20">
+                    <div class="filter-combobox" data-filter-combobox="partida_presupuestal" data-filter-kind="facet">
+                        <input type="text" id="filtroPartidaPresupuestal" placeholder="Selecciona partida" autocomplete="off">
+                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Partida Presupuestal">x</button>
+                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Partida Presupuestal">v</button>
+                        <div class="combo-menu" data-filter-menu hidden>
+                            <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                            <div class="combo-options" data-filter-options></div>
+                        </div>
+                    </div>
+                    <span class="filter-help" data-filter-help="partida_presupuestal">Sin filtro</span>
                 </div>
                 <div class="filter-group">
                     <label>Nombre de Cuenta</label>
-                    <input type="text" id="filtroNombreCuenta" placeholder="Buscar por nombre">
+                    <div class="filter-combobox" data-filter-combobox="nombre_cuenta" data-filter-kind="text">
+                        <input type="text" id="filtroNombreCuenta" placeholder="Escribe para sugerencias" autocomplete="off">
+                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Nombre de Cuenta">x</button>
+                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar sugerencias de Nombre de Cuenta">v</button>
+                        <div class="combo-menu" data-filter-menu hidden>
+                            <div class="combo-status" data-filter-status>Sugerencias disponibles</div>
+                            <div class="combo-options" data-filter-options></div>
+                        </div>
+                    </div>
+                    <span class="filter-help" data-filter-help="nombre_cuenta">Escribe para ver sugerencias</span>
                 </div>
                 <div class="filter-group">
                     <label>Beneficiario</label>
-                    <input type="text" id="filtroBeneficiario" placeholder="Buscar beneficiario">
+                    <div class="filter-combobox" data-filter-combobox="beneficiario" data-filter-kind="text">
+                        <input type="text" id="filtroBeneficiario" placeholder="Escribe para sugerencias" autocomplete="off">
+                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Beneficiario">x</button>
+                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar sugerencias de Beneficiario">v</button>
+                        <div class="combo-menu" data-filter-menu hidden>
+                            <div class="combo-status" data-filter-status>Sugerencias disponibles</div>
+                            <div class="combo-options" data-filter-options></div>
+                        </div>
+                    </div>
+                    <span class="filter-help" data-filter-help="beneficiario">Escribe para ver sugerencias</span>
                 </div>
                 <div class="filter-group">
                     <label>Descripción</label>
-                    <input type="text" id="filtroDescripcion" placeholder="Buscar descripción">
+                    <div class="filter-combobox" data-filter-combobox="descripcion" data-filter-kind="text">
+                        <input type="text" id="filtroDescripcion" placeholder="Escribe para sugerencias" autocomplete="off">
+                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Descripción">x</button>
+                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar sugerencias de Descripción">v</button>
+                        <div class="combo-menu" data-filter-menu hidden>
+                            <div class="combo-status" data-filter-status>Sugerencias disponibles</div>
+                            <div class="combo-options" data-filter-options></div>
+                        </div>
+                    </div>
+                    <span class="filter-help" data-filter-help="descripcion">Escribe para ver sugerencias</span>
                 </div>
                 <div class="filter-group">
                     <label>O.P.</label>
-                    <input type="text" id="filtroOrdenPago" placeholder="Orden de pago">
+                    <div class="filter-combobox" data-filter-combobox="orden_pago" data-filter-kind="text">
+                        <input type="text" id="filtroOrdenPago" placeholder="Escribe para sugerencias" autocomplete="off">
+                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Orden de Pago">x</button>
+                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar sugerencias de Orden de Pago">v</button>
+                        <div class="combo-menu" data-filter-menu hidden>
+                            <div class="combo-status" data-filter-status>Sugerencias disponibles</div>
+                            <div class="combo-options" data-filter-options></div>
+                        </div>
+                    </div>
+                    <span class="filter-help" data-filter-help="orden_pago">Escribe para ver sugerencias</span>
                 </div>
                 <div class="filter-group">
                     <label>Póliza</label>
-                    <input type="text" id="filtroPoliza" placeholder="Buscar póliza">
+                    <div class="filter-combobox" data-filter-combobox="poliza" data-filter-kind="text">
+                        <input type="text" id="filtroPoliza" placeholder="Escribe para sugerencias" autocomplete="off">
+                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Póliza">x</button>
+                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar sugerencias de Póliza">v</button>
+                        <div class="combo-menu" data-filter-menu hidden>
+                            <div class="combo-status" data-filter-status>Sugerencias disponibles</div>
+                            <div class="combo-options" data-filter-options></div>
+                        </div>
+                    </div>
+                    <span class="filter-help" data-filter-help="poliza">Escribe para ver sugerencias</span>
                 </div>
-                <div class="filter-group">
+                <div class="filter-group filter-group--date">
                     <label>Fecha Inicio</label>
                     <input type="date" id="filtroFechaInicio">
+                    <span class="filter-help">Se aplica al cambiar la fecha</span>
                 </div>
-                <div class="filter-group">
+                <div class="filter-group filter-group--date">
                     <label>Fecha Fin</label>
                     <input type="date" id="filtroFechaFin">
+                    <span class="filter-help">Se aplica al cambiar la fecha</span>
                 </div>
             </div>
             <div class="filter-actions">
-                <button class="btn btn-secondary" onclick="limpiarFiltros()">Limpiar Filtros</button>
-                <button class="btn btn-primary" onclick="aplicarFiltros()">Aplicar Filtros</button>
+                <div class="filter-actions-buttons">
+                    <button class="btn btn-secondary consulta-btn-secondary" type="button" onclick="limpiarFiltros()">Limpiar filtros</button>
+                    <button class="btn btn-primary" type="button" onclick="aplicarFiltros()">Aplicar filtros</button>
+                </div>
             </div>
         </section>
 
         <section class="results-section">
             <div class="stats-bar">
-                <div class="stat-item">
+                <div class="stat-item stat-item--neutral">
                     <span class="stat-label">Total Registros</span>
                     <span class="stat-value" id="totalRegistros">0</span>
                     <span class="stat-note">Total con filtros activos</span>
                 </div>
-                <div class="stat-item">
+                <div class="stat-item stat-item--cargos">
                     <span class="stat-label">Cargos Totales</span>
                     <span class="stat-value money positive" id="totalCargos">$0.00</span>
                     <span class="stat-note">Total con filtros activos</span>
                 </div>
-                <div class="stat-item">
+                <div class="stat-item stat-item--abonos">
                     <span class="stat-label">Abonos Totales</span>
                     <span class="stat-value money negative" id="totalAbonos">$0.00</span>
                     <span class="stat-note">Total con filtros activos</span>
                 </div>
             </div>
 
-            <div class="actions-group" style="justify-content: flex-end;">
-                <button class="btn btn-success" onclick="exportarExcel()">
-                    📥 Exportar a Excel
-                </button>
+            <div class="results-toolbar">
+                <div class="table-title">
+                    <h3>Detalle de transacciones</h3>
+                    <p>Desplaza horizontalmente para ver todos los campos. Las columnas monetarias permanecen destacadas y puedes cambiar la densidad de lectura.</p>
+                </div>
+                <div class="toolbar-actions">
+                    <div class="density-toggle" role="group" aria-label="Modo de densidad de la tabla">
+                        <button type="button" id="densityCompact">Compacta</button>
+                        <button type="button" id="densityComfort">Cómoda</button>
+                    </div>
+                    <button class="btn btn-secondary consulta-btn-secondary" type="button" onclick="exportarExcel()">Exportar a Excel</button>
+                </div>
+            </div>
+
+            <div class="active-filters-bar" id="activeFiltersBar" hidden>
+                <div class="active-filters-copy">
+                    <strong>Filtros activos</strong>
+                    <span>Quita criterios individuales sin regresar al formulario.</span>
+                </div>
+                <div class="active-filters-list" id="activeFiltersList"></div>
+                <button class="text-action" type="button" onclick="limpiarFiltros()">Limpiar todo</button>
             </div>
 
             <div class="table-wrapper">
-                <div class="table-header" style="padding: 1rem 1.25rem 0;">
-                    <div class="table-title">
-                        <h3>Detalle de transacciones</h3>
-                        <p>Desplaza horizontalmente para ver todos los campos. Las columnas monetarias quedan fijas.</p>
+                <div class="table-header">
+                    <div>
+                        <strong>Resultado detallado</strong>
+                        <p class="table-header-note">Las columnas monetarias se mantienen visibles para facilitar el cruce entre importes y saldo final.</p>
                     </div>
+                    <span class="table-header-note">El rango mostrado se actualiza con la paginación inferior.</span>
                 </div>
                 <div id="loading" class="loading">
                     <div class="spinner"></div>
@@ -710,32 +1529,314 @@ let totalPaginas = 0;
 let filtrosActuales = {};
 let vistaCompacta = true;
 let totalsKey = null;
+let activeMenuKey = null;
+let facetRefreshSequence = 0;
+let filterOptionsApiEnabled = true;
+let filterOptionsUnavailableMessage = '';
+let baseDataAvailable = null;
+let currentResultTotal = 0;
+
+const FACET_FILTERS = [
+    { key: 'cuenta_contable', inputId: 'filtroCuenta', label: 'Cuenta Contable' },
+    { key: 'genero', inputId: 'filtroGenero', label: 'Género' },
+    { key: 'grupo', inputId: 'filtroGrupo', label: 'Grupo' },
+    { key: 'rubro', inputId: 'filtroRubro', label: 'Rubro' },
+    { key: 'cuenta', inputId: 'filtroCuentaNum', label: 'Cuenta' },
+    { key: 'subcuenta', inputId: 'filtroSubcuenta', label: 'Subcuenta' },
+    { key: 'dependencia', inputId: 'filtroDependencia', label: 'Dependencia' },
+    { key: 'unidad_responsable', inputId: 'filtroUnidadResponsable', label: 'Unidad Responsable' },
+    { key: 'centro_costo', inputId: 'filtroCentroCosto', label: 'Centro de Costo' },
+    { key: 'proyecto_presupuestario', inputId: 'filtroProyectoPresupuestario', label: 'Proyecto Presupuestario' },
+    { key: 'fuente', inputId: 'filtroFuente', label: 'Fuente' },
+    { key: 'subfuente', inputId: 'filtroSubfuente', label: 'SubFuente' },
+    { key: 'tipo_recurso', inputId: 'filtroTipoRecurso', label: 'Tipo de Recurso' },
+    { key: 'partida_presupuestal', inputId: 'filtroPartidaPresupuestal', label: 'Partida Presupuestal' }
+];
+
+const TEXT_FILTERS = [
+    { key: 'nombre_cuenta', inputId: 'filtroNombreCuenta', label: 'Nombre de Cuenta' },
+    { key: 'beneficiario', inputId: 'filtroBeneficiario', label: 'Beneficiario' },
+    { key: 'descripcion', inputId: 'filtroDescripcion', label: 'Descripción' },
+    { key: 'orden_pago', inputId: 'filtroOrdenPago', label: 'O.P.' },
+    { key: 'poliza', inputId: 'filtroPoliza', label: 'Póliza' }
+];
+
+const RANGE_FILTERS = [
+    { key: 'fecha_inicio', inputId: 'filtroFechaInicio' },
+    { key: 'fecha_fin', inputId: 'filtroFechaFin' }
+];
+
+const FACET_FIELD_KEYS = FACET_FILTERS.map((filter) => filter.key);
+const OPTION_FIELD_KEYS = [...FACET_FILTERS, ...TEXT_FILTERS].map((filter) => filter.key);
+const FILTER_LABELS = {
+    ...Object.fromEntries(FACET_FILTERS.map((filter) => [filter.key, filter.label])),
+    ...Object.fromEntries(TEXT_FILTERS.map((filter) => [filter.key, filter.label])),
+    fecha_inicio: 'Fecha Inicio',
+    fecha_fin: 'Fecha Fin',
+};
+const COMBOBOX_FILTER_KEYS = new Set(OPTION_FIELD_KEYS);
+const FILTER_OPTIONS_TTL = 30000;
+const filterOptionsCache = new Map();
+const comboboxState = new Map();
+
+function formatFilterDateValue(value) {
+    const normalized = normalizeValue(value);
+    if (!normalized) {
+        return '';
+    }
+
+    const parts = normalized.split('-');
+    if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
+    return normalized;
+}
+
+function formatActiveFilterValue(key, value) {
+    if (key === 'fecha_inicio' || key === 'fecha_fin') {
+        return formatFilterDateValue(value);
+    }
+
+    return normalizeValue(value);
+}
+
+function getActiveFilterEntries(filters = filtrosActuales) {
+    const entries = [];
+
+    Object.entries(filters || {}).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+            normalizeValueList(value).forEach((item) => {
+                entries.push({
+                    key,
+                    value: item,
+                    label: FILTER_LABELS[key] || key,
+                    displayValue: formatActiveFilterValue(key, item),
+                });
+            });
+            return;
+        }
+
+        const normalized = normalizeValue(value);
+        if (!normalized) {
+            return;
+        }
+
+        entries.push({
+            key,
+            value: normalized,
+            label: FILTER_LABELS[key] || key,
+            displayValue: formatActiveFilterValue(key, normalized),
+        });
+    });
+
+    return entries;
+}
+
+function countActiveCriteria(filters = filtrosActuales) {
+    return getActiveFilterEntries(filters).length;
+}
+
+function countActiveFields(filters = filtrosActuales) {
+    return Object.entries(filters || {}).reduce((count, [, value]) => {
+        if (Array.isArray(value)) {
+            return count + (normalizeValueList(value).length ? 1 : 0);
+        }
+        return count + (normalizeValue(value) ? 1 : 0);
+    }, 0);
+}
+
+function updateDensityToggleUI() {
+    const compactButton = document.getElementById('densityCompact');
+    const comfortButton = document.getElementById('densityComfort');
+    const table = document.querySelector('.tabla-resultados');
+
+    if (table) {
+        table.classList.toggle('compact', vistaCompacta);
+    }
+
+    if (compactButton) {
+        compactButton.classList.toggle('is-active', vistaCompacta);
+    }
+
+    if (comfortButton) {
+        comfortButton.classList.toggle('is-active', !vistaCompacta);
+    }
+}
+
+function setDensityMode(isCompact) {
+    vistaCompacta = Boolean(isCompact);
+    updateDensityToggleUI();
+}
+
+function updateFilterSummaryUI() {
+    const criteriaCount = countActiveCriteria();
+    const fieldCount = countActiveFields();
+    const badge = document.getElementById('filtersSummaryBadge');
+    const heroFiltersCount = document.getElementById('heroFiltersCount');
+    const statusHeading = document.getElementById('filtersStatusHeading');
+    const statusText = document.getElementById('filtersStatusText');
+
+    if (heroFiltersCount) {
+        heroFiltersCount.textContent = criteriaCount.toLocaleString('es-MX');
+    }
+
+    if (badge) {
+        badge.textContent = criteriaCount
+            ? `${criteriaCount.toLocaleString('es-MX')} criterio${criteriaCount === 1 ? '' : 's'} activo${criteriaCount === 1 ? '' : 's'}`
+            : 'Sin filtros activos';
+    }
+
+    if (statusHeading) {
+        statusHeading.textContent = criteriaCount
+            ? `${fieldCount.toLocaleString('es-MX')} filtro${fieldCount === 1 ? '' : 's'} en uso`
+            : 'Selecciona filtros y aplica cambios';
+    }
+
+    if (statusText) {
+        statusText.textContent = criteriaCount
+            ? `${criteriaCount.toLocaleString('es-MX')} criterio${criteriaCount === 1 ? '' : 's'} aplicado${criteriaCount === 1 ? '' : 's'}. Puedes quitarlos desde la barra de resultados.`
+            : 'Puedes combinar múltiples valores por campo y quitar criterios desde la barra de resultados.';
+    }
+}
+
+function removeActiveFilter(key, value) {
+    if (COMBOBOX_FILTER_KEYS.has(key)) {
+        const state = comboboxState.get(key);
+        if (!state) {
+            return;
+        }
+
+        if (state.selectedValues.length > 1) {
+            removeSelectedValue(key, value);
+            return;
+        }
+
+        clearFilterValue(key, { syncInput: true, refresh: true });
+        return;
+    }
+
+    const rangeFilter = RANGE_FILTERS.find((filter) => filter.key === key);
+    if (!rangeFilter) {
+        return;
+    }
+
+    const input = document.getElementById(rangeFilter.inputId);
+    if (input) {
+        input.value = '';
+    }
+    aplicarFiltros();
+}
+
+function renderActiveFilters() {
+    const bar = document.getElementById('activeFiltersBar');
+    const list = document.getElementById('activeFiltersList');
+    const entries = getActiveFilterEntries();
+
+    updateFilterSummaryUI();
+
+    if (!bar || !list) {
+        return;
+    }
+
+    list.innerHTML = '';
+
+    if (!entries.length) {
+        bar.hidden = true;
+        return;
+    }
+
+    const fragment = document.createDocumentFragment();
+
+    entries.forEach((entry) => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'active-filter-chip';
+        chip.title = `${entry.label}: ${entry.displayValue}`;
+
+        const labelNode = document.createElement('span');
+        labelNode.className = 'active-filter-label';
+        labelNode.textContent = entry.label;
+
+        const valueNode = document.createElement('span');
+        valueNode.className = 'active-filter-value';
+        valueNode.textContent = truncate(entry.displayValue, 28);
+
+        const removeNode = document.createElement('span');
+        removeNode.className = 'active-filter-remove';
+        removeNode.textContent = 'x';
+
+        chip.appendChild(labelNode);
+        chip.appendChild(valueNode);
+        chip.appendChild(removeNode);
+        chip.addEventListener('mousedown', (event) => {
+            event.preventDefault();
+        });
+        chip.addEventListener('click', () => {
+            removeActiveFilter(entry.key, entry.value);
+        });
+
+        fragment.appendChild(chip);
+    });
+
+    list.appendChild(fragment);
+    bar.hidden = false;
+}
+
+function initDensityToggle() {
+    const compactButton = document.getElementById('densityCompact');
+    const comfortButton = document.getElementById('densityComfort');
+
+    if (compactButton) {
+        compactButton.addEventListener('click', () => {
+            setDensityMode(true);
+        });
+    }
+
+    if (comfortButton) {
+        comfortButton.addEventListener('click', () => {
+            setDensityMode(false);
+        });
+    }
+
+    updateDensityToggleUI();
+}
 
 async function cargarTransacciones() {
     try {
-        const filtrosKey = JSON.stringify(filtrosActuales || {});
+        const filtrosKey = serializeFilters(filtrosActuales || {});
         const includeTotals = totalsKey !== filtrosKey;
 
-        const params = new URLSearchParams({
-            page: paginaActual,
-            per_page: registrosPorPagina,
-            include_totals: includeTotals ? 1 : 0,
-            ...filtrosActuales
-        });
+        const params = new URLSearchParams();
+        params.set('page', paginaActual);
+        params.set('per_page', registrosPorPagina);
+        params.set('include_totals', includeTotals ? 1 : 0);
+        appendFiltersToParams(params, filtrosActuales);
 
         const response = await fetch(`/api/transacciones?${params}`);
         const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || 'Error al cargar transacciones');
+        }
+
+        currentResultTotal = Number(data.total || 0);
+        if (!hasActiveFilters()) {
+            baseDataAvailable = currentResultTotal > 0;
+        }
 
         totalPaginas = data.pages || 1;
         renderizarTabla(data.transacciones);
         actualizarEstadisticas(data);
         actualizarPaginacion();
+        updateNoResultsMessage();
+        renderActiveFilters();
+        refreshComboboxEmptyStates();
         if (includeTotals) {
             totalsKey = filtrosKey;
         }
 
         document.getElementById('loading').style.display = 'none';
-        document.getElementById('tableContainer').style.display = 'block';
+        document.getElementById('tableContainer').style.display = currentResultTotal > 0 ? 'block' : 'none';
     } catch (error) {
         console.error('Error:', error);
         document.getElementById('loading').innerHTML = `
@@ -752,6 +1853,7 @@ function renderizarTabla(transacciones) {
     const tableContainer = document.getElementById('tableContainer');
 
     tbody.innerHTML = '';
+    updateNoResultsMessage();
 
     if (!transacciones || transacciones.length === 0) {
         tableContainer.style.display = 'none';
@@ -767,7 +1869,7 @@ function renderizarTabla(transacciones) {
     transacciones.forEach(t => {
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td class="sticky-col col-cuenta" data-label="Cuenta Contable"><strong>${t.cuenta_contable || ''}</strong></td>
+            <td class="sticky-col col-cuenta cell-account" data-label="Cuenta Contable"><strong>${t.cuenta_contable || ''}</strong></td>
             <td data-label="Género">${t.genero || ''}</td>
             <td data-label="Grupo">${t.grupo || ''}</td>
             <td data-label="Rubro">${t.rubro || ''}</td>
@@ -781,11 +1883,11 @@ function renderizarTabla(transacciones) {
             <td data-label="SubFuente">${t.subfuente || ''}</td>
             <td data-label="Tipo de Recurso">${t.tipo_recurso || ''}</td>
             <td data-label="Partida Presupuestal">${t.partida_presupuestal || ''}</td>
-            <td data-label="Nombre Cuenta" style="max-width: 250px; overflow: hidden; text-overflow: ellipsis;" title="${t.nombre_cuenta || ''}">${truncate(t.nombre_cuenta, 40)}</td>
-            <td class="col-fecha" data-label="Fecha">${t.fecha_transaccion || ''}</td>
-            <td data-label="Póliza">${t.poliza || ''}</td>
-            <td data-label="Beneficiario" style="max-width: 180px; overflow: hidden; text-overflow: ellipsis;" title="${t.beneficiario || ''}">${truncate(t.beneficiario, 25)}</td>
-            <td data-label="Descripción" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;" title="${t.descripcion || ''}">${truncate(t.descripcion, 30)}</td>
+            <td class="cell-description" data-label="Nombre Cuenta" title="${t.nombre_cuenta || ''}">${truncate(t.nombre_cuenta, 40)}</td>
+            <td class="col-fecha cell-date" data-label="Fecha"><strong>${t.fecha_transaccion || ''}</strong></td>
+            <td class="cell-policy" data-label="Póliza"><strong>${t.poliza || ''}</strong></td>
+            <td class="cell-beneficiary" data-label="Beneficiario" title="${t.beneficiario || ''}">${truncate(t.beneficiario, 25)}</td>
+            <td class="cell-description" data-label="Descripción" title="${t.descripcion || ''}">${truncate(t.descripcion, 30)}</td>
             <td data-label="O.P.">${t.orden_pago || ''}</td>
             <td class="money money-col" data-label="Saldo Inicial">${formatNumber(t.saldo_inicial)}</td>
             <td class="money positive money-col" data-label="Cargos">${formatNumber(t.cargos)}</td>
@@ -799,7 +1901,12 @@ function renderizarTabla(transacciones) {
 }
 
 function actualizarEstadisticas(data) {
-    document.getElementById('totalRegistros').textContent = (data.total || 0).toLocaleString('es-MX');
+    const total = data.total || 0;
+    document.getElementById('totalRegistros').textContent = total.toLocaleString('es-MX');
+    const heroResultCount = document.getElementById('heroResultCount');
+    if (heroResultCount) {
+        heroResultCount.textContent = total.toLocaleString('es-MX');
+    }
 
     if (data.total_cargos !== undefined && data.total_abonos !== undefined) {
         const totalCargos = parseFloat(data.total_cargos || 0);
@@ -809,7 +1916,6 @@ function actualizarEstadisticas(data) {
         document.getElementById('totalAbonos').textContent = formatCurrency(totalAbonos);
     }
 
-    const total = data.total || 0;
     const inicio = total === 0 ? 0 : (paginaActual - 1) * registrosPorPagina + 1;
     const fin = Math.min(paginaActual * registrosPorPagina, total);
     document.getElementById('rangoInfo').textContent = `Mostrando ${inicio.toLocaleString('es-MX')} - ${fin.toLocaleString('es-MX')} de ${total.toLocaleString('es-MX')}`;
@@ -852,106 +1958,6 @@ function irAPaginaIngresada() {
     }
 }
 
-function aplicarFiltros() {
-    filtrosActuales = {};
-    totalsKey = null;
-    paginaActual = 1;
-
-    const cuenta = document.getElementById('filtroCuenta').value.trim();
-    if (cuenta) filtrosActuales.cuenta_contable = cuenta;
-
-    const genero = document.getElementById('filtroGenero').value.trim();
-    if (genero) filtrosActuales.genero = genero;
-
-    const grupo = document.getElementById('filtroGrupo').value.trim();
-    if (grupo) filtrosActuales.grupo = grupo;
-
-    const rubro = document.getElementById('filtroRubro').value.trim();
-    if (rubro) filtrosActuales.rubro = rubro;
-
-    const cuentaNum = document.getElementById('filtroCuentaNum').value.trim();
-    if (cuentaNum) filtrosActuales.cuenta = cuentaNum;
-
-    const subcuenta = document.getElementById('filtroSubcuenta').value.trim();
-    if (subcuenta) filtrosActuales.subcuenta = subcuenta;
-
-    const dependencia = document.getElementById('filtroDependencia').value.trim();
-    if (dependencia) filtrosActuales.dependencia = dependencia;
-
-    const unidadResponsable = document.getElementById('filtroUnidadResponsable').value.trim();
-    if (unidadResponsable) filtrosActuales.unidad_responsable = unidadResponsable;
-
-    const centroCosto = document.getElementById('filtroCentroCosto').value.trim();
-    if (centroCosto) filtrosActuales.centro_costo = centroCosto;
-
-    const proyectoPresupuestario = document.getElementById('filtroProyectoPresupuestario').value.trim();
-    if (proyectoPresupuestario) filtrosActuales.proyecto_presupuestario = proyectoPresupuestario;
-
-    const fuente = document.getElementById('filtroFuente').value.trim();
-    if (fuente) filtrosActuales.fuente = fuente;
-
-    const subfuente = document.getElementById('filtroSubfuente').value.trim();
-    if (subfuente) filtrosActuales.subfuente = subfuente;
-
-    const tipoRecurso = document.getElementById('filtroTipoRecurso').value.trim();
-    if (tipoRecurso) filtrosActuales.tipo_recurso = tipoRecurso;
-
-    const partidaPresupuestal = document.getElementById('filtroPartidaPresupuestal').value.trim();
-    if (partidaPresupuestal) filtrosActuales.partida_presupuestal = partidaPresupuestal;
-
-    const nombreCuenta = document.getElementById('filtroNombreCuenta').value.trim();
-    if (nombreCuenta) filtrosActuales.nombre_cuenta = nombreCuenta;
-
-    const beneficiario = document.getElementById('filtroBeneficiario').value.trim();
-    if (beneficiario) filtrosActuales.beneficiario = beneficiario;
-
-    const descripcion = document.getElementById('filtroDescripcion').value.trim();
-    if (descripcion) filtrosActuales.descripcion = descripcion;
-
-    const ordenPago = document.getElementById('filtroOrdenPago').value.trim();
-    if (ordenPago) filtrosActuales.orden_pago = ordenPago;
-
-    const poliza = document.getElementById('filtroPoliza').value.trim();
-    if (poliza) filtrosActuales.poliza = poliza;
-
-    const fechaInicio = document.getElementById('filtroFechaInicio').value;
-    if (fechaInicio) filtrosActuales.fecha_inicio = fechaInicio;
-
-    const fechaFin = document.getElementById('filtroFechaFin').value;
-    if (fechaFin) filtrosActuales.fecha_fin = fechaFin;
-
-    paginaActual = 1;
-    cargarTransacciones();
-}
-
-function limpiarFiltros() {
-    document.getElementById('filtroCuenta').value = '';
-    document.getElementById('filtroGenero').value = '';
-    document.getElementById('filtroGrupo').value = '';
-    document.getElementById('filtroRubro').value = '';
-    document.getElementById('filtroCuentaNum').value = '';
-    document.getElementById('filtroSubcuenta').value = '';
-    document.getElementById('filtroDependencia').value = '';
-    document.getElementById('filtroUnidadResponsable').value = '';
-    document.getElementById('filtroCentroCosto').value = '';
-    document.getElementById('filtroProyectoPresupuestario').value = '';
-    document.getElementById('filtroFuente').value = '';
-    document.getElementById('filtroSubfuente').value = '';
-    document.getElementById('filtroTipoRecurso').value = '';
-    document.getElementById('filtroPartidaPresupuestal').value = '';
-    document.getElementById('filtroNombreCuenta').value = '';
-    document.getElementById('filtroBeneficiario').value = '';
-    document.getElementById('filtroDescripcion').value = '';
-    document.getElementById('filtroOrdenPago').value = '';
-    document.getElementById('filtroPoliza').value = '';
-    document.getElementById('filtroFechaInicio').value = '';
-    document.getElementById('filtroFechaFin').value = '';
-
-    filtrosActuales = {};
-    paginaActual = 1;
-    cargarTransacciones();
-}
-
 async function exportarExcel() {
     try {
         const response = await fetch('/api/reportes/generar', {
@@ -989,12 +1995,927 @@ function truncate(str, maxLen) {
     return str.length > maxLen ? str.substring(0, maxLen) + '...' : str;
 }
 
-// Cargar al inicio
-window.addEventListener('DOMContentLoaded', () => {
-    const tabla = document.querySelector('.tabla-resultados');
-    if (tabla) {
-        tabla.classList.toggle('compact', vistaCompacta);
+function debounce(fn, delay) {
+    let timerId = null;
+    return (...args) => {
+        window.clearTimeout(timerId);
+        timerId = window.setTimeout(() => fn(...args), delay);
+    };
+}
+
+function normalizeValue(value) {
+    return String(value || '').trim();
+}
+
+function comparableValue(value) {
+    return normalizeValue(value).toLowerCase();
+}
+
+function normalizeValueList(values) {
+    const candidates = Array.isArray(values)
+        ? values
+        : values === undefined || values === null
+            ? []
+            : [values];
+    const normalized = [];
+    const seen = new Set();
+
+    candidates.forEach((value) => {
+        const current = normalizeValue(value);
+        if (!current) {
+            return;
+        }
+
+        const fingerprint = comparableValue(current);
+        if (seen.has(fingerprint)) {
+            return;
+        }
+
+        seen.add(fingerprint);
+        normalized.push(current);
+    });
+
+    return normalized;
+}
+
+function sortComparableValues(values) {
+    return [...normalizeValueList(values)].sort((left, right) =>
+        left.localeCompare(right, 'es', { sensitivity: 'base' })
+    );
+}
+
+function areValueListsEqual(left, right) {
+    return JSON.stringify(sortComparableValues(left)) === JSON.stringify(sortComparableValues(right));
+}
+
+function buildComparableEntries(source = {}) {
+    const entries = [];
+
+    Object.entries(source || {}).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+            const normalized = sortComparableValues(value);
+            if (normalized.length) {
+                entries.push([key, normalized]);
+            }
+            return;
+        }
+
+        const normalized = normalizeValue(value);
+        if (normalized) {
+            entries.push([key, normalized]);
+        }
+    });
+
+    return entries.sort(([leftKey], [rightKey]) => leftKey.localeCompare(rightKey));
+}
+
+function buildComparableSearchEntries(searchTerms = {}) {
+    return Object.entries(searchTerms || {})
+        .map(([key, value]) => [key, normalizeValue(value)])
+        .filter(([, value]) => Boolean(value))
+        .sort(([leftKey], [rightKey]) => leftKey.localeCompare(rightKey));
+}
+
+function serializeFilters(filters) {
+    return JSON.stringify(buildComparableEntries(filters));
+}
+
+function appendFiltersToParams(params, filters = {}) {
+    Object.entries(filters || {}).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+            normalizeValueList(value).forEach((item) => {
+                params.append(key, item);
+            });
+            return;
+        }
+
+        const normalized = normalizeValue(value);
+        if (normalized) {
+            params.set(key, normalized);
+        }
+    });
+
+    return params;
+}
+
+function areFiltersEqual(left, right) {
+    return serializeFilters(left) === serializeFilters(right);
+}
+
+function hasActiveFilters() {
+    return buildComparableEntries(filtrosActuales).length > 0;
+}
+
+function hasNoBaseData() {
+    return baseDataAvailable === false;
+}
+
+function hasNoResultsForCurrentFilters() {
+    return hasActiveFilters() && currentResultTotal === 0;
+}
+
+function getNoDataLoadedMessage() {
+    return 'No hay transacciones cargadas. Sube archivos para habilitar los filtros.';
+}
+
+function summarizeSelectedValues(values, maxItems = 2) {
+    const normalized = normalizeValueList(values);
+    if (!normalized.length) {
+        return '';
     }
+
+    const preview = normalized
+        .slice(0, maxItems)
+        .map((value) => truncate(value, 20))
+        .join(', ');
+    const extra = normalized.length > maxItems ? ` +${normalized.length - maxItems}` : '';
+    return `${preview}${extra}`;
+}
+
+function updateNoResultsMessage() {
+    const emptyMessage = document.querySelector('#noResults .msg-vacio');
+    if (!emptyMessage) return;
+
+    if (hasNoBaseData() && !hasActiveFilters()) {
+        emptyMessage.textContent = getNoDataLoadedMessage();
+        return;
+    }
+
+    if (hasNoResultsForCurrentFilters()) {
+        emptyMessage.textContent = 'No se encontraron transacciones con los filtros seleccionados';
+        return;
+    }
+
+    emptyMessage.textContent = 'No se encontraron transacciones';
+}
+
+function setFilterHelp(key, message, isEmpty = false) {
+    const help = document.querySelector(`[data-filter-help="${key}"]`);
+    if (!help) return;
+    help.textContent = message;
+    help.classList.toggle('is-empty', isEmpty);
+}
+
+function refreshComboboxEmptyStates() {
+    comboboxState.forEach((state) => {
+        if (state.options.length === 0) {
+            renderComboboxOptions(state);
+            return;
+        }
+
+        updateFilterHelpFromState(state);
+    });
+}
+
+function buildEmptyOptionsPayload(fields = []) {
+    const options = {};
+    (fields || []).forEach((field) => {
+        options[field] = {
+            items: [],
+            truncated: false,
+        };
+    });
+    return { options };
+}
+
+function getComboboxUnavailableMessage() {
+    return filterOptionsUnavailableMessage || 'Opciones dinámicas no disponibles';
+}
+
+function updateComboboxDecorators(state) {
+    if (!state) return;
+    const hasValue = Boolean(normalizeValue(state.input.value));
+    const hasSelection = normalizeValueList(state.selectedValues).length > 0;
+    state.wrapper.classList.toggle('has-value', hasValue);
+    state.wrapper.classList.toggle('has-selection', hasSelection);
+}
+
+function renderSelectedValues(state) {
+    if (!state?.selectedContainer) {
+        return;
+    }
+
+    const selectedValues = normalizeValueList(state.selectedValues);
+    state.selectedContainer.innerHTML = '';
+
+    if (!selectedValues.length) {
+        state.selectedContainer.hidden = true;
+        return;
+    }
+
+    const fragment = document.createDocumentFragment();
+
+    selectedValues.forEach((value) => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'combo-chip';
+        chip.title = value;
+
+        const labelNode = document.createElement('span');
+        labelNode.className = 'combo-chip-label';
+        labelNode.textContent = value;
+
+        const removeNode = document.createElement('span');
+        removeNode.className = 'combo-chip-remove';
+        removeNode.textContent = 'x';
+
+        chip.appendChild(labelNode);
+        chip.appendChild(removeNode);
+        chip.addEventListener('mousedown', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            state.preventBlur = true;
+        });
+        chip.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            removeSelectedValue(state.key, value);
+        });
+
+        fragment.appendChild(chip);
+    });
+
+    state.selectedContainer.appendChild(fragment);
+    state.selectedContainer.hidden = false;
+}
+
+function updateFilterHelpFromState(state) {
+    if (!state) return;
+    const selectedValues = normalizeValueList(state.selectedValues);
+
+    if (!filterOptionsApiEnabled) {
+        if (selectedValues.length) {
+            setFilterHelp(
+                state.key,
+                `${selectedValues.length.toLocaleString('es-MX')} seleccionados: ${summarizeSelectedValues(selectedValues)}`
+            );
+        } else {
+            setFilterHelp(state.key, getComboboxUnavailableMessage(), true);
+        }
+        return;
+    }
+
+    if (hasNoBaseData() && !hasActiveFilters()) {
+        setFilterHelp(state.key, 'No hay datos cargados', true);
+        return;
+    }
+
+    if (selectedValues.length) {
+        setFilterHelp(
+            state.key,
+            `${selectedValues.length.toLocaleString('es-MX')} seleccionados: ${summarizeSelectedValues(selectedValues)}`
+        );
+        return;
+    }
+
+    if (state.kind === 'facet') {
+        if (state.options.length === 0) {
+            if (hasNoResultsForCurrentFilters()) {
+                setFilterHelp(state.key, 'Sin opciones con los filtros actuales', true);
+            } else {
+                setFilterHelp(state.key, 'Sin opciones disponibles', true);
+            }
+            return;
+        }
+
+        const suffix = state.truncated ? '+' : '';
+        setFilterHelp(
+            state.key,
+            `${state.options.length.toLocaleString('es-MX')}${suffix} opciones. Puedes marcar varias`
+        );
+        return;
+    }
+
+    if (hasNoResultsForCurrentFilters()) {
+        setFilterHelp(state.key, 'Sin sugerencias con los filtros actuales', true);
+        return;
+    }
+
+    if (normalizeValue(state.lastSearchTerm) && state.options.length === 0) {
+        setFilterHelp(state.key, 'Sin sugerencias para ese texto', true);
+        return;
+    }
+
+    setFilterHelp(state.key, 'Escribe y presiona Enter o marca varias opciones');
+}
+
+function setComboboxLoading(state, message) {
+    if (!state) return;
+    state.status.textContent = message;
+    state.optionsContainer.innerHTML = '';
+}
+
+function renderComboboxOptions(state) {
+    if (!state) return;
+
+    state.optionsContainer.innerHTML = '';
+    const activeValues = new Set(
+        normalizeValueList(state.selectedValues).map((value) => comparableValue(value))
+    );
+
+    if (state.options.length === 0) {
+        if (!filterOptionsApiEnabled) {
+            state.status.textContent = getComboboxUnavailableMessage();
+            updateFilterHelpFromState(state);
+            return;
+        }
+        if (hasNoBaseData() && !hasActiveFilters()) {
+            state.status.textContent = 'No hay datos cargados';
+            updateFilterHelpFromState(state);
+            return;
+        }
+        if (hasNoResultsForCurrentFilters()) {
+            state.status.textContent = 'Sin coincidencias con los filtros actuales';
+            updateFilterHelpFromState(state);
+            return;
+        }
+        if (state.kind === 'text' && !normalizeValue(state.lastSearchTerm)) {
+            state.status.textContent = 'Escribe para buscar y agrega varios valores';
+        } else {
+            state.status.textContent = 'No hay coincidencias disponibles';
+        }
+        updateFilterHelpFromState(state);
+        return;
+    }
+
+    const optionsMessage = state.truncated
+        ? `Mostrando las primeras ${state.options.length.toLocaleString('es-MX')} coincidencias`
+        : `${state.options.length.toLocaleString('es-MX')} coincidencias disponibles`;
+    const selectedCount = normalizeValueList(state.selectedValues).length;
+    state.status.textContent = selectedCount
+        ? `${selectedCount.toLocaleString('es-MX')} seleccionados. ${optionsMessage}`
+        : `${optionsMessage}. Marca para agregar o quitar`;
+
+    const fragment = document.createDocumentFragment();
+
+    state.options.forEach((item) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'combo-option';
+        if (activeValues.has(comparableValue(item.value))) {
+            button.classList.add('is-active');
+        }
+
+        const checkNode = document.createElement('span');
+        checkNode.className = 'combo-option-check';
+        checkNode.textContent = 'x';
+
+        const mainNode = document.createElement('span');
+        mainNode.className = 'combo-option-main';
+
+        const valueNode = document.createElement('strong');
+        valueNode.textContent = item.label || item.value;
+
+        const countNode = document.createElement('span');
+        countNode.className = 'combo-option-meta';
+        countNode.textContent = `${(item.count || 0).toLocaleString('es-MX')} registros`;
+
+        mainNode.appendChild(valueNode);
+        button.appendChild(checkNode);
+        button.appendChild(mainNode);
+        button.appendChild(countNode);
+        button.addEventListener('mousedown', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            state.preventBlur = true;
+            toggleComboboxOption(state.key, item.value);
+        });
+
+        fragment.appendChild(button);
+    });
+
+    state.optionsContainer.appendChild(fragment);
+    updateFilterHelpFromState(state);
+}
+
+function applyOptionsPayload(key, payload) {
+    const state = comboboxState.get(key);
+    if (!state) return;
+    state.options = Array.isArray(payload?.items) ? payload.items : [];
+    state.truncated = Boolean(payload?.truncated);
+    renderSelectedValues(state);
+    renderComboboxOptions(state);
+    updateComboboxDecorators(state);
+}
+
+function closeCombobox(key) {
+    const state = comboboxState.get(key);
+    if (!state) return;
+    state.menu.hidden = true;
+    state.wrapper.classList.remove('is-open');
+    if (activeMenuKey === key) {
+        activeMenuKey = null;
+    }
+}
+
+function closeAllComboboxes(exceptKey = '') {
+    comboboxState.forEach((state, key) => {
+        if (key !== exceptKey) {
+            closeCombobox(key);
+        }
+    });
+}
+
+function pruneFilterOptionsCache() {
+    const now = Date.now();
+    for (const [cacheKey, entry] of filterOptionsCache.entries()) {
+        if ((now - entry.ts) > FILTER_OPTIONS_TTL) {
+            filterOptionsCache.delete(cacheKey);
+        }
+    }
+    while (filterOptionsCache.size > 80) {
+        const firstKey = filterOptionsCache.keys().next().value;
+        filterOptionsCache.delete(firstKey);
+    }
+}
+
+async function fetchFilterOptions(fields, searchTerms = {}) {
+    const orderedFields = [...new Set(fields || [])].filter(Boolean).sort();
+    if (!orderedFields.length) {
+        return { options: {} };
+    }
+
+    if (!filterOptionsApiEnabled) {
+        return buildEmptyOptionsPayload(orderedFields);
+    }
+
+    pruneFilterOptionsCache();
+
+    const normalizedSearchTerms = {};
+    Object.entries(searchTerms || {}).forEach(([key, value]) => {
+        const normalized = normalizeValue(value);
+        if (normalized) {
+            normalizedSearchTerms[key] = normalized;
+        }
+    });
+
+    const cacheKey = JSON.stringify({
+        fields: orderedFields,
+        filtros: buildComparableEntries(filtrosActuales),
+        search: buildComparableSearchEntries(normalizedSearchTerms),
+    });
+    const cached = filterOptionsCache.get(cacheKey);
+    if (cached && (Date.now() - cached.ts) < FILTER_OPTIONS_TTL) {
+        return cached.data;
+    }
+
+    const params = new URLSearchParams();
+    params.set('fields', orderedFields.join(','));
+    appendFiltersToParams(params, filtrosActuales);
+    Object.entries(normalizedSearchTerms).forEach(([key, value]) => {
+        params.set(`search_${key}`, value);
+    });
+
+    const response = await fetch(`/api/transacciones/filtros?${params}`);
+    let data = {};
+    try {
+        data = await response.json();
+    } catch (error) {
+        data = {};
+    }
+    if (!response.ok) {
+        if (response.status === 404) {
+            filterOptionsApiEnabled = false;
+            filterOptionsUnavailableMessage = 'Reinicia el servidor para activar las opciones dinámicas';
+            return buildEmptyOptionsPayload(orderedFields);
+        }
+        throw new Error(data.error || 'Error al cargar opciones de filtros');
+    }
+
+    filterOptionsCache.set(cacheKey, { ts: Date.now(), data });
+    return data;
+}
+
+async function loadComboboxOptions(key, { searchTerm = '' } = {}) {
+    const state = comboboxState.get(key);
+    if (!state) return;
+
+    const requestId = ++state.requestId;
+    state.lastSearchTerm = normalizeValue(searchTerm);
+    setComboboxLoading(
+        state,
+        state.kind === 'facet' ? 'Cargando opciones disponibles...' : 'Buscando sugerencias...'
+    );
+
+    try {
+        const data = await fetchFilterOptions(
+            [key],
+            state.lastSearchTerm ? { [key]: state.lastSearchTerm } : {}
+        );
+        if (requestId !== state.requestId) {
+            return;
+        }
+        applyOptionsPayload(key, data.options?.[key] || { items: [], truncated: false });
+    } catch (error) {
+        if (requestId !== state.requestId) {
+            return;
+        }
+        state.options = [];
+        state.truncated = false;
+        state.status.textContent = error.message;
+        state.optionsContainer.innerHTML = '';
+        updateFilterHelpFromState(state);
+    }
+}
+
+async function refreshFilterOptions() {
+    const sequence = ++facetRefreshSequence;
+    const searchTerms = {};
+
+    if (activeMenuKey) {
+        const activeState = comboboxState.get(activeMenuKey);
+        if (activeState) {
+            const activeSearch = normalizeValue(activeState.input.value);
+            if (activeSearch) {
+                searchTerms[activeState.key] = activeSearch;
+            }
+        }
+    }
+
+    try {
+        const data = await fetchFilterOptions(OPTION_FIELD_KEYS, searchTerms);
+        if (sequence !== facetRefreshSequence) {
+            return;
+        }
+
+        OPTION_FIELD_KEYS.forEach((fieldKey) => {
+            applyOptionsPayload(fieldKey, data.options?.[fieldKey] || { items: [], truncated: false });
+        });
+    } catch (error) {
+        OPTION_FIELD_KEYS.forEach((fieldKey) => {
+            const state = comboboxState.get(fieldKey);
+            if (!state) return;
+            state.status.textContent = error.message;
+            state.options = [];
+            state.truncated = false;
+            updateFilterHelpFromState(state);
+        });
+    }
+}
+
+async function refreshCurrentView() {
+    totalsKey = null;
+    paginaActual = 1;
+    await Promise.allSettled([refreshFilterOptions(), cargarTransacciones()]);
+}
+
+function getSelectedValues(key, source = filtrosActuales) {
+    return normalizeValueList(source?.[key]);
+}
+
+function setFilterValues(key, values, { clearInput = false } = {}) {
+    const normalizedValues = normalizeValueList(values);
+    const currentValues = getSelectedValues(key);
+    const state = comboboxState.get(key);
+
+    if (normalizedValues.length) {
+        filtrosActuales[key] = normalizedValues;
+    } else {
+        delete filtrosActuales[key];
+    }
+
+    if (state) {
+        state.selectedValues = [...normalizedValues];
+        if (clearInput) {
+            state.input.value = '';
+            state.lastSearchTerm = '';
+            state.hasPendingInput = false;
+        }
+        renderSelectedValues(state);
+        updateComboboxDecorators(state);
+        renderComboboxOptions(state);
+    }
+
+    renderActiveFilters();
+    return !areValueListsEqual(currentValues, normalizedValues);
+}
+
+function resolveFacetInputValue(state) {
+    const rawValue = normalizeValue(state.input.value);
+    if (!rawValue) {
+        return '';
+    }
+
+    const exactMatch = state.options.find((item) => comparableValue(item.value) === comparableValue(rawValue));
+    if (exactMatch) {
+        return exactMatch.value;
+    }
+
+    if (state.options.length === 1) {
+        const [singleOption] = state.options;
+        if (comparableValue(singleOption.value).startsWith(comparableValue(rawValue))) {
+            return singleOption.value;
+        }
+    }
+
+    if (state.key === 'cuenta_contable') {
+        return rawValue;
+    }
+
+    return '';
+}
+
+function commitPendingInputSelection(key, { refresh = true, clearInput = true } = {}) {
+    const state = comboboxState.get(key);
+    if (!state || !state.hasPendingInput) {
+        return false;
+    }
+
+    const resolvedValue = state.kind === 'text'
+        ? normalizeValue(state.input.value)
+        : resolveFacetInputValue(state);
+    if (!resolvedValue) {
+        return false;
+    }
+
+    const nextValues = normalizeValueList([...state.selectedValues, resolvedValue]);
+    const changed = setFilterValues(key, nextValues, { clearInput });
+    state.hasPendingInput = false;
+
+    if (changed && refresh) {
+        refreshCurrentView();
+    }
+
+    return changed;
+}
+
+function toggleComboboxOption(key, value) {
+    const state = comboboxState.get(key);
+    if (!state) return;
+
+    const normalizedValue = normalizeValue(value);
+    if (!normalizedValue) {
+        return;
+    }
+
+    state.hasPendingInput = false;
+    const nextValues = state.selectedValues.some(
+        (item) => comparableValue(item) === comparableValue(normalizedValue)
+    )
+        ? state.selectedValues.filter((item) => comparableValue(item) !== comparableValue(normalizedValue))
+        : [...state.selectedValues, normalizedValue];
+    const changed = setFilterValues(key, nextValues);
+
+    if (changed) {
+        refreshCurrentView();
+    }
+}
+
+function removeSelectedValue(key, value) {
+    const state = comboboxState.get(key);
+    if (!state) return;
+
+    const nextValues = state.selectedValues.filter(
+        (item) => comparableValue(item) !== comparableValue(value)
+    );
+    const changed = setFilterValues(key, nextValues);
+
+    if (changed) {
+        refreshCurrentView();
+    }
+}
+
+function clearFilterValue(key, { syncInput = true, refresh = true } = {}) {
+    const state = comboboxState.get(key);
+    if (state && syncInput) {
+        state.input.value = '';
+        state.lastSearchTerm = '';
+        state.hasPendingInput = false;
+    }
+
+    const changed = setFilterValues(key, [], { clearInput: syncInput });
+
+    if (changed && refresh) {
+        refreshCurrentView();
+    }
+}
+
+function openCombobox(key) {
+    const state = comboboxState.get(key);
+    if (!state) return;
+    closeAllComboboxes(key);
+    state.menu.hidden = false;
+    state.wrapper.classList.add('is-open');
+    activeMenuKey = key;
+    loadComboboxOptions(key, { searchTerm: normalizeValue(state.input.value) });
+}
+
+function initComboboxes() {
+    document.querySelectorAll('[data-filter-combobox]').forEach((wrapper) => {
+        const key = wrapper.dataset.filterCombobox;
+        const kind = wrapper.dataset.filterKind;
+        const menu = wrapper.querySelector('[data-filter-menu]');
+        let selectedContainer = wrapper.querySelector('[data-filter-selected]');
+
+        if (!selectedContainer) {
+            selectedContainer = document.createElement('div');
+            selectedContainer.className = 'combo-selected';
+            selectedContainer.dataset.filterSelected = key;
+            selectedContainer.hidden = true;
+            wrapper.insertBefore(selectedContainer, menu);
+        }
+
+        const state = {
+            key,
+            kind,
+            wrapper,
+            input: wrapper.querySelector('input'),
+            menu,
+            status: wrapper.querySelector('[data-filter-status]'),
+            optionsContainer: wrapper.querySelector('[data-filter-options]'),
+            clearButton: wrapper.querySelector('[data-filter-clear]'),
+            toggleButton: wrapper.querySelector('[data-filter-toggle]'),
+            selectedContainer,
+            selectedValues: getSelectedValues(key),
+            lastSearchTerm: '',
+            hasPendingInput: false,
+            options: [],
+            truncated: false,
+            requestId: 0,
+            preventBlur: false,
+            debouncedLookup: null,
+        };
+
+        state.debouncedLookup = debounce((searchTerm) => {
+            loadComboboxOptions(state.key, { searchTerm });
+        }, 280);
+
+        state.input.addEventListener('focus', () => {
+            openCombobox(state.key);
+        });
+
+        state.input.addEventListener('click', () => {
+            openCombobox(state.key);
+        });
+
+        state.input.addEventListener('input', () => {
+            const rawValue = normalizeValue(state.input.value);
+            state.lastSearchTerm = rawValue;
+            state.hasPendingInput = Boolean(rawValue);
+            updateComboboxDecorators(state);
+            state.debouncedLookup(rawValue);
+        });
+
+        state.input.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                openCombobox(state.key);
+                return;
+            }
+
+            if (event.key === 'Escape') {
+                closeCombobox(state.key);
+                return;
+            }
+
+            if (event.key === 'Backspace' && !normalizeValue(state.input.value) && state.selectedValues.length > 0) {
+                event.preventDefault();
+                removeSelectedValue(state.key, state.selectedValues[state.selectedValues.length - 1]);
+                return;
+            }
+
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const changed = commitPendingInputSelection(state.key, {
+                    refresh: false,
+                    clearInput: true,
+                });
+                if (changed) {
+                    refreshCurrentView();
+                }
+            }
+        });
+
+        state.input.addEventListener('blur', () => {
+            window.setTimeout(() => {
+                if (state.preventBlur) {
+                    state.preventBlur = false;
+                    return;
+                }
+                closeCombobox(state.key);
+            }, 120);
+        });
+
+        state.clearButton.addEventListener('mousedown', (event) => {
+            event.stopPropagation();
+            state.preventBlur = true;
+        });
+
+        state.clearButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            clearFilterValue(state.key, { syncInput: true, refresh: true });
+            state.input.focus();
+            openCombobox(state.key);
+        });
+
+        state.toggleButton.addEventListener('mousedown', (event) => {
+            event.stopPropagation();
+            state.preventBlur = true;
+        });
+
+        state.toggleButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (state.menu.hidden) {
+                openCombobox(state.key);
+                state.input.focus();
+            } else {
+                closeCombobox(state.key);
+            }
+        });
+
+        comboboxState.set(key, state);
+        renderSelectedValues(state);
+        updateComboboxDecorators(state);
+        renderComboboxOptions(state);
+    });
+}
+
+function buildNextFilters() {
+    const nextFilters = {};
+
+    comboboxState.forEach((state) => {
+        const selectedValues = normalizeValueList(state.selectedValues);
+        if (selectedValues.length) {
+            nextFilters[state.key] = selectedValues;
+        }
+    });
+
+    RANGE_FILTERS.forEach((config) => {
+        const input = document.getElementById(config.inputId);
+        const value = normalizeValue(input?.value);
+        if (value) {
+            nextFilters[config.key] = value;
+        }
+    });
+
+    return nextFilters;
+}
+
+async function aplicarFiltros() {
+    let committedPending = false;
+
+    comboboxState.forEach((state) => {
+        const changed = commitPendingInputSelection(state.key, {
+            refresh: false,
+            clearInput: true,
+        });
+        committedPending = committedPending || changed;
+        closeCombobox(state.key);
+    });
+
+    const nextFilters = buildNextFilters();
+    const filtersChanged = !areFiltersEqual(filtrosActuales, nextFilters);
+    filtrosActuales = nextFilters;
+    renderActiveFilters();
+    totalsKey = null;
+    paginaActual = 1;
+
+    if (!filtersChanged && !committedPending) {
+        await Promise.allSettled([refreshFilterOptions(), cargarTransacciones()]);
+        return;
+    }
+
+    await Promise.allSettled([refreshFilterOptions(), cargarTransacciones()]);
+}
+
+async function limpiarFiltros() {
+    filtrosActuales = {};
+
+    comboboxState.forEach((state) => {
+        state.selectedValues = [];
+        state.lastSearchTerm = '';
+        state.hasPendingInput = false;
+        state.options = [];
+        state.truncated = false;
+        state.requestId = 0;
+        state.input.value = '';
+        renderSelectedValues(state);
+        updateComboboxDecorators(state);
+        renderComboboxOptions(state);
+        closeCombobox(state.key);
+    });
+
+    RANGE_FILTERS.forEach((config) => {
+        const input = document.getElementById(config.inputId);
+        if (input) {
+            input.value = '';
+        }
+    });
+
+    renderActiveFilters();
+    totalsKey = null;
+    paginaActual = 1;
+    await Promise.allSettled([refreshFilterOptions(), cargarTransacciones()]);
+}
+
+// Cargar al inicio
+window.addEventListener('DOMContentLoaded', async () => {
+    initDensityToggle();
+    initComboboxes();
+    renderActiveFilters();
+
     const pageInput = document.getElementById('pageInput');
     if (pageInput) {
         pageInput.addEventListener('keydown', (event) => {
@@ -1003,7 +2924,23 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-    cargarTransacciones();
+
+    RANGE_FILTERS.forEach((config) => {
+        const input = document.getElementById(config.inputId);
+        if (!input) return;
+        input.addEventListener('change', () => {
+            aplicarFiltros();
+        });
+    });
+
+    document.addEventListener('mousedown', (event) => {
+        const clickedInsideCombobox = event.target.closest('[data-filter-combobox]');
+        if (!clickedInsideCombobox) {
+            closeAllComboboxes();
+        }
+    });
+
+    await Promise.allSettled([refreshFilterOptions(), cargarTransacciones()]);
 });
 </script>
 {% endblock %}

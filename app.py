@@ -307,6 +307,376 @@ def create_app(config_name="default"):
             stats_cache[key] = {"ts": now, "data": data}
         return data
 
+    TRANSACTION_FACET_FIELDS = {
+        "cuenta_contable": {
+            "column": Transaccion.cuenta_contable,
+            "match": "prefix",
+            "search_match": "prefix",
+            "kind": "facet",
+            "multiple": True,
+        },
+        "genero": {
+            "column": Transaccion.genero,
+            "match": "exact",
+            "search_match": "prefix",
+            "kind": "facet",
+            "multiple": True,
+        },
+        "grupo": {
+            "column": Transaccion.grupo,
+            "match": "exact",
+            "search_match": "prefix",
+            "kind": "facet",
+            "multiple": True,
+        },
+        "rubro": {
+            "column": Transaccion.rubro,
+            "match": "exact",
+            "search_match": "prefix",
+            "kind": "facet",
+            "multiple": True,
+        },
+        "cuenta": {
+            "column": Transaccion.cuenta,
+            "match": "exact",
+            "search_match": "prefix",
+            "kind": "facet",
+            "multiple": True,
+        },
+        "subcuenta": {
+            "column": Transaccion.subcuenta,
+            "match": "exact",
+            "search_match": "prefix",
+            "kind": "facet",
+            "multiple": True,
+        },
+        "dependencia": {
+            "column": Transaccion.dependencia,
+            "match": "exact",
+            "search_match": "prefix",
+            "kind": "facet",
+            "multiple": True,
+        },
+        "unidad_responsable": {
+            "column": Transaccion.unidad_responsable,
+            "match": "exact",
+            "search_match": "prefix",
+            "kind": "facet",
+            "multiple": True,
+        },
+        "centro_costo": {
+            "column": Transaccion.centro_costo,
+            "match": "exact",
+            "search_match": "prefix",
+            "kind": "facet",
+            "multiple": True,
+        },
+        "proyecto_presupuestario": {
+            "column": Transaccion.proyecto_presupuestario,
+            "match": "exact",
+            "search_match": "prefix",
+            "kind": "facet",
+            "multiple": True,
+        },
+        "fuente": {
+            "column": Transaccion.fuente,
+            "match": "exact",
+            "search_match": "prefix",
+            "kind": "facet",
+            "multiple": True,
+        },
+        "subfuente": {
+            "column": Transaccion.subfuente,
+            "match": "exact",
+            "search_match": "prefix",
+            "kind": "facet",
+            "multiple": True,
+        },
+        "tipo_recurso": {
+            "column": Transaccion.tipo_recurso,
+            "match": "exact",
+            "search_match": "prefix",
+            "kind": "facet",
+            "multiple": True,
+        },
+        "partida_presupuestal": {
+            "column": Transaccion.partida_presupuestal,
+            "match": "exact",
+            "search_match": "prefix",
+            "kind": "facet",
+            "multiple": True,
+        },
+    }
+
+    TRANSACTION_TEXT_FIELDS = {
+        "nombre_cuenta": {
+            "column": Transaccion.nombre_cuenta,
+            "match": "contains",
+            "search_match": "contains",
+            "kind": "text",
+            "multiple": True,
+        },
+        "beneficiario": {
+            "column": Transaccion.beneficiario,
+            "match": "contains",
+            "search_match": "contains",
+            "kind": "text",
+            "multiple": True,
+        },
+        "descripcion": {
+            "column": Transaccion.descripcion,
+            "match": "contains",
+            "search_match": "contains",
+            "kind": "text",
+            "multiple": True,
+        },
+        "orden_pago": {
+            "column": Transaccion.orden_pago,
+            "match": "contains",
+            "search_match": "contains",
+            "kind": "text",
+            "multiple": True,
+        },
+        "poliza": {
+            "column": Transaccion.poliza,
+            "match": "contains",
+            "search_match": "contains",
+            "kind": "text",
+            "multiple": True,
+        },
+    }
+
+    TRANSACTION_RANGE_FIELDS = {
+        "fecha_inicio": {
+            "column": Transaccion.fecha_transaccion,
+            "op": "gte",
+            "kind": "range",
+        },
+        "fecha_fin": {
+            "column": Transaccion.fecha_transaccion,
+            "op": "lte",
+            "kind": "range",
+        },
+    }
+
+    TRANSACTION_FILTERS = {
+        **TRANSACTION_FACET_FIELDS,
+        **TRANSACTION_TEXT_FIELDS,
+        **TRANSACTION_RANGE_FIELDS,
+    }
+    TRANSACTION_OPTION_FIELDS = [
+        *TRANSACTION_FACET_FIELDS.keys(),
+        *TRANSACTION_TEXT_FIELDS.keys(),
+    ]
+
+    def _sanitize_filter_values(raw_values):
+        if isinstance(raw_values, (list, tuple, set)):
+            candidates = raw_values
+        else:
+            candidates = [raw_values]
+
+        sanitized = []
+        seen = set()
+
+        for raw_value in candidates:
+            if raw_value is None:
+                continue
+
+            value = str(raw_value).strip()
+            if not value:
+                continue
+
+            comparable = value.casefold()
+            if comparable in seen:
+                continue
+
+            seen.add(comparable)
+            sanitized.append(value)
+
+        return sanitized
+
+    def _get_filter_values(filters, key):
+        if not filters:
+            return []
+
+        raw_value = filters.get(key)
+        if raw_value is None:
+            return []
+
+        return _sanitize_filter_values(raw_value)
+
+    def _sanitize_transaccion_filters(source):
+        sanitized = {}
+        if not source:
+            return sanitized
+
+        for key, config in TRANSACTION_FILTERS.items():
+            raw_values = []
+            if hasattr(source, "getlist"):
+                raw_values = source.getlist(key)
+                if not raw_values and key in source:
+                    raw_values = [source.get(key)]
+            else:
+                raw_values = source.get(key)
+
+            values = _sanitize_filter_values(raw_values)
+            if not values:
+                continue
+
+            if config["kind"] == "range" or not config.get("multiple"):
+                sanitized[key] = values[-1]
+            else:
+                sanitized[key] = values
+
+        return sanitized
+
+    def _sanitize_transaccion_search_terms(source):
+        search_terms = {}
+        if not source:
+            return search_terms
+
+        for key in TRANSACTION_OPTION_FIELDS:
+            raw_value = source.get(f"search_{key}")
+            if raw_value is None:
+                continue
+            value = str(raw_value).strip()
+            if value:
+                search_terms[key] = value
+
+        return search_terms
+
+    def _parse_filter_date(value):
+        try:
+            return datetime.strptime(value, "%Y-%m-%d").date()
+        except (TypeError, ValueError):
+            return None
+
+    def _build_string_match_expression(column, value, match_mode):
+        if match_mode == "exact":
+            return column == value
+        if match_mode == "prefix":
+            return column.like(f"{value}%")
+        return column.like(f"%{value}%")
+
+    def _apply_string_match(query, column, value, match_mode):
+        return query.filter(_build_string_match_expression(column, value, match_mode))
+
+    def _apply_transaccion_filters(query, filters, exclude_field=None):
+        for key, value in (filters or {}).items():
+            if key == exclude_field:
+                continue
+
+            config = TRANSACTION_FILTERS.get(key)
+            if not config:
+                continue
+
+            if config["kind"] == "range":
+                parsed_date = _parse_filter_date(value)
+                if not parsed_date:
+                    continue
+                if config["op"] == "gte":
+                    query = query.filter(config["column"] >= parsed_date)
+                elif config["op"] == "lte":
+                    query = query.filter(config["column"] <= parsed_date)
+                continue
+
+            values = _get_filter_values(filters, key)
+            if not values:
+                continue
+
+            if len(values) == 1:
+                query = _apply_string_match(query, config["column"], values[0], config["match"])
+                continue
+
+            query = query.filter(
+                or_(
+                    *[
+                        _build_string_match_expression(config["column"], item, config["match"])
+                        for item in values
+                    ]
+                )
+            )
+
+        return query
+
+    def _build_filter_options(field_key, filters, search_term="", limit=None):
+        config = TRANSACTION_FILTERS.get(field_key)
+        if not config or config["kind"] == "range":
+            return [], False
+
+        option_limit = limit or (100 if config["kind"] == "facet" else 12)
+        base_query = _apply_transaccion_filters(
+            Transaccion.query,
+            filters,
+            exclude_field=field_key,
+        )
+        column = config["column"]
+
+        grouped_query = base_query.filter(
+            column.isnot(None),
+            func.length(func.trim(column)) > 0,
+        )
+
+        normalized_search = (search_term or "").strip()
+        if normalized_search:
+            grouped_query = _apply_string_match(
+                grouped_query,
+                column,
+                normalized_search,
+                config.get("search_match", "contains"),
+            )
+
+        grouped_query = (
+            grouped_query.with_entities(
+                column.label("value"),
+                func.count(Transaccion.id).label("count"),
+            )
+            .group_by(column)
+            .order_by(func.count(Transaccion.id).desc(), column.asc())
+        )
+
+        rows = grouped_query.limit(option_limit + 1).all()
+        items = [
+            {
+                "value": value,
+                "label": value,
+                "count": int(count or 0),
+            }
+            for value, count in rows[:option_limit]
+            if value is not None and str(value).strip()
+        ]
+
+        current_values = _get_filter_values(filters, field_key)
+        existing_values = {item["value"] for item in items}
+        missing_selected = []
+
+        for current_value in current_values:
+            if current_value in existing_values:
+                continue
+
+            current_count = _apply_string_match(
+                base_query.filter(
+                    column.isnot(None),
+                    func.length(func.trim(column)) > 0,
+                ),
+                column,
+                current_value,
+                config["match"],
+            ).count()
+            if current_count:
+                missing_selected.append(
+                    {
+                        "value": current_value,
+                        "label": current_value,
+                        "count": int(current_count),
+                    }
+                )
+
+        if missing_selected:
+            items = missing_selected + items
+
+        return items, len(rows) > option_limit
+
     @app.route("/login", methods=["GET", "POST"])
     def login():
         if _is_authenticated():
@@ -744,58 +1114,8 @@ def create_app(config_name="default"):
                 "true",
                 "yes",
             )
-            base_query = Transaccion.query
-
-            def apply_filters(filtered_query):
-                if cuenta := request.args.get("cuenta_contable"):
-                    filtered_query = filtered_query.filter(Transaccion.cuenta_contable.like(f"{cuenta}%"))
-                if dependencia := request.args.get("dependencia"):
-                    filtered_query = filtered_query.filter(Transaccion.dependencia == dependencia)
-                if fecha_inicio := request.args.get("fecha_inicio"):
-                    filtered_query = filtered_query.filter(Transaccion.fecha_transaccion >= fecha_inicio)
-                if fecha_fin := request.args.get("fecha_fin"):
-                    filtered_query = filtered_query.filter(Transaccion.fecha_transaccion <= fecha_fin)
-                if poliza := request.args.get("poliza"):
-                    filtered_query = filtered_query.filter(Transaccion.poliza.like(f"%{poliza}%"))
-
-                # Filtros por componentes de cuenta
-                if genero := request.args.get("genero"):
-                    filtered_query = filtered_query.filter(Transaccion.genero == genero)
-                if grupo := request.args.get("grupo"):
-                    filtered_query = filtered_query.filter(Transaccion.grupo == grupo)
-                if rubro := request.args.get("rubro"):
-                    filtered_query = filtered_query.filter(Transaccion.rubro == rubro)
-                if cuenta_num := request.args.get("cuenta"):
-                    filtered_query = filtered_query.filter(Transaccion.cuenta == cuenta_num)
-                if subcuenta := request.args.get("subcuenta"):
-                    filtered_query = filtered_query.filter(Transaccion.subcuenta == subcuenta)
-                if unidad_responsable := request.args.get("unidad_responsable"):
-                    filtered_query = filtered_query.filter(Transaccion.unidad_responsable == unidad_responsable)
-                if centro_costo := request.args.get("centro_costo"):
-                    filtered_query = filtered_query.filter(Transaccion.centro_costo == centro_costo)
-                if proyecto_presupuestario := request.args.get("proyecto_presupuestario"):
-                    filtered_query = filtered_query.filter(Transaccion.proyecto_presupuestario == proyecto_presupuestario)
-                if fuente := request.args.get("fuente"):
-                    filtered_query = filtered_query.filter(Transaccion.fuente == fuente)
-                if subfuente := request.args.get("subfuente"):
-                    filtered_query = filtered_query.filter(Transaccion.subfuente == subfuente)
-                if tipo_recurso := request.args.get("tipo_recurso"):
-                    filtered_query = filtered_query.filter(Transaccion.tipo_recurso == tipo_recurso)
-                if partida_presupuestal := request.args.get("partida_presupuestal"):
-                    filtered_query = filtered_query.filter(Transaccion.partida_presupuestal == partida_presupuestal)
-
-                # Filtros de texto con búsqueda parcial
-                if nombre_cuenta := request.args.get("nombre_cuenta"):
-                    filtered_query = filtered_query.filter(Transaccion.nombre_cuenta.like(f"%{nombre_cuenta}%"))
-                if beneficiario := request.args.get("beneficiario"):
-                    filtered_query = filtered_query.filter(Transaccion.beneficiario.like(f"%{beneficiario}%"))
-                if descripcion := request.args.get("descripcion"):
-                    filtered_query = filtered_query.filter(Transaccion.descripcion.like(f"%{descripcion}%"))
-                if orden_pago := request.args.get("orden_pago"):
-                    filtered_query = filtered_query.filter(Transaccion.orden_pago.like(f"%{orden_pago}%"))
-                return filtered_query
-
-            base_query = apply_filters(base_query)
+            filtros = _sanitize_transaccion_filters(request.args)
+            base_query = _apply_transaccion_filters(Transaccion.query, filtros)
             query = base_query.order_by(Transaccion.fecha_transaccion.desc())
             paginated = query.paginate(page=page, per_page=per_page, error_out=False)
 
@@ -820,6 +1140,40 @@ def create_app(config_name="default"):
                 })
 
             return jsonify(response_payload)
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    @app.route("/api/transacciones/filtros")
+    def get_transacciones_filtros():
+        try:
+            filtros = _sanitize_transaccion_filters(request.args)
+            search_terms = _sanitize_transaccion_search_terms(request.args)
+            requested_fields = [
+                field.strip()
+                for field in request.args.get("fields", "").split(",")
+                if field.strip() in TRANSACTION_OPTION_FIELDS
+            ]
+
+            if not requested_fields:
+                requested_fields = list(TRANSACTION_OPTION_FIELDS)
+
+            options = {}
+            for field_key in requested_fields:
+                items, truncated = _build_filter_options(
+                    field_key,
+                    filtros,
+                    search_term=search_terms.get(field_key, ""),
+                )
+                options[field_key] = {
+                    "kind": TRANSACTION_FILTERS[field_key]["kind"],
+                    "items": items,
+                    "truncated": truncated,
+                }
+
+            return jsonify({
+                "filtros_aplicados": filtros,
+                "options": options,
+            })
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
@@ -865,55 +1219,8 @@ def create_app(config_name="default"):
     @app.route("/api/reportes/generar", methods=["POST"])
     def generar_reporte():
         try:
-            filtros = request.json
-            query = Transaccion.query
-
-            if cuenta := filtros.get("cuenta_contable"):
-                query = query.filter(Transaccion.cuenta_contable.like(f"{cuenta}%"))
-            if dependencia := filtros.get("dependencia"):
-                query = query.filter(Transaccion.dependencia == dependencia)
-            if fecha_inicio := filtros.get("fecha_inicio"):
-                query = query.filter(Transaccion.fecha_transaccion >= fecha_inicio)
-            if fecha_fin := filtros.get("fecha_fin"):
-                query = query.filter(Transaccion.fecha_transaccion <= fecha_fin)
-            if poliza := filtros.get("poliza"):
-                query = query.filter(Transaccion.poliza.like(f"%{poliza}%"))
-
-            # Filtros por componentes de cuenta
-            if genero := filtros.get("genero"):
-                query = query.filter(Transaccion.genero == genero)
-            if grupo := filtros.get("grupo"):
-                query = query.filter(Transaccion.grupo == grupo)
-            if rubro := filtros.get("rubro"):
-                query = query.filter(Transaccion.rubro == rubro)
-            if cuenta_num := filtros.get("cuenta"):
-                query = query.filter(Transaccion.cuenta == cuenta_num)
-            if subcuenta := filtros.get("subcuenta"):
-                query = query.filter(Transaccion.subcuenta == subcuenta)
-            if unidad_responsable := filtros.get("unidad_responsable"):
-                query = query.filter(Transaccion.unidad_responsable == unidad_responsable)
-            if centro_costo := filtros.get("centro_costo"):
-                query = query.filter(Transaccion.centro_costo == centro_costo)
-            if proyecto_presupuestario := filtros.get("proyecto_presupuestario"):
-                query = query.filter(Transaccion.proyecto_presupuestario == proyecto_presupuestario)
-            if fuente := filtros.get("fuente"):
-                query = query.filter(Transaccion.fuente == fuente)
-            if subfuente := filtros.get("subfuente"):
-                query = query.filter(Transaccion.subfuente == subfuente)
-            if tipo_recurso := filtros.get("tipo_recurso"):
-                query = query.filter(Transaccion.tipo_recurso == tipo_recurso)
-            if partida_presupuestal := filtros.get("partida_presupuestal"):
-                query = query.filter(Transaccion.partida_presupuestal == partida_presupuestal)
-
-            # Filtros de texto con búsqueda parcial
-            if nombre_cuenta := filtros.get("nombre_cuenta"):
-                query = query.filter(Transaccion.nombre_cuenta.like(f"%{nombre_cuenta}%"))
-            if beneficiario := filtros.get("beneficiario"):
-                query = query.filter(Transaccion.beneficiario.like(f"%{beneficiario}%"))
-            if descripcion := filtros.get("descripcion"):
-                query = query.filter(Transaccion.descripcion.like(f"%{descripcion}%"))
-            if orden_pago := filtros.get("orden_pago"):
-                query = query.filter(Transaccion.orden_pago.like(f"%{orden_pago}%"))
+            filtros = _sanitize_transaccion_filters(request.json or {})
+            query = _apply_transaccion_filters(Transaccion.query, filtros)
 
             query = query.order_by(Transaccion.fecha_transaccion, Transaccion.cuenta_contable)
             transacciones = query.limit(100000).all()
