@@ -5,128 +5,192 @@
 {% block extra_css %}
 <style>
     .container {
-        max-width: 980px;
+        max-width: 920px;
         margin: 0 auto;
-        padding: 3.5rem 2rem 4rem;
+        padding: 2.75rem 2rem 3rem;
     }
 
     .page-header {
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
-        margin-bottom: 2rem;
+        gap: 0.2rem;
+        margin-bottom: 1.15rem;
     }
 
     .page-title {
-        font-family: "Fraunces", serif;
-        font-size: 2.25rem;
+        font-family: var(--font-serif);
+        font-size: 2rem;
         font-weight: 700;
         color: var(--text-primary);
     }
 
     .page-subtitle {
+        font-size: 0.9rem;
         color: var(--text-secondary);
-        font-size: 1rem;
-        max-width: 560px;
     }
 
-    .upload-card {
-        background: var(--surface);
-        border-radius: 12px;
-        border: 2px dashed var(--border);
-        padding: 2.5rem 2rem;
-        text-align: center;
-        transition: all 0.3s;
-        cursor: pointer;
-        margin-bottom: 2rem;
+    .page-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.55rem;
+        margin-top: 0.55rem;
+    }
+
+    .page-user {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.42rem 0.72rem;
+        border-radius: 999px;
+        border: 1px solid rgba(31, 59, 44, 0.10);
+        background: rgba(255, 255, 255, 0.92);
+        color: var(--primary);
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+
+    .selection-card,
+    .upload-card,
+    .status-bar {
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid rgba(31, 59, 44, 0.10);
+        border-radius: 18px;
+        box-shadow: 0 12px 24px rgba(15, 23, 42, 0.05);
+    }
+
+    .selection-card {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .selection-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .selection-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .ente-select-wrap {
         position: relative;
     }
 
+    .ente-select {
+        width: 100%;
+        padding: 0.95rem 3rem 0.95rem 1rem;
+        border-radius: 14px;
+        border: 1px solid rgba(31, 59, 44, 0.15);
+        background: rgba(255, 255, 255, 0.98);
+        color: var(--text-primary);
+        font-size: 0.96rem;
+        font-weight: 600;
+        appearance: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .ente-select:focus {
+        outline: none;
+        border-color: rgba(31, 59, 44, 0.30);
+        box-shadow: 0 0 0 4px rgba(31, 59, 44, 0.08);
+    }
+
+    .ente-select-icon {
+        position: absolute;
+        top: 50%;
+        right: 1rem;
+        transform: translateY(-50%);
+        color: var(--primary);
+        font-size: 0.95rem;
+        font-weight: 700;
+        pointer-events: none;
+    }
+
+    .ente-meta {
+        display: flex;
+        gap: 0.55rem;
+        flex-wrap: wrap;
+        align-items: center;
+        min-height: 1.85rem;
+        margin-top: 0.7rem;
+    }
+
+    .ente-meta.is-empty {
+        color: var(--text-secondary);
+        font-size: 0.84rem;
+    }
+
+    .ente-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.42rem 0.72rem;
+        border: 1px solid rgba(31, 59, 44, 0.10);
+        border-radius: 999px;
+        background: #f7faf8;
+        color: var(--text-primary);
+        font-size: 0.78rem;
+        font-weight: 700;
+        max-width: 100%;
+        white-space: nowrap;
+    }
+
+    .ente-badge-name {
+        background: rgba(31, 59, 44, 0.08);
+        color: var(--primary);
+        border-color: rgba(31, 59, 44, 0.14);
+        max-width: 420px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .upload-card {
+        padding: 1.3rem 1.2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+        margin-bottom: 0.9rem;
+        background: linear-gradient(180deg, #ffffff 0%, #fbfdfb 100%);
+    }
+
     .upload-card:hover {
-        border-color: var(--primary-light);
-        background: #f9fbfb;
+        border-color: rgba(31, 59, 44, 0.22);
+        transform: translateY(-1px);
+        box-shadow: 0 16px 28px rgba(15, 23, 42, 0.07);
     }
 
     .upload-card.drag-over {
         border-color: var(--primary);
-        background: #eef6f5;
+        background: #f4f8f5;
     }
 
     .upload-icon {
-        font-size: 2.75rem;
-        margin-bottom: 1rem;
+        width: 46px;
+        height: 46px;
+        margin: 0 auto 0.7rem;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(31, 59, 44, 0.08);
         color: var(--primary);
+        font-size: 1.4rem;
+        font-weight: 700;
     }
 
     .upload-title {
-        font-size: 1.25rem;
-        font-weight: 600;
+        font-size: 1rem;
+        font-weight: 700;
         color: var(--text-primary);
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.2rem;
     }
 
     .upload-subtitle {
-        font-size: 0.875rem;
+        font-size: 0.84rem;
         color: var(--text-secondary);
-    }
-
-    .file-type-selector {
-        margin: 2rem 0 1.5rem;
-    }
-
-    .file-type-menu {
-        display: inline-flex;
-        padding: 0.35rem;
-        border-radius: 999px;
-        border: 1px solid var(--border);
-        background: var(--background);
-        gap: 0.35rem;
-    }
-
-    .file-type-option {
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.6rem;
-        padding: 0.6rem 1.1rem;
-        border-radius: 999px;
-        cursor: pointer;
-        transition: color 0.2s, background 0.2s;
-        color: var(--text-secondary);
-        font-weight: 600;
-    }
-
-    .file-type-option input {
-        position: absolute;
-        opacity: 0;
-        pointer-events: none;
-    }
-
-    .file-type-option span {
-        color: inherit;
-        position: relative;
-        z-index: 1;
-    }
-
-    .file-type-option input:checked + span {
-        color: #fff;
-    }
-
-    .file-type-option input:checked + span::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: var(--color-secondary);
-        border-radius: 999px;
-        z-index: -1;
-        box-shadow: 0 10px 20px rgba(18, 50, 74, 0.18);
-    }
-
-    .file-type-hint {
-        margin-top: 0.75rem;
-        color: var(--text-secondary);
-        font-size: 0.9rem;
-        max-width: 560px;
     }
 
     #fileInput {
@@ -134,55 +198,79 @@
     }
 
     .file-list {
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state {
+        border-radius: 14px;
+        border: 1px dashed rgba(31, 59, 44, 0.14);
+        background: #f9fbfa;
+        color: var(--text-secondary);
+        text-align: center;
+        padding: 0.9rem 1rem;
+        font-size: 0.85rem;
     }
 
     .file-item {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        padding: 0.9rem 1.15rem;
-        margin-bottom: 0.75rem;
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        transition: box-shadow 0.2s;
-    }
-
-    .file-item:hover {
-        box-shadow: 0 2px 8px var(--shadow);
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.78rem 0.95rem;
+        margin-bottom: 0.65rem;
+        background: #ffffff;
+        border: 1px solid rgba(31, 59, 44, 0.08);
+        border-radius: 14px;
     }
 
     .file-info {
         display: flex;
         align-items: center;
-        gap: 1rem;
+        gap: 0.8rem;
+        min-width: 0;
     }
 
     .file-icon {
-        font-size: 1.5rem;
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        background: #f4f8f5;
+        color: var(--primary);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .file-details {
+        min-width: 0;
     }
 
     .file-details h4 {
-        font-size: 0.9375rem;
-        font-weight: 500;
+        font-size: 0.9rem;
+        font-weight: 700;
         color: var(--text-primary);
-        margin-bottom: 0.25rem;
+        margin-bottom: 0.1rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .file-details p {
-        font-size: 0.8125rem;
+        font-size: 0.78rem;
         color: var(--text-secondary);
     }
 
     .btn-remove {
-        background: none;
+        background: transparent;
         border: none;
         color: var(--text-secondary);
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
         cursor: pointer;
-        padding: 0.5rem;
-        border-radius: 4px;
-        transition: all 0.2s;
+        flex-shrink: 0;
     }
 
     .btn-remove:hover {
@@ -192,272 +280,380 @@
 
     .action-buttons {
         display: flex;
-        gap: 1rem;
-        justify-content: center;
-        margin-bottom: 2rem;
+        justify-content: flex-end;
+        gap: 0.8rem;
+        margin-bottom: 1rem;
+    }
+
+    .btn-primary,
+    .btn-outline {
+        border-radius: 999px;
     }
 
     .btn-primary {
-        padding: 0.75rem 1.75rem;
-        border-radius: 999px;
+        padding: 0.75rem 1.6rem;
     }
 
     .btn-outline {
-        padding: 0.7rem 1.5rem;
-        border-radius: 999px;
+        padding: 0.7rem 1.35rem;
     }
 
-    .summary-card {
-        background: var(--surface);
-        border-radius: 12px;
-        border: 1px solid var(--border);
-        padding: 1.25rem 1.75rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 1.5rem;
-        gap: 1rem;
-    }
-
-    .summary-title {
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--text-primary);
-        margin-bottom: 0.35rem;
-    }
-
-    .summary-subtitle {
-        font-size: 0.875rem;
-        color: var(--text-secondary);
-    }
-
-    .summary-count {
-        font-size: 2.25rem;
-        font-weight: 700;
-        color: var(--primary);
-        min-width: 60px;
-        text-align: right;
-    }
-
-    .empty-state {
-        background: var(--background);
-        border-radius: 10px;
-        padding: 1.25rem;
-        text-align: center;
-        color: var(--text-secondary);
-        border: 1px dashed var(--border);
-    }
-
-    .progress-section {
-        background: var(--surface);
-        border-radius: 8px;
-        border: 1px solid var(--border);
-        padding: 1.25rem 1.5rem;
-        margin-bottom: 2rem;
+    .status-bar {
         display: none;
+        padding: 1rem;
+        margin-bottom: 1rem;
     }
 
-    .progress-section.active {
+    .status-bar.is-visible {
         display: block;
     }
 
-    .progress-bar-container {
-        background: var(--background);
-        border-radius: 9999px;
-        height: 10px;
-        overflow: hidden;
-        margin-bottom: 1rem;
-    }
-
-    .progress-bar {
-        background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
-        height: 100%;
-        transition: width 0.3s;
-        border-radius: 9999px;
-    }
-
-    .progress-header {
+    .status-top,
+    .status-bottom {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 1rem;
+    }
+
+    .status-top {
+        margin-bottom: 0.8rem;
+    }
+
+    .status-group {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        flex-wrap: wrap;
+        min-width: 0;
+    }
+
+    .status-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.45rem 0.72rem;
+        border-radius: 999px;
+        background: #f7faf8;
+        border: 1px solid rgba(31, 59, 44, 0.10);
+        color: var(--text-primary);
+        font-size: 0.78rem;
+        font-weight: 700;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .status-chip[data-tone="accent"] {
+        background: rgba(31, 59, 44, 0.08);
+        color: var(--primary);
+        border-color: rgba(31, 59, 44, 0.14);
+    }
+
+    .progress-bar-container {
+        width: 100%;
+        height: 10px;
+        border-radius: 999px;
+        background: #edf2ee;
+        overflow: hidden;
         margin-bottom: 0.75rem;
     }
 
-    .progress-title {
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--text-primary);
+    .progress-bar {
+        height: 100%;
+        width: 0;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+        transition: width 0.25s ease;
     }
 
-    .progress-subtitle {
-        font-size: 0.875rem;
+    .status-message {
+        font-size: 0.86rem;
         color: var(--text-secondary);
-        margin-top: 0.35rem;
     }
 
     .progress-percent {
-        font-size: 1.25rem;
+        font-size: 0.86rem;
         font-weight: 700;
         color: var(--primary);
+        flex-shrink: 0;
     }
 
-    .progress-meta {
-        margin-top: 0.75rem;
-        padding: 0.85rem 1rem;
-        border-radius: 10px;
-        background: var(--background);
-        border: 1px dashed var(--border);
+    .progress-file-row {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin-top: 0.7rem;
+        padding-top: 0.7rem;
+        border-top: 1px solid rgba(31, 59, 44, 0.08);
+        min-width: 0;
     }
 
     .progress-file-label {
-        font-size: 0.75rem;
-        text-transform: uppercase;
+        font-size: 0.72rem;
+        font-weight: 700;
         letter-spacing: 0.08em;
+        text-transform: uppercase;
         color: var(--text-secondary);
-        margin-bottom: 0.35rem;
+        flex-shrink: 0;
     }
 
     .progress-file {
-        font-size: 0.9rem;
-        color: var(--text-primary);
-        font-weight: 600;
-        word-break: break-word;
-    }
-
-    .processed-card {
-        background: var(--surface);
-        border-radius: 12px;
-        border: 1px solid var(--border);
-        padding: 1.5rem;
-        margin-top: 1.5rem;
-    }
-
-    .processed-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        margin-bottom: 1rem;
-    }
-
-    .processed-title {
-        font-size: 1rem;
+        font-size: 0.86rem;
         font-weight: 600;
         color: var(--text-primary);
-    }
-
-    .processed-subtitle {
-        font-size: 0.875rem;
-        color: var(--text-secondary);
-        margin-top: 0.35rem;
-    }
-
-    .processed-table {
-        border-radius: 10px;
-        border: 1px solid var(--border);
         overflow: hidden;
-    }
-
-    .processed-row {
-        display: grid;
-        grid-template-columns: 1.4fr 1fr;
-        gap: 1rem;
-        padding: 0.75rem 1rem;
-        border-bottom: 1px solid var(--border);
-        align-items: center;
-        font-size: 0.9rem;
-        color: var(--text-primary);
-    }
-
-    .processed-row:last-child {
-        border-bottom: none;
-    }
-
-    .processed-head {
-        background: var(--background);
-        font-size: 0.7rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--text-secondary);
-        font-weight: 600;
-    }
-
-    .processed-empty {
-        margin-top: 0.85rem;
-        font-size: 0.875rem;
-        color: var(--text-secondary);
-    }
-
-    .btn-small {
-        padding: 0.45rem 1rem;
-        font-size: 0.8rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .alert {
-        padding: 1rem 1.25rem;
-        border-radius: 8px;
-        margin-bottom: 1.5rem;
+        padding: 0.95rem 1rem;
+        border-radius: 14px;
+        margin-bottom: 1rem;
         display: none;
+        font-size: 0.86rem;
     }
 
     .alert.active {
         display: block;
     }
 
-    .alert-success {
-        background: #d1fae5;
-        border: 1px solid #6ee7b7;
-        color: #065f46;
+    .alert h4 {
+        font-size: 0.92rem;
+        margin-bottom: 0.2rem;
     }
 
-    .alert-error {
-        background: #fee2e2;
-        border: 1px solid #fca5a5;
-        color: #991b1b;
+    .alert-success {
+        background: #e8f6ee;
+        border: 1px solid rgba(31, 90, 57, 0.16);
+        color: #1f5a39;
     }
 
     .alert-warning {
-        background: #fff4d8;
-        border: 1px solid #f1c876;
-        color: #7a4b00;
+        background: #fff5df;
+        border: 1px solid rgba(139, 92, 19, 0.16);
+        color: #8b5c13;
     }
 
-    .alert h4 {
+    .alert-error {
+        background: #fdeceb;
+        border: 1px solid rgba(155, 44, 44, 0.16);
+        color: #9b2c2c;
+    }
+
+    .drawer-toggle {
+        position: fixed;
+        top: 50%;
+        right: 0;
+        transform: translateY(-50%);
+        z-index: 1080;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.7rem;
+        padding: 0.95rem 1rem 0.95rem 0.9rem;
+        border: none;
+        border-radius: 18px 0 0 18px;
+        background: rgba(31, 59, 44, 0.96);
+        color: #ffffff;
+        font-size: 0.84rem;
+        font-weight: 700;
+        box-shadow: 0 18px 36px rgba(15, 23, 42, 0.18);
+        cursor: pointer;
+    }
+
+    .drawer-toggle:hover {
+        background: var(--primary-light);
+    }
+
+    .drawer-toggle-count {
+        min-width: 1.85rem;
+        height: 1.85rem;
+        padding: 0 0.45rem;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.16);
+        color: #ffffff;
+        font-size: 0.78rem;
+    }
+
+    .drawer-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.28);
+        backdrop-filter: blur(3px);
+        z-index: 1085;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+    }
+
+    .drawer-overlay.is-visible {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .drawer-panel {
+        position: fixed;
+        top: 0;
+        right: 0;
+        z-index: 1090;
+        width: min(390px, calc(100vw - 1.2rem));
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: rgba(255, 255, 255, 0.98);
+        border-left: 1px solid rgba(31, 59, 44, 0.10);
+        box-shadow: -18px 0 36px rgba(15, 23, 42, 0.14);
+        transform: translateX(100%);
+        visibility: hidden;
+        transition: transform 0.24s ease, visibility 0.24s ease;
+    }
+
+    .drawer-panel.is-open {
+        transform: translateX(0);
+        visibility: visible;
+    }
+
+    .drawer-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1rem 0.95rem;
+        border-bottom: 1px solid rgba(31, 59, 44, 0.08);
+    }
+
+    .drawer-title {
         font-size: 1rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
     }
 
-    .alert p {
-        font-size: 0.875rem;
+    .drawer-meta {
+        font-size: 0.82rem;
+        color: var(--text-secondary);
+        margin-top: 0.15rem;
+    }
+
+    .drawer-close {
+        width: 38px;
+        height: 38px;
+        border: none;
+        border-radius: 12px;
+        background: #f4f8f5;
+        color: var(--primary);
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+
+    .drawer-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0.95rem 1rem 1.1rem;
+    }
+
+    .drawer-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 0.75rem;
+    }
+
+    .btn-small {
+        padding: 0.55rem 1rem;
+        font-size: 0.82rem;
+    }
+
+    .processed-list {
+        display: grid;
+        gap: 0.65rem;
+    }
+
+    .processed-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.8rem 0.9rem;
+        border-radius: 14px;
+        border: 1px solid rgba(31, 59, 44, 0.08);
+        background: #fbfdfb;
+    }
+
+    .processed-file {
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .processed-method {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.38rem 0.7rem;
+        border-radius: 999px;
+        background: rgba(31, 59, 44, 0.08);
+        border: 1px solid rgba(31, 59, 44, 0.12);
+        color: var(--primary);
+        font-size: 0.78rem;
+        font-weight: 700;
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+
+    .processed-empty {
+        display: none;
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 0.84rem;
+        padding: 0.9rem 0 0.2rem;
     }
 
     @media (max-width: 720px) {
         .container {
-            padding: 2.5rem 1.25rem 3rem;
+            padding: 2.25rem 1.15rem 2.75rem;
         }
 
-        .summary-card {
+        .selection-top,
+        .status-top,
+        .status-bottom,
+        .action-buttons,
+        .processed-item {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .btn-small,
+        .btn-outline,
+        .btn-primary {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .drawer-toggle {
+            top: auto;
+            bottom: 1rem;
+            right: 1rem;
+            left: 1rem;
+            transform: none;
+            border-radius: 16px;
+            justify-content: space-between;
+        }
+
+        .drawer-panel {
+            width: min(100vw, 100%);
+        }
+
+        .progress-file-row {
             flex-direction: column;
             align-items: flex-start;
-        }
-
-        .summary-count {
-            align-self: flex-end;
-        }
-
-        .action-buttons {
-            flex-direction: column;
-        }
-
-        .file-type-menu {
-            width: 100%;
-        }
-
-        .file-type-option {
-            flex: 1;
-            justify-content: center;
         }
     }
 </style>
@@ -467,31 +663,31 @@
 <div class="container">
     <div class="page-header">
         <div class="page-title">Carga de Datos</div>
-        <div class="page-subtitle">
-            Selecciona el tipo de archivo, carga tus auxiliares y procesa la informacion en un solo flujo.
+        <div class="page-subtitle">Selecciona tu ente y carga tus archivos.</div>
+        {% if current_user_display %}
+        <div class="page-meta">
+            <span class="page-user">Usuario: {{ current_user_display }}</span>
         </div>
+        {% endif %}
     </div>
 
-    <div class="file-type-selector">
-        <div class="file-type-menu" role="tablist" aria-label="Tipo de archivo">
-            <label class="file-type-option">
-                <input type="radio" name="fileType" value="auxiliar" checked>
-                <span>Auxiliar contable</span>
-            </label>
-            <label class="file-type-option">
-                <input type="radio" name="fileType" value="macro">
-                <span>Macro SIIF</span>
-            </label>
+    <section class="selection-card">
+        <div class="selection-top">
+            <div class="selection-title">Selecciona tu ente</div>
         </div>
-        <div class="file-type-hint" id="fileTypeHint">
-            Logica actual de carga del sistema.
+        <div class="ente-select-wrap">
+            <select id="enteSelect" class="ente-select" required>
+                <option value="">Selecciona una opción...</option>
+            </select>
+            <div class="ente-select-icon">▾</div>
         </div>
-    </div>
+        <div class="ente-meta is-empty" id="entePreview">Sin selección</div>
+    </section>
 
     <div class="upload-card" id="uploadArea">
-        <div class="upload-icon">📂</div>
-        <div class="upload-title">Selecciona archivos Excel</div>
-        <div class="upload-subtitle">Arrastra archivos aquí o haz clic para seleccionar (.xlsx, .xls, .xlsm)</div>
+        <div class="upload-icon">+</div>
+        <div class="upload-title">Agregar archivos</div>
+        <div class="upload-subtitle">Arrastra o haz clic para seleccionar.</div>
         <input type="file" id="fileInput" accept=".xlsx,.xls,.xlsm" multiple>
     </div>
 
@@ -502,111 +698,130 @@
             Limpiar
         </button>
         <button class="btn btn-primary" id="btnProcess" disabled onclick="processFiles()">
-            Procesar Archivos
+            Procesar
         </button>
     </div>
 
-    <div class="summary-card">
-        <div>
-            <div class="summary-title">Archivos listos para procesar</div>
-            <div class="summary-subtitle" id="summaryText">Agrega archivos para iniciar la carga.</div>
-        </div>
-        <div class="summary-count" id="summaryCount">0</div>
-    </div>
-
-    <div class="file-list" id="fileListProcess"></div>
-
-    <div class="alert alert-success" id="successAlert">
-        <h4>✓ Procesamiento Completado</h4>
-        <p id="successMessage"></p>
-    </div>
-
-    <div class="alert alert-warning" id="warningAlert">
-        <h4>⚠️ Aviso</h4>
-        <p id="warningMessage"></p>
-    </div>
-
-    <div class="alert alert-error" id="errorAlert">
-        <h4>✗ Error</h4>
-        <p id="errorMessage"></p>
-    </div>
-
-    <div class="progress-section" id="progressSection">
-        <div class="progress-header">
-            <div>
-                <div class="progress-title">Procesando archivos</div>
-                <div class="progress-subtitle" id="progressMessage">Preparando carga...</div>
+    <section class="status-bar" id="statusBar">
+        <div class="status-top">
+            <div class="status-group">
+                <span class="status-chip" id="statusSelection">Ente: sin seleccionar</span>
+                <span class="status-chip" id="statusFiles">0 archivos</span>
             </div>
-            <div class="progress-percent" id="progressPercent">0%</div>
+            <span class="status-chip" id="statusState" data-tone="accent">Procesando</span>
         </div>
         <div class="progress-bar-container">
             <div class="progress-bar" id="progressBar" style="width: 0%"></div>
         </div>
-        <div class="progress-meta">
-            <div class="progress-file-label">Archivo actual</div>
-            <div class="progress-file" id="progressFile">—</div>
+        <div class="status-bottom">
+            <span class="status-message" id="progressMessage">Preparando carga</span>
+            <span class="progress-percent" id="progressPercent">0%</span>
         </div>
+        <div class="progress-file-row" id="progressFileRow" hidden>
+            <span class="progress-file-label">Archivo</span>
+            <span class="progress-file" id="progressFile">—</span>
+        </div>
+    </section>
+
+    <div class="alert alert-success" id="successAlert">
+        <h4>Proceso completado</h4>
+        <p id="successMessage"></p>
     </div>
 
-    <div class="processed-card">
-        <div class="processed-header">
-            <div>
-                <div class="processed-title">Archivos procesados</div>
-                <div class="processed-subtitle">
-                    Listado de archivos cargados y el metodo de procesamiento.
-                </div>
-            </div>
+    <div class="alert alert-warning" id="warningAlert">
+        <h4>Aviso</h4>
+        <p id="warningMessage"></p>
+    </div>
+
+    <div class="alert alert-error" id="errorAlert">
+        <h4>Error</h4>
+        <p id="errorMessage"></p>
+    </div>
+</div>
+
+<button class="drawer-toggle" id="processedDrawerToggle" type="button" aria-controls="processedDrawer" aria-expanded="false">
+    <span>Archivos procesados</span>
+    <span class="drawer-toggle-count" id="processedDrawerCount">0</span>
+</button>
+
+<div class="drawer-overlay" id="processedDrawerOverlay"></div>
+
+<aside class="drawer-panel" id="processedDrawer" aria-hidden="true">
+    <div class="drawer-header">
+        <div>
+            <div class="drawer-title">Archivos procesados</div>
+            <div class="drawer-meta" id="processedDrawerMeta">Sin archivos</div>
+        </div>
+        <button class="drawer-close" id="processedDrawerClose" type="button" aria-label="Cerrar panel">✕</button>
+    </div>
+    <div class="drawer-body">
+        <div class="drawer-actions">
             <button class="btn btn-outline btn-small" id="btnRefreshProcessed" type="button">
                 Actualizar
             </button>
         </div>
-        <div class="processed-table">
-            <div class="processed-row processed-head">
-                <div>Archivo</div>
-                <div>Metodo</div>
-            </div>
-            <div id="processedTableBody"></div>
-        </div>
-        <div class="processed-empty" id="processedEmpty">
-            Aun no hay archivos procesados.
-        </div>
+        <div class="processed-list" id="processedTableBody"></div>
+        <div class="processed-empty" id="processedEmpty">Sin archivos procesados.</div>
     </div>
-</div>
+</aside>
 {% endblock %}
 
 {% block extra_js %}
 <script>
 let selectedFiles = [];
+let isProcessing = false;
+let processedItemsCount = 0;
 
 const uploadArea = document.getElementById('uploadArea');
 const fileInput = document.getElementById('fileInput');
 const fileListUpload = document.getElementById('fileListUpload');
-const fileListProcess = document.getElementById('fileListProcess');
 const btnProcess = document.getElementById('btnProcess');
 const btnClear = document.getElementById('btnClear');
-const progressSection = document.getElementById('progressSection');
+const statusBar = document.getElementById('statusBar');
 const progressBar = document.getElementById('progressBar');
 const progressMessage = document.getElementById('progressMessage');
 const progressPercent = document.getElementById('progressPercent');
 const progressFile = document.getElementById('progressFile');
+const progressFileRow = document.getElementById('progressFileRow');
 const successAlert = document.getElementById('successAlert');
 const warningAlert = document.getElementById('warningAlert');
 const errorAlert = document.getElementById('errorAlert');
 const successMessage = document.getElementById('successMessage');
 const warningMessage = document.getElementById('warningMessage');
 const errorMessage = document.getElementById('errorMessage');
-const summaryCount = document.getElementById('summaryCount');
-const summaryText = document.getElementById('summaryText');
-const fileTypeInputs = document.querySelectorAll('input[name="fileType"]');
-const fileTypeHint = document.getElementById('fileTypeHint');
+const enteSelect = document.getElementById('enteSelect');
+const entePreview = document.getElementById('entePreview');
+const statusSelection = document.getElementById('statusSelection');
+const statusFiles = document.getElementById('statusFiles');
+const statusState = document.getElementById('statusState');
 const processedTableBody = document.getElementById('processedTableBody');
 const processedEmpty = document.getElementById('processedEmpty');
+const processedDrawerToggle = document.getElementById('processedDrawerToggle');
+const processedDrawerCount = document.getElementById('processedDrawerCount');
+const processedDrawerMeta = document.getElementById('processedDrawerMeta');
+const processedDrawerOverlay = document.getElementById('processedDrawerOverlay');
+const processedDrawer = document.getElementById('processedDrawer');
+const processedDrawerClose = document.getElementById('processedDrawerClose');
 const btnRefreshProcessed = document.getElementById('btnRefreshProcessed');
-
-let selectedFileType = 'auxiliar';
 
 uploadArea.addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', (e) => handleFiles(Array.from(e.target.files)));
+btnRefreshProcessed.addEventListener('click', () => loadProcessedFiles());
+enteSelect.addEventListener('change', () => {
+    hideAlerts();
+    updateEntePreview();
+    updateButtons();
+});
+
+processedDrawerToggle.addEventListener('click', () => openProcessedDrawer());
+processedDrawerClose.addEventListener('click', () => closeProcessedDrawer());
+processedDrawerOverlay.addEventListener('click', () => closeProcessedDrawer());
+
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+        closeProcessedDrawer();
+    }
+});
 
 uploadArea.addEventListener('dragover', (e) => {
     e.preventDefault();
@@ -623,22 +838,36 @@ uploadArea.addEventListener('drop', (e) => {
     handleFiles(Array.from(e.dataTransfer.files));
 });
 
-fileTypeInputs.forEach(input => {
-    input.addEventListener('change', (event) => {
-        selectedFileType = event.target.value;
-        updateFileTypeHint();
-        updateSummary();
-    });
-});
+function openProcessedDrawer() {
+    processedDrawer.classList.add('is-open');
+    processedDrawerOverlay.classList.add('is-visible');
+    processedDrawer.setAttribute('aria-hidden', 'false');
+    processedDrawerToggle.setAttribute('aria-expanded', 'true');
+}
 
-btnRefreshProcessed.addEventListener('click', () => {
-    loadProcessedFiles();
-});
+function closeProcessedDrawer() {
+    processedDrawer.classList.remove('is-open');
+    processedDrawerOverlay.classList.remove('is-visible');
+    processedDrawer.setAttribute('aria-hidden', 'true');
+    processedDrawerToggle.setAttribute('aria-expanded', 'false');
+}
+
+function syncProgressVisibility() {
+    statusBar.classList.toggle('is-visible', isProcessing);
+    if (!isProcessing) {
+        progressBar.style.width = '0%';
+        progressPercent.textContent = '0%';
+        progressMessage.textContent = 'Preparando carga';
+        progressFile.textContent = '—';
+        progressFileRow.hidden = true;
+    }
+}
 
 function handleFiles(files) {
-    const excelFiles = files.filter(f =>
-        f.name.endsWith('.xlsx') || f.name.endsWith('.xls') || f.name.endsWith('.xlsm')
+    const excelFiles = files.filter((file) =>
+        file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.xlsm')
     );
+    if (!excelFiles.length) return;
     selectedFiles = [...selectedFiles, ...excelFiles];
     renderFileLists();
 }
@@ -659,24 +888,20 @@ function renderFileList(listElement, emptyMessage) {
         item.className = 'file-item';
         item.innerHTML = `
             <div class="file-info">
-                <div class="file-icon">📄</div>
+                <div class="file-icon">XLS</div>
                 <div class="file-details">
-                    <h4>${file.name}</h4>
+                    <h4 title="${file.name}">${file.name}</h4>
                     <p>${formatFileSize(file.size)}</p>
                 </div>
             </div>
-            <button class="btn-remove" onclick="removeFile(${index})" title="Eliminar">
-                ✕
-            </button>
+            <button class="btn-remove" onclick="removeFile(${index})" title="Eliminar">✕</button>
         `;
         listElement.appendChild(item);
     });
 }
 
 function renderFileLists() {
-    renderFileList(fileListUpload, 'No hay archivos cargados todavía.');
-    renderFileList(fileListProcess, 'Agrega archivos para iniciar la carga.');
-    updateSummary();
+    renderFileList(fileListUpload, 'Sin archivos');
     updateButtons();
 }
 
@@ -692,17 +917,107 @@ function clearFiles() {
     hideAlerts();
 }
 
+function updateEntePreview() {
+    const option = enteSelect.options[enteSelect.selectedIndex];
+    const hasSelection = Boolean(enteSelect.value && option);
+
+    if (!hasSelection) {
+        entePreview.className = 'ente-meta is-empty';
+        entePreview.textContent = 'Sin selección';
+        return;
+    }
+
+    const nombre = option.dataset.nombre || option.textContent || 'Sin nombre';
+    const siglas = option.dataset.siglas || 'Sin siglas';
+    const ambito = option.dataset.ambito || 'Sin ámbito';
+
+    entePreview.className = 'ente-meta';
+    entePreview.innerHTML = `
+        <span class="ente-badge ente-badge-name" title="${nombre}">${siglas || nombre}</span>
+        <span class="ente-badge">${ambito}</span>
+    `;
+}
+
+function updateProgressHeader() {
+    const option = enteSelect.options[enteSelect.selectedIndex];
+    const hasSelection = Boolean(enteSelect.value && option);
+    const enteLabel = hasSelection
+        ? (option.dataset.siglas || option.dataset.nombre || option.textContent || 'seleccionado')
+        : 'sin seleccionar';
+    const totalBytes = selectedFiles.reduce((sum, file) => sum + file.size, 0);
+
+    statusSelection.textContent = `Ente: ${enteLabel}`;
+    statusSelection.title = hasSelection ? (option.dataset.nombre || option.textContent || '') : '';
+    statusFiles.textContent = selectedFiles.length
+        ? `${selectedFiles.length} archivo(s) · ${formatFileSize(totalBytes)}`
+        : '0 archivos';
+}
+
+async function loadCatalogoGeneral() {
+    try {
+        enteSelect.innerHTML = '<option value="">Selecciona una opción...</option>';
+        const response = await fetch('/api/catalogo-general');
+        if (!response.ok) {
+            throw new Error('No se pudo cargar el Catálogo General.');
+        }
+
+        const data = await response.json();
+        const items = data.opciones || [];
+        const grupos = new Map();
+
+        items.forEach((item) => {
+            const key = item.grupo_label || 'Catálogo General';
+            if (!grupos.has(key)) {
+                grupos.set(key, []);
+            }
+            grupos.get(key).push(item);
+        });
+
+        Array.from(grupos.entries()).forEach(([groupLabel, groupItems]) => {
+            const group = document.createElement('optgroup');
+            group.label = groupLabel;
+
+            groupItems.forEach((item) => {
+                const option = document.createElement('option');
+                option.value = item.id;
+                option.dataset.nombre = item.nombre || '';
+                option.dataset.dd = item.dd || '';
+                option.dataset.siglas = item.siglas || '';
+                option.dataset.ambito = item.ambito || '';
+                option.textContent = item.label || item.nombre || 'Sin nombre';
+                group.appendChild(option);
+            });
+
+            enteSelect.appendChild(group);
+        });
+
+        enteSelect.value = '';
+        updateEntePreview();
+    } catch (error) {
+        console.error('Error cargando Catálogo General:', error);
+        showError('No se pudo cargar el Catálogo General.');
+    }
+}
+
 async function processFiles(force = false) {
     if (selectedFiles.length === 0) return;
+    if (!enteSelect.value) {
+        showError('Selecciona una opción del Catálogo General antes de procesar.');
+        return;
+    }
 
-    btnProcess.disabled = true;
+    isProcessing = true;
     hideAlerts();
-    progressSection.classList.add('active');
-    updateProgress(0, 'Iniciando procesamiento...', null);
+    updateButtons();
+    updateProgressHeader();
+    statusState.textContent = 'Procesando';
+    syncProgressVisibility();
+    updateProgress(0, 'Preparando carga', null);
 
     const formData = new FormData();
-    selectedFiles.forEach(file => formData.append('archivo', file));
-    formData.append('tipo_archivo', selectedFileType);
+    selectedFiles.forEach((file) => formData.append('archivo', file));
+    formData.append('tipo_archivo', 'auxiliar');
+    formData.append('catalogo_item_id', enteSelect.value);
     formData.append('allow_duplicates', force ? 'true' : 'false');
 
     try {
@@ -736,34 +1051,33 @@ async function processFiles(force = false) {
                     `Estos archivos ya fueron procesados: ${data.duplicate_files.join(', ')}. ` +
                     '¿Deseas reprocesarlos de todos modos?'
                 );
-                progressSection.classList.remove('active');
-                btnProcess.disabled = false;
+                isProcessing = false;
+                syncProgressVisibility();
+                updateButtons();
                 if (shouldRetry) {
                     return processFiles(true);
                 }
                 return;
             }
-            let message = data.error || 'Error al iniciar el procesamiento';
-            if (data.duplicate_files && data.duplicate_files.length) {
-                message += ` Archivos: ${data.duplicate_files.join(', ')}`;
-            }
-            showError(message);
-            progressSection.classList.remove('active');
-            btnProcess.disabled = false;
+
+            isProcessing = false;
+            syncProgressVisibility();
+            updateButtons();
+            showError(data.error || 'Error al iniciar el procesamiento');
             return;
         }
 
         if (data.duplicate_files && data.duplicate_files.length) {
-            const warningLabel = force
-                ? 'Reprocesando archivos ya cargados'
-                : 'Estos archivos ya habían sido procesados y se omitieron';
+            const warningLabel = force ? 'Reprocesando archivos' : 'Archivos omitidos';
             showWarning(`${warningLabel}: ${data.duplicate_files.join(', ')}`);
         }
+
         monitorProgress(data.job_id);
     } catch (error) {
+        isProcessing = false;
+        syncProgressVisibility();
+        updateButtons();
         showError(error.message);
-        progressSection.classList.remove('active');
-        btnProcess.disabled = false;
     }
 }
 
@@ -772,48 +1086,60 @@ function monitorProgress(jobId) {
     let finished = false;
 
     eventSource.onmessage = (event) => {
-        const data = JSON.parse(event.data);
+        try {
+            const data = JSON.parse(event.data);
+            updateProgress(data.progress, data.message, data.current_file);
 
-        updateProgress(data.progress, data.message, data.current_file);
+            if (data.done && !data.error) {
+                finished = true;
+                eventSource.close();
+                isProcessing = false;
+                syncProgressVisibility();
+                selectedFiles = [];
+                fileInput.value = '';
+                renderFileLists();
+                showSuccess(
+                    data.message ||
+                    `Archivo procesado con exito. ${(data.total_registros || 0).toLocaleString('es-MX')} registros agregados.`
+                );
+                loadProcessedFiles();
+                return;
+            }
 
-        if (data.done && !data.error) {
-            finished = true;
-            eventSource.close();
-            progressSection.classList.remove('active');
-            showSuccess(`Se procesaron ${(data.total_registros || 0).toLocaleString('es-MX')} registros correctamente`);
-            clearFiles();
-            loadProcessedFiles();
-        } else if (data.error) {
-            finished = true;
-            eventSource.close();
-            progressSection.classList.remove('active');
-            showError(data.error);
-            btnProcess.disabled = false;
+            if (data.error) {
+                finished = true;
+                eventSource.close();
+                isProcessing = false;
+                syncProgressVisibility();
+                updateButtons();
+                showError(data.error);
+            }
+        } catch (error) {
+            console.error('Error leyendo progreso:', error);
         }
     };
 
     eventSource.onerror = () => {
-        if (finished) {
-            return;
-        }
+        if (finished) return;
         eventSource.close();
-        progressSection.classList.remove('active');
+        isProcessing = false;
+        syncProgressVisibility();
+        updateButtons();
         showError('Error de conexión con el servidor');
-        btnProcess.disabled = false;
     };
 }
 
 function updateProgress(percent, message, currentFile) {
-    progressBar.style.width = percent + '%';
-    progressMessage.textContent = message;
-    progressPercent.textContent = `${Math.round(percent)}%`;
+    progressBar.style.width = `${Math.max(0, percent || 0)}%`;
+    progressMessage.textContent = message || 'Procesando';
+    progressPercent.textContent = `${Math.round(percent || 0)}%`;
     progressFile.textContent = currentFile || '—';
+    progressFileRow.hidden = !currentFile;
 }
 
 function showSuccess(message) {
     successMessage.textContent = message;
     successAlert.classList.add('active');
-    btnProcess.disabled = false;
 }
 
 function showWarning(message) {
@@ -832,92 +1158,86 @@ function hideAlerts() {
     errorAlert.classList.remove('active');
 }
 
-function updateSummary() {
-    summaryCount.textContent = selectedFiles.length;
-
-    if (selectedFiles.length === 0) {
-        summaryText.textContent = 'Agrega archivos para iniciar la carga.';
-        return;
-    }
-
-    const totalBytes = selectedFiles.reduce((sum, file) => sum + file.size, 0);
-    const tipoLabel = selectedFileType === 'macro'
-        ? 'Archivos procesados por la macro'
-        : 'Auxiliar contable';
-    summaryText.textContent = `${formatFileSize(totalBytes)} en total · ${tipoLabel}`;
-}
-
 function formatMetodo(tipo) {
     if (tipo === 'macro') return 'Macro SIIF';
-    if (tipo === 'auxiliar') return 'Auxiliar contable';
     return 'Auxiliar contable';
+}
+
+function updateProcessedDrawerMeta() {
+    processedDrawerCount.textContent = processedItemsCount.toLocaleString('es-MX');
+    processedDrawerMeta.textContent = processedItemsCount
+        ? `${processedItemsCount.toLocaleString('es-MX')} archivo(s)`
+        : 'Sin archivos';
 }
 
 function renderProcessedFiles(items) {
     processedTableBody.innerHTML = '';
+    processedItemsCount = items.length;
+    updateProcessedDrawerMeta();
+
     if (!items.length) {
-        processedEmpty.textContent = 'Aun no hay archivos procesados.';
         processedEmpty.style.display = 'block';
         return;
     }
 
     processedEmpty.style.display = 'none';
     const fragment = document.createDocumentFragment();
+
     items.forEach((item) => {
         const row = document.createElement('div');
-        row.className = 'processed-row';
-
-        const archivo = document.createElement('div');
-        archivo.textContent = item.archivo || '—';
-
-        const metodo = document.createElement('div');
-        metodo.textContent = formatMetodo(item.tipo_archivo);
-
-        row.appendChild(archivo);
-        row.appendChild(metodo);
+        row.className = 'processed-item';
+        row.innerHTML = `
+            <div class="processed-file" title="${item.archivo || '—'}">${item.archivo || '—'}</div>
+            <div class="processed-method">${formatMetodo(item.tipo_archivo)}</div>
+        `;
         fragment.appendChild(row);
     });
+
     processedTableBody.appendChild(fragment);
 }
 
 async function loadProcessedFiles() {
-    processedEmpty.textContent = 'Cargando archivos procesados...';
+    processedTableBody.innerHTML = '';
     processedEmpty.style.display = 'block';
+    processedEmpty.textContent = 'Cargando...';
+    processedDrawerMeta.textContent = 'Consultando';
+
     try {
         const response = await fetch('/api/archivos-procesados');
         if (!response.ok) {
             throw new Error('No se pudieron cargar los archivos procesados');
         }
+
         const data = await response.json();
         const items = Array.isArray(data.archivos) ? data.archivos : [];
+        processedEmpty.textContent = 'Sin archivos procesados.';
         renderProcessedFiles(items);
     } catch (error) {
+        processedItemsCount = 0;
+        updateProcessedDrawerMeta();
         processedTableBody.innerHTML = '';
-        processedEmpty.textContent = 'No se pudo cargar la lista de archivos procesados.';
         processedEmpty.style.display = 'block';
+        processedEmpty.textContent = 'No se pudo cargar la lista.';
     }
-}
-
-function updateFileTypeHint() {
-    fileTypeHint.textContent = selectedFileType === 'macro'
-        ? 'Estructura generada desde la macro SIIF.'
-        : 'Logica actual de carga del sistema.';
 }
 
 function updateButtons() {
     const hasFiles = selectedFiles.length > 0;
-    btnProcess.disabled = !hasFiles;
+    const hasEnte = Boolean(enteSelect.value);
+    btnProcess.disabled = !(hasFiles && hasEnte) || isProcessing;
     btnClear.style.display = hasFiles ? 'inline-flex' : 'none';
 }
 
 function formatFileSize(bytes) {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 }
 
+syncProgressVisibility();
+loadCatalogoGeneral();
+updateEntePreview();
 renderFileLists();
-updateFileTypeHint();
 loadProcessedFiles();
 </script>
 {% endblock %}

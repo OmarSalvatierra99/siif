@@ -29,8 +29,8 @@
                 <div class="login-access-list">
                     {% if usuarios_activos %}
                         {% for usuario in usuarios_activos %}
-                        {% set display_name = usuario.nombre_completo or usuario.username %}
                         {% set normalized_username = (usuario.username or '') | lower %}
+                        {% set display_name = preferred_user_display.get(normalized_username, usuario.nombre_completo or usuario.username) %}
                         <button class="login-access-user{% if selected_username == normalized_username %} is-selected{% endif %}" type="button" data-username="{{ normalized_username }}" data-display="{{ display_name }}">
                             <span class="login-access-initials" aria-hidden="true">{{ display_name[:2] | upper }}</span>
                             <span class="login-access-meta">

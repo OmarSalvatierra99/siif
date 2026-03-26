@@ -5,10 +5,10 @@
 {% block extra_css %}
 <style>
     .consulta-container {
-        max-width: 1600px;
+        max-width: 100%;
         width: 100%;
         margin: 0 auto;
-        padding: 2.5rem 2rem 6.5rem;
+        padding: 1.75rem 1rem 2rem;
         position: relative;
     }
 
@@ -32,7 +32,7 @@
     .results-section {
         display: flex;
         flex-direction: column;
-        gap: 1.5rem;
+        gap: 1.1rem;
     }
 
     .page-hero,
@@ -46,18 +46,19 @@
     }
 
     .page-hero {
-        display: grid;
-        grid-template-columns: minmax(0, 1.7fr) minmax(280px, 0.9fr);
-        gap: 1.25rem;
-        padding: 1.75rem;
-        margin-bottom: 1.75rem;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1.2rem 1.35rem;
+        margin-bottom: 1rem;
         overflow: hidden;
     }
 
     .hero-copy {
         display: flex;
         flex-direction: column;
-        gap: 0.55rem;
+        gap: 0.35rem;
     }
 
     .hero-kicker,
@@ -77,109 +78,311 @@
 
     .page-hero h2 {
         color: var(--color-primary);
-        font-size: clamp(2.5rem, 3.4vw, 3.35rem);
-        font-weight: 800;
+        font-size: clamp(1.9rem, 3vw, 2.6rem);
+        font-weight: 700;
         margin: 0;
-        line-height: 1.05;
-        letter-spacing: -0.03em;
+        line-height: 1.08;
+        letter-spacing: -0.02em;
     }
 
     .page-hero .subtitle {
-        max-width: 680px;
+        max-width: 760px;
         color: var(--color-muted);
-        font-size: 1rem;
-        line-height: 1.65;
-    }
-
-    .hero-panel {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        gap: 1rem;
-        padding: 1.1rem;
-        border-radius: 18px;
-        background: linear-gradient(180deg, #ffffff 0%, #f8fbf8 100%);
-        border: 1px solid rgba(31, 59, 44, 0.08);
-    }
-
-    .hero-stats {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0.8rem;
-    }
-
-    .hero-stat {
-        padding: 0.95rem 1rem;
-        border-radius: 16px;
-        background: rgba(31, 59, 44, 0.05);
-        border: 1px solid rgba(31, 59, 44, 0.08);
-    }
-
-    .hero-stat-label {
-        display: block;
-        color: var(--color-muted);
-        font-size: 0.74rem;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        margin-bottom: 0.3rem;
-    }
-
-    .hero-stat strong {
-        color: var(--color-primary);
-        font-size: 1.4rem;
-        line-height: 1;
+        font-size: 0.92rem;
+        line-height: 1.55;
     }
 
     .hero-meta {
         display: flex;
         flex-wrap: wrap;
         gap: 0.5rem;
+        justify-content: flex-end;
     }
 
     .hero-chip {
         display: inline-flex;
         align-items: center;
-        gap: 0.35rem;
+        gap: 0.45rem;
         background: #ffffff;
         border: 1px solid rgba(31, 59, 44, 0.12);
         color: var(--color-primary);
         font-weight: 600;
-        font-size: 0.78rem;
+        font-size: 0.8rem;
         padding: 0.45rem 0.75rem;
         border-radius: 999px;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .hero-chip strong {
+        font-size: 0.92rem;
+        font-weight: 700;
+    }
+
+    .hero-chip:hover {
+        background: rgba(31, 59, 44, 0.08);
+        border-color: rgba(31, 59, 44, 0.2);
+    }
+
+    .selection-card {
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.94);
+        border: 1px solid rgba(31, 59, 44, 0.12);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .selection-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .selection-title {
+        color: var(--color-primary);
+        font-size: 1rem;
+        font-weight: 700;
+    }
+
+    .ente-select-wrap {
+        position: relative;
+    }
+
+    .ente-select {
+        width: 100%;
+        padding: 0.95rem 3rem 0.95rem 1rem;
+        border-radius: 14px;
+        border: 1px solid rgba(31, 59, 44, 0.15);
+        background: rgba(255, 255, 255, 0.98);
+        color: var(--color-text);
+        font-size: 0.96rem;
+        font-weight: 600;
+        appearance: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .ente-select:focus {
+        outline: none;
+        border-color: rgba(31, 59, 44, 0.30);
+        box-shadow: 0 0 0 4px rgba(31, 59, 44, 0.08);
+    }
+
+    .ente-select-icon {
+        position: absolute;
+        top: 50%;
+        right: 1rem;
+        transform: translateY(-50%);
+        color: var(--color-primary);
+        font-size: 0.95rem;
+        font-weight: 700;
+        pointer-events: none;
+    }
+
+    .ente-meta {
+        display: flex;
+        gap: 0.55rem;
+        flex-wrap: wrap;
+        align-items: center;
+        min-height: 1.85rem;
+        margin-top: 0.7rem;
+    }
+
+    .ente-meta.is-empty {
+        color: var(--color-muted);
+        font-size: 0.84rem;
+    }
+
+    .ente-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.42rem 0.72rem;
+        border: 1px solid rgba(31, 59, 44, 0.10);
+        border-radius: 999px;
+        background: #f7faf8;
+        color: var(--color-text);
+        font-size: 0.78rem;
+        font-weight: 700;
+        max-width: 100%;
+        white-space: nowrap;
+    }
+
+    .ente-badge-name {
+        background: rgba(31, 59, 44, 0.08);
+        color: var(--color-primary);
+        border-color: rgba(31, 59, 44, 0.14);
+        max-width: 420px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .overview-section {
+        display: flex;
+        flex-direction: column;
+        gap: 0.7rem;
+        margin-bottom: 1rem;
+        padding: 1rem 1.05rem;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.94);
+        border: 1px solid rgba(31, 59, 44, 0.12);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .filter-drawer-select {
+        width: 100%;
+        padding: 0.65rem 0.9rem;
+        border-radius: 12px;
+        border: 1px solid rgba(31, 59, 44, 0.14);
+        background: #ffffff;
+        color: var(--color-text);
+        font-size: 0.88rem;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .filter-drawer-select:focus {
+        outline: none;
+        border-color: rgba(31, 59, 44, 0.28);
+        box-shadow: 0 0 0 4px rgba(31, 59, 44, 0.08);
+    }
+
+    /* Old ente-focus-bar removed — replaced by selection-card */
+
+    .overview-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+        width: 100%;
+        padding: 0;
+        border: none;
+        background: transparent;
+        text-align: left;
+        cursor: pointer;
+    }
+
+    .overview-toggle-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+    }
+
+    .overview-toggle-meta {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.65rem;
+    }
+
+    .overview-toggle-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 999px;
+        border: 1px solid rgba(31, 59, 44, 0.12);
+        background: rgba(31, 59, 44, 0.04);
+        color: var(--color-primary);
+        font-size: 0.9rem;
+        transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .overview-toggle[aria-expanded="true"] .overview-toggle-icon {
+        transform: rotate(180deg);
+        background: rgba(31, 59, 44, 0.08);
+    }
+
+    .overview-body[hidden] {
+        display: none;
+    }
+
+    .overview-toggle h3 {
+        color: var(--color-primary);
+        font-size: 1.02rem;
+        font-weight: 700;
+        margin: 0.2rem 0 0;
+    }
+
+    .summary-balance-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.5rem 0.9rem;
+        border-radius: 999px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border: 1px solid rgba(31, 59, 44, 0.12);
+    }
+
+    .summary-balance-pill--ok {
+        color: #065f46;
+        background: rgba(16, 185, 129, 0.16);
+        border-color: rgba(16, 185, 129, 0.32);
+    }
+
+    .summary-balance-pill--warn {
+        color: #92400e;
+        background: rgba(251, 191, 36, 0.18);
+        border-color: rgba(251, 191, 36, 0.34);
+    }
+
+    .stat-item--difference {
+        border-top-color: rgba(196, 140, 52, 0.4);
+    }
+
+    .results-overview {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 0;
+    }
+
+    .results-overview h3 {
+        color: var(--color-primary);
+        font-size: 1rem;
+        margin: 0;
     }
 
     .filters-section {
-        padding: 1.6rem;
+        padding: 0.9rem 1rem 1rem;
+        position: static;
+        z-index: 30;
+        backdrop-filter: blur(14px);
     }
 
     .section-heading {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         justify-content: space-between;
-        gap: 1.25rem;
-        margin-bottom: 1.25rem;
+        gap: 1rem;
+        margin-bottom: 0.55rem;
     }
 
     .section-heading h3 {
         color: var(--color-primary);
-        font-size: 1.4rem;
-        margin: 0.45rem 0 0.35rem;
+        margin: 0;
+        font-size: 0.98rem;
     }
 
     .section-heading p {
-        max-width: 720px;
+        margin: 0.25rem 0 0;
         color: var(--color-muted);
-        line-height: 1.6;
-        margin: 0;
+        font-size: 0.82rem;
+        line-height: 1.45;
     }
 
-    .section-summary {
+    .filters-strip-actions {
         display: flex;
+        align-items: center;
         flex-wrap: wrap;
-        justify-content: flex-end;
         gap: 0.6rem;
-        min-width: 260px;
+        margin-left: auto;
     }
 
     .summary-pill {
@@ -196,88 +399,154 @@
         white-space: nowrap;
     }
 
-    .filters-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(180px, 1fr));
-        gap: 1rem;
-    }
-
-    .filter-group-heading {
-        grid-column: 1 / -1;
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 1rem;
-        padding: 1rem 1.05rem;
-        border-radius: 16px;
-        background: linear-gradient(180deg, #fbfdfb 0%, #f5f9f5 100%);
-        border: 1px solid rgba(31, 59, 44, 0.08);
-        margin-top: 0.1rem;
-    }
-
-    .filter-group-heading:first-child {
-        margin-top: 0;
-    }
-
-    .filter-group-heading h4 {
+    .filters-toggle-btn,
+    .filters-scroll-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        padding: 0.5rem 0.8rem;
+        border-radius: 999px;
+        background: rgba(31, 59, 44, 0.06);
         color: var(--color-primary);
-        font-size: 1rem;
-        margin: 0.35rem 0 0.2rem;
+        border: 1px solid rgba(31, 59, 44, 0.08);
+        font-size: 0.82rem;
+        font-weight: 600;
+        white-space: nowrap;
     }
 
-    .filter-group-heading p {
-        color: var(--color-muted);
-        font-size: 0.88rem;
-        line-height: 1.55;
-        margin: 0;
+    .filters-toggle-btn {
+        cursor: pointer;
+        transition: var(--transition);
     }
 
-    .filter-group {
+    .filters-toggle-btn:hover {
+        background: rgba(31, 59, 44, 0.12);
+        border-color: rgba(31, 59, 44, 0.22);
+    }
+
+    .filters-scroll-btn {
+        min-width: 2.35rem;
+        min-height: 2.35rem;
+        padding: 0;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .filters-scroll-btn:hover:not(:disabled) {
+        background: rgba(31, 59, 44, 0.12);
+        border-color: rgba(31, 59, 44, 0.22);
+    }
+
+    .filters-scroll-btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+
+    .table-filter-row th {
+        position: sticky;
+        top: 52px;
+        z-index: 12;
+        padding: 0.38rem 0.38rem 0.42rem;
+        background: #f6faf7;
+        border-bottom: 1px solid rgba(31, 59, 44, 0.12);
+        text-transform: none;
+        letter-spacing: 0;
+        font-size: 0.72rem;
+    }
+
+    .table-filter-row th.sticky-col {
+        background: #f1f7f3;
+        z-index: 13;
+    }
+
+    .table-filter-row th.sticky-right {
+        background: #f1f7f3;
+        z-index: 13;
+    }
+
+    .table-filter-control,
+    .table-filter-date {
         display: flex;
         flex-direction: column;
-        gap: 0.42rem;
-        padding: 0.95rem 1rem;
-        border-radius: 16px;
-        background: #ffffff;
-        border: 1px solid rgba(31, 59, 44, 0.08);
-        box-shadow: 0 4px 14px rgba(31, 59, 44, 0.04);
+        gap: 0.28rem;
+        min-width: 0;
     }
 
-    .filter-group label {
-        color: var(--color-muted);
+    .table-filter-control .filter-combobox input,
+    .table-filter-date input {
+        min-height: 32px;
+        padding: 0.45rem 0.6rem;
+        border-radius: 9px;
         font-size: 0.74rem;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-    }
-
-    .filter-group input,
-    .filter-group select {
-        width: 100%;
-        min-height: 44px;
-        padding: 0.75rem 0.8rem;
-        border: 1px solid rgba(31, 59, 44, 0.16);
-        border-radius: 12px;
-        font-size: 0.92rem;
-        background: #ffffff;
+        border: 1px solid rgba(31, 59, 44, 0.14);
+        background: rgba(255, 255, 255, 0.96);
         color: var(--color-text);
-        transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        box-shadow: inset 0 1px 2px rgba(31, 59, 44, 0.03);
     }
 
-    .filter-group input::placeholder {
-        color: #7a867e;
+    .table-filter-control .filter-combobox input {
+        padding-right: 3.8rem;
     }
 
-    .filter-group input:focus,
-    .filter-group select:focus {
-        outline: none;
-        border-color: rgba(31, 59, 44, 0.72);
-        box-shadow: 0 0 0 3px rgba(31, 59, 44, 0.14);
-        background: #ffffff;
+    .table-filter-control .combo-toggle,
+    .table-filter-control .combo-clear {
+        width: 1.45rem;
+        height: 1.45rem;
+        border-radius: 6px;
     }
 
-    .filter-group--date {
-        justify-content: flex-start;
+    .table-filter-control .combo-clear {
+        right: 1.9rem;
+    }
+
+    .table-filter-control .combo-toggle {
+        right: 0.28rem;
+    }
+
+    .table-filter-control .combo-menu {
+        border-radius: 14px;
+        z-index: 50;
+    }
+
+    .table-filter-control .combo-status {
+        padding: 0.55rem 0.7rem;
+        font-size: 0.72rem;
+    }
+
+    .table-filter-control .combo-option {
+        padding: 0.65rem 0.7rem;
+        gap: 0.55rem;
+    }
+
+    .table-filter-control .combo-option-main strong {
+        font-size: 0.78rem;
+    }
+
+    .table-filter-control .combo-option-meta {
+        font-size: 0.66rem;
+    }
+
+    .table-filter-control .combo-selected {
+        padding-top: 0.25rem;
+        gap: 0.25rem;
+    }
+
+    .table-filter-control .combo-chip {
+        padding: 0.22rem 0.45rem;
+        font-size: 0.66rem;
+    }
+
+    .table-filter-control .combo-chip-label {
+        max-width: 120px;
+    }
+
+    .table-filter-control .filter-help {
+        display: none;
+    }
+
+    .table-filter-empty {
+        background: #f6faf7;
     }
 
     .filter-combobox {
@@ -477,32 +746,6 @@
         color: var(--color-warning);
     }
 
-    .filter-actions {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        margin-top: 1.4rem;
-        padding-top: 1.25rem;
-        border-top: 1px dashed rgba(31, 59, 44, 0.18);
-    }
-
-    .filter-actions-meta {
-        display: flex;
-        flex-direction: column;
-        gap: 0.2rem;
-    }
-
-    .filter-actions-meta strong {
-        color: var(--color-primary);
-        font-size: 0.95rem;
-    }
-
-    .filter-actions-meta span {
-        color: var(--color-muted);
-        font-size: 0.82rem;
-    }
-
     .filter-actions-buttons,
     .toolbar-actions {
         display: flex;
@@ -513,6 +756,270 @@
 
     .consulta-btn-secondary {
         box-shadow: none;
+    }
+
+    .filters-drawer-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        min-width: 148px;
+        padding: 0.85rem 1.25rem;
+        border: 1px solid var(--color-accent);
+        border-radius: 999px;
+        background: var(--color-accent);
+        color: #ffffff;
+        font-size: 0.92rem;
+        font-weight: 700;
+        box-shadow: 0 18px 36px rgba(15, 23, 42, 0.18);
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+        position: fixed;
+        right: 1.5rem;
+        bottom: 1.5rem;
+        z-index: 1185;
+    }
+
+    .filters-drawer-toggle:hover {
+        background: var(--color-accent-strong);
+        border-color: var(--color-accent-strong);
+        transform: translateY(-2px);
+        box-shadow: 0 22px 40px rgba(31, 59, 44, 0.28);
+    }
+
+    .filters-drawer-toggle .kbd-hint {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.15rem 0.45rem;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 0.68rem;
+        font-weight: 600;
+        font-family: inherit;
+        letter-spacing: 0.03em;
+        line-height: 1;
+    }
+
+    .filters-drawer-toggle-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.8rem;
+        height: 1.8rem;
+        padding: 0 0.42rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.18);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        color: #ffffff;
+        font-size: 0.76rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .filters-drawer-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.34);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.2s ease, visibility 0.2s ease;
+        z-index: 1190;
+    }
+
+    .filters-drawer-overlay.is-visible {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .filters-drawer {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: min(540px, 100vw);
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: #f7faf8;
+        visibility: hidden;
+        border-left: 1px solid rgba(31, 59, 44, 0.12);
+        box-shadow: -24px 0 48px rgba(15, 23, 42, 0.16);
+        transform: translateX(100%);
+        transition: transform 0.24s ease;
+        z-index: 1200;
+    }
+
+    .filters-drawer.is-open {
+        visibility: visible;
+        transform: translateX(0);
+    }
+
+    .filters-drawer-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1.15rem 1.2rem 1rem;
+        border-bottom: 1px solid rgba(31, 59, 44, 0.10);
+        background: rgba(255, 255, 255, 0.98);
+    }
+
+    .filters-drawer-title {
+        color: var(--color-primary);
+        font-size: 1.08rem;
+        font-weight: 700;
+    }
+
+    .filters-drawer-meta {
+        margin-top: 0.25rem;
+        color: var(--color-muted);
+        font-size: 0.82rem;
+    }
+
+    .filters-drawer-close {
+        border: none;
+        background: rgba(31, 59, 44, 0.08);
+        color: var(--color-primary);
+        width: 2.2rem;
+        height: 2.2rem;
+        border-radius: 999px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: var(--transition);
+    }
+
+    .filters-drawer-close:hover {
+        background: rgba(31, 59, 44, 0.14);
+    }
+
+    .filters-drawer-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem 1.2rem 1.4rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .filters-drawer .active-filters-bar {
+        box-shadow: none;
+    }
+
+    .filters-drawer .active-filters-resizer,
+    .filters-drawer .text-action {
+        display: none;
+    }
+
+    .filters-drawer-actions {
+        display: flex;
+    }
+
+    .filters-drawer-actions .floating-clear-btn {
+        width: 100%;
+        justify-content: center;
+        box-shadow: none;
+    }
+
+    .filters-drawer-footer {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        padding: 0.85rem 1.2rem;
+        border-top: 1px solid rgba(31, 59, 44, 0.10);
+        background: rgba(255, 255, 255, 0.98);
+        flex-shrink: 0;
+    }
+
+    .filters-drawer-footer .btn-apply-filters {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.2rem;
+        border: 1px solid var(--color-accent);
+        border-radius: 14px;
+        background: var(--color-accent);
+        color: #ffffff;
+        font-size: 0.9rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 0.2s ease, transform 0.15s ease;
+    }
+
+    .filters-drawer-footer .btn-apply-filters:hover {
+        background: var(--color-accent-strong);
+        border-color: var(--color-accent-strong);
+    }
+
+    .filters-drawer-footer .btn-apply-filters:active {
+        transform: scale(0.98);
+    }
+
+    .filters-drawer-footer .btn-clear-filters {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem 1rem;
+        border: 1px solid rgba(31, 59, 44, 0.14);
+        border-radius: 14px;
+        background: transparent;
+        color: var(--color-muted);
+        font-size: 0.84rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .filters-drawer-footer .btn-clear-filters:hover {
+        background: rgba(31, 59, 44, 0.06);
+        color: var(--color-primary);
+    }
+
+    .filters-panel-section {
+        display: flex;
+        flex-direction: column;
+        gap: 0.9rem;
+        padding: 1rem;
+        border-radius: 18px;
+        border: 1px solid rgba(31, 59, 44, 0.10);
+        background: rgba(255, 255, 255, 0.96);
+    }
+
+    .filters-panel-section h4 {
+        margin: 0;
+        color: var(--color-primary);
+        font-size: 0.94rem;
+        font-weight: 700;
+    }
+
+    /* ente select now inside drawer */
+
+    .filters-panel-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.9rem;
+    }
+
+    .filter-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.42rem;
+        min-width: 0;
+    }
+
+    .filter-field--wide {
+        grid-column: 1 / -1;
+    }
+
+    .filter-field-label {
+        color: var(--color-muted);
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
     }
 
     .floating-clear-btn {
@@ -551,15 +1058,15 @@
 
     .stats-bar {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 0.8rem;
     }
 
     .stat-item {
         display: flex;
         flex-direction: column;
-        gap: 0.28rem;
-        padding: 1.1rem 1.2rem;
+        gap: 0.18rem;
+        padding: 0.9rem 1rem;
         border-radius: 18px;
         background: linear-gradient(180deg, #ffffff 0%, #fbfdfb 100%);
         border: 1px solid rgba(31, 59, 44, 0.12);
@@ -577,14 +1084,14 @@
 
     .stat-label {
         color: var(--color-muted);
-        font-size: 0.75rem;
+        font-size: 0.72rem;
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }
 
     .stat-value {
         color: var(--color-primary);
-        font-size: clamp(1.45rem, 1.8vw, 1.8rem);
+        font-size: clamp(1.3rem, 1.7vw, 1.65rem);
         font-weight: 700;
         line-height: 1.15;
     }
@@ -596,7 +1103,7 @@
 
     .results-toolbar {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         justify-content: space-between;
         gap: 1rem;
         flex-wrap: wrap;
@@ -605,22 +1112,21 @@
     .table-title {
         display: flex;
         flex-direction: column;
-        gap: 0.35rem;
+        gap: 0.2rem;
     }
 
     .table-title h3 {
         color: var(--color-primary);
-        font-size: 1.2rem;
+        font-size: 1.05rem;
         font-weight: 700;
         margin: 0;
     }
 
     .table-title p {
         color: var(--color-muted);
-        font-size: 0.88rem;
-        line-height: 1.55;
+        font-size: 0.8rem;
+        line-height: 1.45;
         margin: 0;
-        max-width: 780px;
     }
 
     .density-toggle {
@@ -680,9 +1186,9 @@
         flex-direction: column;
         align-items: stretch;
         justify-content: flex-start;
-        gap: 0.85rem;
+        gap: 0.65rem;
         width: 100%;
-        padding: 1rem 1.1rem;
+        padding: 0.9rem 1rem;
         backdrop-filter: blur(10px);
     }
 
@@ -704,7 +1210,7 @@
 
     .active-filters-copy span {
         color: var(--color-muted);
-        font-size: 0.8rem;
+        font-size: 0.76rem;
     }
 
     .active-filters-list {
@@ -811,26 +1317,6 @@
         overflow: hidden;
     }
 
-    .table-header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 1rem;
-        padding: 1rem 1.2rem;
-        border-bottom: 1px solid rgba(31, 59, 44, 0.08);
-        background: linear-gradient(180deg, #ffffff 0%, #fafcfb 100%);
-    }
-
-    .table-header strong {
-        color: var(--color-primary);
-        font-size: 0.96rem;
-    }
-
-    .table-header-note {
-        color: var(--color-muted);
-        font-size: 0.8rem;
-    }
-
     .table-scroll {
         overflow-x: auto;
         overflow-y: visible;
@@ -884,6 +1370,75 @@
         letter-spacing: 0.04em;
         text-transform: uppercase;
         z-index: 10;
+        vertical-align: bottom;
+    }
+
+    .table-head-label {
+        display: flex;
+        flex-direction: column;
+        gap: 0.14rem;
+        min-height: 1.8rem;
+    }
+
+    .table-head-title {
+        font-size: 0.68rem;
+        font-weight: 700;
+        line-height: 1.1;
+    }
+
+    .table-head-subtitle {
+        font-size: 0.6rem;
+        font-weight: 600;
+        line-height: 1.08;
+        letter-spacing: 0.03em;
+        text-transform: none;
+        color: rgba(255, 255, 255, 0.76);
+    }
+
+    .tabla-resultados th.col-ente,
+    .tabla-resultados td.col-ente {
+        min-width: 180px;
+    }
+
+    .tabla-resultados th.col-unidad,
+    .tabla-resultados td.col-unidad {
+        min-width: 170px;
+    }
+
+    .tabla-resultados th.col-centro,
+    .tabla-resultados td.col-centro {
+        min-width: 160px;
+    }
+
+    .tabla-resultados th.col-proyecto,
+    .tabla-resultados td.col-proyecto {
+        min-width: 180px;
+    }
+
+    .tabla-resultados th.col-fuente,
+    .tabla-resultados td.col-fuente,
+    .tabla-resultados th.col-subfuente,
+    .tabla-resultados td.col-subfuente,
+    .tabla-resultados th.col-tipo,
+    .tabla-resultados td.col-tipo,
+    .tabla-resultados th.col-partida,
+    .tabla-resultados td.col-partida {
+        min-width: 140px;
+    }
+
+    .tabla-resultados th.col-nombre,
+    .tabla-resultados td.col-nombre {
+        min-width: 220px;
+    }
+
+    .tabla-resultados th.col-beneficiario,
+    .tabla-resultados td.col-beneficiario {
+        min-width: 190px;
+    }
+
+    .tabla-resultados th.col-descripcion,
+    .tabla-resultados td.col-descripcion {
+        min-width: 240px;
     }
 
     .tabla-resultados th.sticky-col {
@@ -975,7 +1530,7 @@
         align-items: center;
         gap: 1rem;
         flex-wrap: wrap;
-        padding: 1rem 0.3rem 0;
+        padding: 0.85rem 0.1rem 0;
     }
 
     .range-info {
@@ -1068,95 +1623,23 @@
         margin: 0;
     }
 
-    @media (max-width: 1280px) {
-        .filters-grid {
-            grid-template-columns: repeat(3, minmax(180px, 1fr));
-        }
-    }
-
     @media (max-width: 980px) {
-        .page-hero {
-            grid-template-columns: 1fr;
-        }
-
         .section-heading,
-        .filter-group-heading,
         .results-toolbar,
         .active-filters-bar,
-        .table-header,
         .table-footer {
-            flex-direction: column;
             align-items: flex-start;
         }
 
-        .section-summary {
-            justify-content: flex-start;
-        }
-
-        .filters-grid {
-            grid-template-columns: repeat(2, minmax(160px, 1fr));
-        }
-
         .tabla-resultados {
-            min-width: 100%;
-        }
-
-        .tabla-resultados thead {
-            display: none;
-        }
-
-        .tabla-resultados tr {
-            display: block;
-            margin: 0 0 0.9rem;
-            border: 1px solid rgba(31, 59, 44, 0.12);
-            border-radius: 16px;
-            overflow: hidden;
-            background: #ffffff;
-            box-shadow: 0 10px 24px rgba(31, 59, 44, 0.05);
-        }
-
-        .tabla-resultados td {
-            display: flex;
-            justify-content: space-between;
-            gap: 1rem;
-            white-space: normal;
-            padding: 0.75rem 0.95rem;
-            border-bottom: 1px dashed rgba(31, 59, 44, 0.12);
-        }
-
-        .tabla-resultados td::before {
-            content: attr(data-label);
-            color: var(--color-muted);
-            font-size: 0.7rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .tabla-resultados td:last-child {
-            border-bottom: none;
-        }
-
-        .tabla-resultados th.sticky-col,
-        .tabla-resultados td.sticky-col,
-        .tabla-resultados th.sticky-right,
-        .tabla-resultados td.sticky-right {
-            position: static;
-            box-shadow: none;
-        }
-
-        .tabla-resultados td.sticky-col,
-        .tabla-resultados td.sticky-right,
-        .tabla-resultados tr:nth-child(even) td,
-        .tabla-resultados tr:hover td {
-            background: #ffffff;
+            min-width: 1750px;
         }
     }
 
     @media (max-width: 640px) {
         .consulta-container {
-            padding-top: 1.5rem;
-            padding-bottom: 6rem;
+            padding-top: 1rem;
+            padding-bottom: 2rem;
         }
 
         .page-hero,
@@ -1164,22 +1647,14 @@
             padding: 1.2rem;
         }
 
-        .hero-stats,
-        .filters-grid {
-            grid-template-columns: 1fr;
+        .page-hero {
+            flex-direction: column;
+            align-items: flex-start;
         }
 
-        .filter-actions,
-        .filter-actions-buttons,
         .toolbar-actions,
         .pagination {
             width: 100%;
-        }
-
-        .filter-actions,
-        .filter-actions-buttons {
-            flex-direction: column;
-            align-items: stretch;
         }
 
         .toolbar-actions {
@@ -1193,28 +1668,27 @@
         }
 
         .density-toggle button,
-        .filter-actions-buttons .btn,
         .toolbar-actions .btn {
             width: 100%;
+        }
+
+        .filters-drawer-toggle {
+            right: 1rem;
+            left: 1rem;
+            bottom: 1rem;
+            width: calc(100vw - 2rem);
         }
 
         .active-filter-chip {
             max-width: 100%;
         }
 
-        .floating-filters-dock {
-            right: 1rem;
-            bottom: 1rem;
-            width: calc(100vw - 2rem);
+        .filters-drawer {
+            width: 100vw;
         }
 
-        .active-filters-resizer {
-            display: none;
-        }
-
-        .floating-clear-btn {
-            padding: 0.6rem 0.9rem;
-            font-size: 0.82rem;
+        .filters-panel-grid {
+            grid-template-columns: 1fr;
         }
     }
 </style>
@@ -1224,319 +1698,79 @@
 <div class="consulta-container">
     <div class="page-hero">
         <div class="hero-copy">
-            <span class="hero-kicker">Consulta operativa</span>
             <h2>Consultar Transacciones</h2>
-        </div>
-        <div class="hero-panel">
-            <div class="hero-stats">
-                <div class="hero-stat">
-                    <span class="hero-stat-label">Criterios activos</span>
-                    <strong id="heroFiltersCount">0</strong>
-                </div>
-                <div class="hero-stat">
-                    <span class="hero-stat-label">Registros visibles</span>
-                    <strong id="heroResultCount">0</strong>
-                </div>
-            </div>
+            <p class="subtitle">Consulta, filtra y exporta transacciones desde una sola vista.</p>
         </div>
     </div>
 
-    <div class="consulta-layout">
-        <section class="filters-section">
-            <div class="section-heading">
-                <div>
-                    <h3>Filtros</h3>
-                </div>
-            </div>
-            <div class="filters-grid">
-                <div class="filter-group">
-                    <label>Cuenta Contable</label>
-                    <div class="filter-combobox" data-filter-combobox="cuenta_contable" data-filter-kind="facet">
-                        <input type="text" id="filtroCuenta" placeholder="Ej: 32210080500000000600N" autocomplete="off">
-                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Cuenta Contable">x</button>
-                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Cuenta Contable">v</button>
-                        <div class="combo-menu" data-filter-menu hidden>
-                            <div class="combo-status" data-filter-status>Opciones disponibles</div>
-                            <div class="combo-options" data-filter-options></div>
-                        </div>
-                    </div>
-                    <span class="filter-help" data-filter-help="cuenta_contable">Sin filtro</span>
-                </div>
-                <div class="filter-group">
-                    <label>Género</label>
-                    <div class="filter-combobox" data-filter-combobox="genero" data-filter-kind="facet">
-                        <input type="text" id="filtroGenero" placeholder="Selecciona género" autocomplete="off">
-                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Género">x</button>
-                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Género">v</button>
-                        <div class="combo-menu" data-filter-menu hidden>
-                            <div class="combo-status" data-filter-status>Opciones disponibles</div>
-                            <div class="combo-options" data-filter-options></div>
-                        </div>
-                    </div>
-                    <span class="filter-help" data-filter-help="genero">Sin filtro</span>
-                </div>
-                <div class="filter-group">
-                    <label>Grupo</label>
-                    <div class="filter-combobox" data-filter-combobox="grupo" data-filter-kind="facet">
-                        <input type="text" id="filtroGrupo" placeholder="Selecciona grupo" autocomplete="off">
-                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Grupo">x</button>
-                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Grupo">v</button>
-                        <div class="combo-menu" data-filter-menu hidden>
-                            <div class="combo-status" data-filter-status>Opciones disponibles</div>
-                            <div class="combo-options" data-filter-options></div>
-                        </div>
-                    </div>
-                    <span class="filter-help" data-filter-help="grupo">Sin filtro</span>
-                </div>
-                <div class="filter-group">
-                    <label>Rubro</label>
-                    <div class="filter-combobox" data-filter-combobox="rubro" data-filter-kind="facet">
-                        <input type="text" id="filtroRubro" placeholder="Selecciona rubro" autocomplete="off">
-                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Rubro">x</button>
-                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Rubro">v</button>
-                        <div class="combo-menu" data-filter-menu hidden>
-                            <div class="combo-status" data-filter-status>Opciones disponibles</div>
-                            <div class="combo-options" data-filter-options></div>
-                        </div>
-                    </div>
-                    <span class="filter-help" data-filter-help="rubro">Sin filtro</span>
-                </div>
-                <div class="filter-group">
-                    <label>Cuenta</label>
-                    <div class="filter-combobox" data-filter-combobox="cuenta" data-filter-kind="facet">
-                        <input type="text" id="filtroCuentaNum" placeholder="Selecciona cuenta" autocomplete="off">
-                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Cuenta">x</button>
-                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Cuenta">v</button>
-                        <div class="combo-menu" data-filter-menu hidden>
-                            <div class="combo-status" data-filter-status>Opciones disponibles</div>
-                            <div class="combo-options" data-filter-options></div>
-                        </div>
-                    </div>
-                    <span class="filter-help" data-filter-help="cuenta">Sin filtro</span>
-                </div>
-                <div class="filter-group">
-                    <label>Subcuenta</label>
-                    <div class="filter-combobox" data-filter-combobox="subcuenta" data-filter-kind="facet">
-                        <input type="text" id="filtroSubcuenta" placeholder="Selecciona subcuenta" autocomplete="off">
-                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Subcuenta">x</button>
-                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Subcuenta">v</button>
-                        <div class="combo-menu" data-filter-menu hidden>
-                            <div class="combo-status" data-filter-status>Opciones disponibles</div>
-                            <div class="combo-options" data-filter-options></div>
-                        </div>
-                    </div>
-                    <span class="filter-help" data-filter-help="subcuenta">Sin filtro</span>
-                </div>
-                <div class="filter-group">
-                    <label>Dependencia</label>
-                    <div class="filter-combobox" data-filter-combobox="dependencia" data-filter-kind="facet">
-                        <input type="text" id="filtroDependencia" placeholder="Selecciona dependencia" autocomplete="off">
-                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Dependencia">x</button>
-                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Dependencia">v</button>
-                        <div class="combo-menu" data-filter-menu hidden>
-                            <div class="combo-status" data-filter-status>Opciones disponibles</div>
-                            <div class="combo-options" data-filter-options></div>
-                        </div>
-                    </div>
-                    <span class="filter-help" data-filter-help="dependencia">Sin filtro</span>
-                </div>
-                <div class="filter-group">
-                    <label>Unidad Responsable</label>
-                    <div class="filter-combobox" data-filter-combobox="unidad_responsable" data-filter-kind="facet">
-                        <input type="text" id="filtroUnidadResponsable" placeholder="Selecciona unidad responsable" autocomplete="off">
-                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Unidad Responsable">x</button>
-                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Unidad Responsable">v</button>
-                        <div class="combo-menu" data-filter-menu hidden>
-                            <div class="combo-status" data-filter-status>Opciones disponibles</div>
-                            <div class="combo-options" data-filter-options></div>
-                        </div>
-                    </div>
-                    <span class="filter-help" data-filter-help="unidad_responsable">Sin filtro</span>
-                </div>
-                <div class="filter-group">
-                    <label>Centro de Costo</label>
-                    <div class="filter-combobox" data-filter-combobox="centro_costo" data-filter-kind="facet">
-                        <input type="text" id="filtroCentroCosto" placeholder="Selecciona centro de costo" autocomplete="off">
-                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Centro de Costo">x</button>
-                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Centro de Costo">v</button>
-                        <div class="combo-menu" data-filter-menu hidden>
-                            <div class="combo-status" data-filter-status>Opciones disponibles</div>
-                            <div class="combo-options" data-filter-options></div>
-                        </div>
-                    </div>
-                    <span class="filter-help" data-filter-help="centro_costo">Sin filtro</span>
-                </div>
-                <div class="filter-group">
-                    <label>Proyecto Presupuestario</label>
-                    <div class="filter-combobox" data-filter-combobox="proyecto_presupuestario" data-filter-kind="facet">
-                        <input type="text" id="filtroProyectoPresupuestario" placeholder="Selecciona proyecto" autocomplete="off">
-                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Proyecto Presupuestario">x</button>
-                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Proyecto Presupuestario">v</button>
-                        <div class="combo-menu" data-filter-menu hidden>
-                            <div class="combo-status" data-filter-status>Opciones disponibles</div>
-                            <div class="combo-options" data-filter-options></div>
-                        </div>
-                    </div>
-                    <span class="filter-help" data-filter-help="proyecto_presupuestario">Sin filtro</span>
-                </div>
-                <div class="filter-group">
-                    <label>Fuente</label>
-                    <div class="filter-combobox" data-filter-combobox="fuente" data-filter-kind="facet">
-                        <input type="text" id="filtroFuente" placeholder="Selecciona fuente" autocomplete="off">
-                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Fuente">x</button>
-                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Fuente">v</button>
-                        <div class="combo-menu" data-filter-menu hidden>
-                            <div class="combo-status" data-filter-status>Opciones disponibles</div>
-                            <div class="combo-options" data-filter-options></div>
-                        </div>
-                    </div>
-                    <span class="filter-help" data-filter-help="fuente">Sin filtro</span>
-                </div>
-                <div class="filter-group">
-                    <label>SubFuente</label>
-                    <div class="filter-combobox" data-filter-combobox="subfuente" data-filter-kind="facet">
-                        <input type="text" id="filtroSubfuente" placeholder="Selecciona subfuente" autocomplete="off">
-                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar SubFuente">x</button>
-                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de SubFuente">v</button>
-                        <div class="combo-menu" data-filter-menu hidden>
-                            <div class="combo-status" data-filter-status>Opciones disponibles</div>
-                            <div class="combo-options" data-filter-options></div>
-                        </div>
-                    </div>
-                    <span class="filter-help" data-filter-help="subfuente">Sin filtro</span>
-                </div>
-                <div class="filter-group">
-                    <label>Tipo de Recurso</label>
-                    <div class="filter-combobox" data-filter-combobox="tipo_recurso" data-filter-kind="facet">
-                        <input type="text" id="filtroTipoRecurso" placeholder="Selecciona tipo de recurso" autocomplete="off">
-                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Tipo de Recurso">x</button>
-                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Tipo de Recurso">v</button>
-                        <div class="combo-menu" data-filter-menu hidden>
-                            <div class="combo-status" data-filter-status>Opciones disponibles</div>
-                            <div class="combo-options" data-filter-options></div>
-                        </div>
-                    </div>
-                    <span class="filter-help" data-filter-help="tipo_recurso">Sin filtro</span>
-                </div>
-                <div class="filter-group">
-                    <label>Partida Presupuestal</label>
-                    <div class="filter-combobox" data-filter-combobox="partida_presupuestal" data-filter-kind="facet">
-                        <input type="text" id="filtroPartidaPresupuestal" placeholder="Selecciona partida" autocomplete="off">
-                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Partida Presupuestal">x</button>
-                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Partida Presupuestal">v</button>
-                        <div class="combo-menu" data-filter-menu hidden>
-                            <div class="combo-status" data-filter-status>Opciones disponibles</div>
-                            <div class="combo-options" data-filter-options></div>
-                        </div>
-                    </div>
-                    <span class="filter-help" data-filter-help="partida_presupuestal">Sin filtro</span>
-                </div>
-                <div class="filter-group">
-                    <label>Nombre de Cuenta</label>
-                    <div class="filter-combobox" data-filter-combobox="nombre_cuenta" data-filter-kind="text">
-                        <input type="text" id="filtroNombreCuenta" placeholder="Escribe para sugerencias" autocomplete="off">
-                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Nombre de Cuenta">x</button>
-                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar sugerencias de Nombre de Cuenta">v</button>
-                        <div class="combo-menu" data-filter-menu hidden>
-                            <div class="combo-status" data-filter-status>Sugerencias disponibles</div>
-                            <div class="combo-options" data-filter-options></div>
-                        </div>
-                    </div>
-                    <span class="filter-help" data-filter-help="nombre_cuenta">Escribe para ver sugerencias</span>
-                </div>
-                <div class="filter-group">
-                    <label>Beneficiario</label>
-                    <div class="filter-combobox" data-filter-combobox="beneficiario" data-filter-kind="text">
-                        <input type="text" id="filtroBeneficiario" placeholder="Escribe para sugerencias" autocomplete="off">
-                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Beneficiario">x</button>
-                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar sugerencias de Beneficiario">v</button>
-                        <div class="combo-menu" data-filter-menu hidden>
-                            <div class="combo-status" data-filter-status>Sugerencias disponibles</div>
-                            <div class="combo-options" data-filter-options></div>
-                        </div>
-                    </div>
-                    <span class="filter-help" data-filter-help="beneficiario">Escribe para ver sugerencias</span>
-                </div>
-                <div class="filter-group">
-                    <label>Descripción</label>
-                    <div class="filter-combobox" data-filter-combobox="descripcion" data-filter-kind="text">
-                        <input type="text" id="filtroDescripcion" placeholder="Escribe para sugerencias" autocomplete="off">
-                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Descripción">x</button>
-                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar sugerencias de Descripción">v</button>
-                        <div class="combo-menu" data-filter-menu hidden>
-                            <div class="combo-status" data-filter-status>Sugerencias disponibles</div>
-                            <div class="combo-options" data-filter-options></div>
-                        </div>
-                    </div>
-                    <span class="filter-help" data-filter-help="descripcion">Escribe para ver sugerencias</span>
-                </div>
-                <div class="filter-group">
-                    <label>O.P.</label>
-                    <div class="filter-combobox" data-filter-combobox="orden_pago" data-filter-kind="text">
-                        <input type="text" id="filtroOrdenPago" placeholder="Escribe para sugerencias" autocomplete="off">
-                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Orden de Pago">x</button>
-                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar sugerencias de Orden de Pago">v</button>
-                        <div class="combo-menu" data-filter-menu hidden>
-                            <div class="combo-status" data-filter-status>Sugerencias disponibles</div>
-                            <div class="combo-options" data-filter-options></div>
-                        </div>
-                    </div>
-                    <span class="filter-help" data-filter-help="orden_pago">Escribe para ver sugerencias</span>
-                </div>
-                <div class="filter-group">
-                    <label>Póliza</label>
-                    <div class="filter-combobox" data-filter-combobox="poliza" data-filter-kind="text">
-                        <input type="text" id="filtroPoliza" placeholder="Escribe para sugerencias" autocomplete="off">
-                        <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Póliza">x</button>
-                        <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar sugerencias de Póliza">v</button>
-                        <div class="combo-menu" data-filter-menu hidden>
-                            <div class="combo-status" data-filter-status>Sugerencias disponibles</div>
-                            <div class="combo-options" data-filter-options></div>
-                        </div>
-                    </div>
-                    <span class="filter-help" data-filter-help="poliza">Escribe para ver sugerencias</span>
-                </div>
-                <div class="filter-group filter-group--date">
-                    <label>Fecha Inicio</label>
-                    <input type="date" id="filtroFechaInicio">
-                    <span class="filter-help">Se aplica al cambiar la fecha</span>
-                </div>
-                <div class="filter-group filter-group--date">
-                    <label>Fecha Fin</label>
-                    <input type="date" id="filtroFechaFin">
-                    <span class="filter-help">Se aplica al cambiar la fecha</span>
-                </div>
-            </div>
-            <div class="filter-actions">
-                <div class="filter-actions-buttons">
-                    <button class="btn btn-primary" type="button" onclick="aplicarFiltros()">Aplicar filtros</button>
-                </div>
-            </div>
-        </section>
+    <section class="selection-card">
+        <div class="selection-top">
+            <div class="selection-title">Selecciona tu ente</div>
+        </div>
+        <div class="ente-select-wrap">
+            <select id="consultaEnteSelect" class="ente-select">
+                <option value="">Todos los entes</option>
+            </select>
+            <div class="ente-select-icon">▾</div>
+        </div>
+        <div class="ente-meta is-empty" id="consultaEntePreview">Sin filtro por ente</div>
+    </section>
 
-        <section class="results-section">
+    <section class="overview-section" id="resumen-general">
+        <button class="overview-toggle" id="resumenToggle" type="button" aria-expanded="false" aria-controls="resumenGeneralBody">
+            <div class="overview-toggle-copy">
+                <span class="section-eyebrow">Resumen general</span>
+                <h3>Vista global</h3>
+            </div>
+            <div class="overview-toggle-meta">
+                <span class="summary-balance-pill summary-balance-pill--ok" id="resumenEstadoCoincidencia">Coinciden</span>
+                <span class="overview-toggle-icon" aria-hidden="true">▾</span>
+            </div>
+        </button>
+        <div class="overview-body" id="resumenGeneralBody" hidden>
             <div class="stats-bar">
                 <div class="stat-item stat-item--neutral">
-                    <span class="stat-label">Total Registros</span>
-                    <span class="stat-value" id="totalRegistros">0</span>
-                    <span class="stat-note">Total con filtros activos</span>
+                    <span class="stat-label">Registros globales</span>
+                    <span class="stat-value" id="resumenTotalRegistros">0</span>
                 </div>
                 <div class="stat-item stat-item--cargos">
-                    <span class="stat-label">Cargos Totales</span>
-                    <span class="stat-value money positive" id="totalCargos">$0.00</span>
-                    <span class="stat-note">Total con filtros activos</span>
+                    <span class="stat-label">Cargos globales</span>
+                    <span class="stat-value money positive" id="resumenTotalCargos">$0.00</span>
                 </div>
                 <div class="stat-item stat-item--abonos">
-                    <span class="stat-label">Abonos Totales</span>
+                    <span class="stat-label">Abonos globales</span>
+                    <span class="stat-value money negative" id="resumenTotalAbonos">$0.00</span>
+                </div>
+                <div class="stat-item stat-item--difference">
+                    <span class="stat-label">Diferencia global</span>
+                    <span class="stat-value" id="resumenTotalDiferencia">$0.00</span>
+                    <span class="stat-note" id="resumenEstadoBalance">Balance general</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="consulta-layout">
+        <section class="results-section" id="detalle-operativo">
+            <div class="stats-bar">
+                <div class="stat-item stat-item--neutral">
+                    <span class="stat-label">Registros visibles</span>
+                    <span class="stat-value" id="totalRegistros">0</span>
+                </div>
+                <div class="stat-item stat-item--cargos">
+                    <span class="stat-label">Cargos visibles</span>
+                    <span class="stat-value money positive" id="totalCargos">$0.00</span>
+                </div>
+                <div class="stat-item stat-item--abonos">
+                    <span class="stat-label">Abonos visibles</span>
                     <span class="stat-value money negative" id="totalAbonos">$0.00</span>
-                    <span class="stat-note">Total con filtros activos</span>
                 </div>
             </div>
 
             <div class="results-toolbar">
                 <div class="table-title">
-                    <h3>Detalle de transacciones</h3>
-                    <p>Desplaza horizontalmente para ver todos los campos. Las columnas monetarias permanecen destacadas y puedes cambiar la densidad de lectura.</p>
+                    <h3>Transacciones</h3>
+                    <p>Consulta y filtra directamente desde la tabla.</p>
                 </div>
                 <div class="toolbar-actions">
                     <div class="density-toggle" role="group" aria-label="Modo de densidad de la tabla">
@@ -1548,13 +1782,6 @@
             </div>
 
             <div class="table-wrapper">
-                <div class="table-header">
-                    <div>
-                        <strong>Resultado detallado</strong>
-                        <p class="table-header-note">Las columnas monetarias se mantienen visibles para facilitar el cruce entre importes y saldo final.</p>
-                    </div>
-                    <span class="table-header-note">El rango mostrado se actualiza con la paginación inferior.</span>
-                </div>
                 <div id="loading" class="loading">
                     <div class="spinner"></div>
                     <p>Cargando transacciones...</p>
@@ -1563,30 +1790,30 @@
                     <table class="tabla-resultados">
                         <thead>
                             <tr>
-                                <th class="sticky-col col-cuenta">Cuenta Contable</th>
-                                <th>Género</th>
-                                <th>Grupo</th>
-                                <th>Rubro</th>
-                                <th>Cuenta</th>
-                                <th>Subcuenta</th>
-                                <th>Dependencia</th>
-                                <th>Unidad Responsable</th>
-                                <th>Centro de Costo</th>
-                                <th>Proyecto Presupuestario</th>
-                                <th>Fuente</th>
-                                <th>SubFuente</th>
-                                <th>Tipo de Recurso</th>
-                                <th>Partida Presupuestal</th>
-                                <th>Nombre de la Cuenta</th>
-                                <th class="col-fecha">FECHA</th>
-                                <th>POLIZA</th>
-                                <th>BENEFICIARIO</th>
-                                <th>DESCRIPCION</th>
-                                <th>O.P.</th>
-                                <th class="money-col">SALDO INICIAL</th>
-                                <th class="money-col">CARGOS</th>
-                                <th class="money-col">ABONOS</th>
-                                <th class="money-col sticky-right">SALDO FINAL</th>
+                                <th class="sticky-col col-cuenta"><span class="table-head-label"><span class="table-head-title">Cuenta Contable</span><span class="table-head-subtitle">Cuenta</span></span></th>
+                                <th><span class="table-head-label"><span class="table-head-title">Género</span></span></th>
+                                <th><span class="table-head-label"><span class="table-head-title">Grupo</span></span></th>
+                                <th><span class="table-head-label"><span class="table-head-title">Rubro</span></span></th>
+                                <th><span class="table-head-label"><span class="table-head-title">Cuenta</span></span></th>
+                                <th><span class="table-head-label"><span class="table-head-title">Subcuenta</span></span></th>
+                                <th class="col-ente"><span class="table-head-label"><span class="table-head-title">Catálogo consulta</span><span class="table-head-subtitle">Dependencia</span></span></th>
+                                <th class="col-unidad"><span class="table-head-label"><span class="table-head-title">Unidad Responsable</span><span class="table-head-subtitle">Unidad</span></span></th>
+                                <th class="col-centro"><span class="table-head-label"><span class="table-head-title">Centro de Costo</span><span class="table-head-subtitle">Centro</span></span></th>
+                                <th class="col-proyecto"><span class="table-head-label"><span class="table-head-title">Proyecto Presupuestario</span><span class="table-head-subtitle">Proyecto</span></span></th>
+                                <th class="col-fuente"><span class="table-head-label"><span class="table-head-title">Fuente</span></span></th>
+                                <th class="col-subfuente"><span class="table-head-label"><span class="table-head-title">SubFuente</span></span></th>
+                                <th class="col-tipo"><span class="table-head-label"><span class="table-head-title">Tipo de Recurso</span><span class="table-head-subtitle">Tipo</span></span></th>
+                                <th class="col-partida"><span class="table-head-label"><span class="table-head-title">Partida Presupuestal</span><span class="table-head-subtitle">Partida</span></span></th>
+                                <th class="col-nombre"><span class="table-head-label"><span class="table-head-title">Nombre de la Cuenta</span><span class="table-head-subtitle">Nombre</span></span></th>
+                                <th class="col-fecha"><span class="table-head-label"><span class="table-head-title">Fecha</span><span class="table-head-subtitle">dd/mm/aaaa</span></span></th>
+                                <th><span class="table-head-label"><span class="table-head-title">Póliza</span></span></th>
+                                <th class="col-beneficiario"><span class="table-head-label"><span class="table-head-title">Beneficiario</span></span></th>
+                                <th class="col-descripcion"><span class="table-head-label"><span class="table-head-title">Descripción</span></span></th>
+                                <th><span class="table-head-label"><span class="table-head-title">O.P.</span></span></th>
+                                <th class="money-col"><span class="table-head-label"><span class="table-head-title">Saldo Inicial</span></span></th>
+                                <th class="money-col"><span class="table-head-label"><span class="table-head-title">Cargos</span></span></th>
+                                <th class="money-col"><span class="table-head-label"><span class="table-head-title">Abonos</span></span></th>
+                                <th class="money-col sticky-right"><span class="table-head-label"><span class="table-head-title">Saldo Final</span></span></th>
                             </tr>
                         </thead>
                         <tbody id="tablaBody">
@@ -1614,20 +1841,357 @@
     </div>
 </div>
 
-<div class="floating-filters-dock" id="floatingFiltersDock">
-    <div class="active-filters-bar" id="activeFiltersBar" hidden>
-        <button class="active-filters-resizer" id="activeFiltersResizer" type="button" aria-label="Ajustar ancho de filtros activos" title="Arrastra para ajustar el ancho"></button>
-        <div class="active-filters-copy">
-            <strong>Filtros activos</strong>
-            <span>Quita criterios individuales sin regresar al formulario.</span>
+<button class="filters-drawer-toggle" id="filtersDrawerToggle" type="button" aria-controls="filtersDrawer" aria-expanded="false">
+    <span>Filtros</span>
+    <span class="filters-drawer-toggle-count" id="filtersDrawerCount">0</span>
+    <span class="kbd-hint">Shift+F</span>
+</button>
+
+<div class="filters-drawer-overlay" id="filtersDrawerOverlay"></div>
+
+<aside class="filters-drawer" id="filtersDrawer" aria-hidden="true">
+    <div class="filters-drawer-header">
+        <div>
+            <div class="filters-drawer-title">Filtros</div>
+            <div class="filters-drawer-meta" id="filtersDrawerMeta">Sin filtros</div>
         </div>
-        <div class="active-filters-list" id="activeFiltersList"></div>
-        <button class="text-action" type="button" onclick="limpiarFiltros()">Limpiar todo</button>
+        <button class="filters-drawer-close" id="filtersDrawerClose" type="button" aria-label="Cerrar panel">✕</button>
     </div>
-    <button class="floating-clear-btn" id="floatingClearFiltersButton" type="button" onclick="limpiarFiltros()">
-        <span>Limpiar filtros</span>
-    </button>
-</div>
+    <div class="filters-drawer-body">
+        <div class="active-filters-bar" id="activeFiltersBar" hidden>
+            <div class="active-filters-copy">
+                <strong>Filtros activos</strong>
+                <span>Revisa o elimina criterios desde aquí.</span>
+            </div>
+            <div class="active-filters-list" id="activeFiltersList"></div>
+        </div>
+
+        <section class="filters-panel-section">
+            <h4>Estructura contable</h4>
+            <div class="filters-panel-grid">
+                <div class="filter-field filter-field--wide">
+                    <label class="filter-field-label" for="filtroCuenta">Cuenta Contable</label>
+                    <div class="table-filter-control">
+                        <div class="filter-combobox" data-filter-combobox="cuenta_contable" data-filter-kind="facet">
+                            <input type="text" id="filtroCuenta" placeholder="Cuenta" autocomplete="off">
+                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Cuenta Contable">x</button>
+                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Cuenta Contable">v</button>
+                            <div class="combo-menu" data-filter-menu hidden>
+                                <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                                <div class="combo-options" data-filter-options></div>
+                            </div>
+                        </div>
+                        <span class="filter-help" data-filter-help="cuenta_contable">Sin filtro</span>
+                    </div>
+                </div>
+                <div class="filter-field">
+                    <label class="filter-field-label" for="filtroGenero">Género</label>
+                    <div class="table-filter-control">
+                        <div class="filter-combobox" data-filter-combobox="genero" data-filter-kind="facet">
+                            <input type="text" id="filtroGenero" placeholder="Género" autocomplete="off">
+                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Género">x</button>
+                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Género">v</button>
+                            <div class="combo-menu" data-filter-menu hidden>
+                                <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                                <div class="combo-options" data-filter-options></div>
+                            </div>
+                        </div>
+                        <span class="filter-help" data-filter-help="genero">Sin filtro</span>
+                    </div>
+                </div>
+                <div class="filter-field">
+                    <label class="filter-field-label" for="filtroGrupo">Grupo</label>
+                    <div class="table-filter-control">
+                        <div class="filter-combobox" data-filter-combobox="grupo" data-filter-kind="facet">
+                            <input type="text" id="filtroGrupo" placeholder="Grupo" autocomplete="off">
+                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Grupo">x</button>
+                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Grupo">v</button>
+                            <div class="combo-menu" data-filter-menu hidden>
+                                <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                                <div class="combo-options" data-filter-options></div>
+                            </div>
+                        </div>
+                        <span class="filter-help" data-filter-help="grupo">Sin filtro</span>
+                    </div>
+                </div>
+                <div class="filter-field">
+                    <label class="filter-field-label" for="filtroRubro">Rubro</label>
+                    <div class="table-filter-control">
+                        <div class="filter-combobox" data-filter-combobox="rubro" data-filter-kind="facet">
+                            <input type="text" id="filtroRubro" placeholder="Rubro" autocomplete="off">
+                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Rubro">x</button>
+                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Rubro">v</button>
+                            <div class="combo-menu" data-filter-menu hidden>
+                                <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                                <div class="combo-options" data-filter-options></div>
+                            </div>
+                        </div>
+                        <span class="filter-help" data-filter-help="rubro">Sin filtro</span>
+                    </div>
+                </div>
+                <div class="filter-field">
+                    <label class="filter-field-label" for="filtroCuentaNum">Cuenta</label>
+                    <div class="table-filter-control">
+                        <div class="filter-combobox" data-filter-combobox="cuenta" data-filter-kind="facet">
+                            <input type="text" id="filtroCuentaNum" placeholder="Cuenta" autocomplete="off">
+                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Cuenta">x</button>
+                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Cuenta">v</button>
+                            <div class="combo-menu" data-filter-menu hidden>
+                                <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                                <div class="combo-options" data-filter-options></div>
+                            </div>
+                        </div>
+                        <span class="filter-help" data-filter-help="cuenta">Sin filtro</span>
+                    </div>
+                </div>
+                <div class="filter-field">
+                    <label class="filter-field-label" for="filtroSubcuenta">Subcuenta</label>
+                    <div class="table-filter-control">
+                        <div class="filter-combobox" data-filter-combobox="subcuenta" data-filter-kind="facet">
+                            <input type="text" id="filtroSubcuenta" placeholder="Subcuenta" autocomplete="off">
+                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Subcuenta">x</button>
+                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Subcuenta">v</button>
+                            <div class="combo-menu" data-filter-menu hidden>
+                                <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                                <div class="combo-options" data-filter-options></div>
+                            </div>
+                        </div>
+                        <span class="filter-help" data-filter-help="subcuenta">Sin filtro</span>
+                    </div>
+                </div>
+                <div class="filter-field">
+                    <label class="filter-field-label" for="filtroDependencia">Catálogo consulta</label>
+                    <div class="table-filter-control">
+                        <div class="filter-combobox" data-filter-combobox="dependencia" data-filter-kind="facet">
+                            <input type="text" id="filtroDependencia" placeholder="Dependencia" autocomplete="off">
+                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Catálogo consulta">x</button>
+                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Catálogo consulta">v</button>
+                            <div class="combo-menu" data-filter-menu hidden>
+                                <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                                <div class="combo-options" data-filter-options></div>
+                            </div>
+                        </div>
+                        <span class="filter-help" data-filter-help="dependencia">Sin filtro</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="filters-panel-section">
+            <h4>Consulta institucional</h4>
+            <div class="filters-panel-grid">
+                <div class="filter-field">
+                    <label class="filter-field-label" for="filtroUnidadResponsable">Unidad Responsable</label>
+                    <div class="table-filter-control">
+                        <div class="filter-combobox" data-filter-combobox="unidad_responsable" data-filter-kind="facet">
+                            <input type="text" id="filtroUnidadResponsable" placeholder="Unidad" autocomplete="off">
+                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Unidad Responsable">x</button>
+                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Unidad Responsable">v</button>
+                            <div class="combo-menu" data-filter-menu hidden>
+                                <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                                <div class="combo-options" data-filter-options></div>
+                            </div>
+                        </div>
+                        <span class="filter-help" data-filter-help="unidad_responsable">Sin filtro</span>
+                    </div>
+                </div>
+                <div class="filter-field">
+                    <label class="filter-field-label" for="filtroCentroCosto">Centro de Costo</label>
+                    <div class="table-filter-control">
+                        <div class="filter-combobox" data-filter-combobox="centro_costo" data-filter-kind="facet">
+                            <input type="text" id="filtroCentroCosto" placeholder="Centro" autocomplete="off">
+                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Centro de Costo">x</button>
+                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Centro de Costo">v</button>
+                            <div class="combo-menu" data-filter-menu hidden>
+                                <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                                <div class="combo-options" data-filter-options></div>
+                            </div>
+                        </div>
+                        <span class="filter-help" data-filter-help="centro_costo">Sin filtro</span>
+                    </div>
+                </div>
+                <div class="filter-field filter-field--wide">
+                    <label class="filter-field-label" for="filtroProyectoPresupuestario">Proyecto Presupuestario</label>
+                    <div class="table-filter-control">
+                        <div class="filter-combobox" data-filter-combobox="proyecto_presupuestario" data-filter-kind="facet">
+                            <input type="text" id="filtroProyectoPresupuestario" placeholder="Proyecto" autocomplete="off">
+                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Proyecto Presupuestario">x</button>
+                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Proyecto Presupuestario">v</button>
+                            <div class="combo-menu" data-filter-menu hidden>
+                                <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                                <div class="combo-options" data-filter-options></div>
+                            </div>
+                        </div>
+                        <span class="filter-help" data-filter-help="proyecto_presupuestario">Sin filtro</span>
+                    </div>
+                </div>
+                <div class="filter-field">
+                    <label class="filter-field-label" for="filtroFuente">Fuente</label>
+                    <div class="table-filter-control">
+                        <div class="filter-combobox" data-filter-combobox="fuente" data-filter-kind="facet">
+                            <input type="text" id="filtroFuente" placeholder="Fuente" autocomplete="off">
+                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Fuente">x</button>
+                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Fuente">v</button>
+                            <div class="combo-menu" data-filter-menu hidden>
+                                <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                                <div class="combo-options" data-filter-options></div>
+                            </div>
+                        </div>
+                        <span class="filter-help" data-filter-help="fuente">Sin filtro</span>
+                    </div>
+                </div>
+                <div class="filter-field">
+                    <label class="filter-field-label" for="filtroSubfuente">SubFuente</label>
+                    <div class="table-filter-control">
+                        <div class="filter-combobox" data-filter-combobox="subfuente" data-filter-kind="facet">
+                            <input type="text" id="filtroSubfuente" placeholder="Subfuente" autocomplete="off">
+                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar SubFuente">x</button>
+                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de SubFuente">v</button>
+                            <div class="combo-menu" data-filter-menu hidden>
+                                <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                                <div class="combo-options" data-filter-options></div>
+                            </div>
+                        </div>
+                        <span class="filter-help" data-filter-help="subfuente">Sin filtro</span>
+                    </div>
+                </div>
+                <div class="filter-field">
+                    <label class="filter-field-label" for="filtroTipoRecurso">Tipo de Recurso</label>
+                    <div class="table-filter-control">
+                        <div class="filter-combobox" data-filter-combobox="tipo_recurso" data-filter-kind="facet">
+                            <input type="text" id="filtroTipoRecurso" placeholder="Tipo" autocomplete="off">
+                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Tipo de Recurso">x</button>
+                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Tipo de Recurso">v</button>
+                            <div class="combo-menu" data-filter-menu hidden>
+                                <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                                <div class="combo-options" data-filter-options></div>
+                            </div>
+                        </div>
+                        <span class="filter-help" data-filter-help="tipo_recurso">Sin filtro</span>
+                    </div>
+                </div>
+                <div class="filter-field">
+                    <label class="filter-field-label" for="filtroPartidaPresupuestal">Partida Presupuestal</label>
+                    <div class="table-filter-control">
+                        <div class="filter-combobox" data-filter-combobox="partida_presupuestal" data-filter-kind="facet">
+                            <input type="text" id="filtroPartidaPresupuestal" placeholder="Partida" autocomplete="off">
+                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Partida Presupuestal">x</button>
+                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Partida Presupuestal">v</button>
+                            <div class="combo-menu" data-filter-menu hidden>
+                                <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                                <div class="combo-options" data-filter-options></div>
+                            </div>
+                        </div>
+                        <span class="filter-help" data-filter-help="partida_presupuestal">Sin filtro</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="filters-panel-section">
+            <h4>Búsqueda libre</h4>
+            <div class="filters-panel-grid">
+                <div class="filter-field filter-field--wide">
+                    <label class="filter-field-label" for="filtroNombreCuenta">Nombre de la Cuenta</label>
+                    <div class="table-filter-control">
+                        <div class="filter-combobox" data-filter-combobox="nombre_cuenta" data-filter-kind="text">
+                            <input type="text" id="filtroNombreCuenta" placeholder="Nombre" autocomplete="off">
+                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Nombre de Cuenta">x</button>
+                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar sugerencias de Nombre de Cuenta">v</button>
+                            <div class="combo-menu" data-filter-menu hidden>
+                                <div class="combo-status" data-filter-status>Sugerencias disponibles</div>
+                                <div class="combo-options" data-filter-options></div>
+                            </div>
+                        </div>
+                        <span class="filter-help" data-filter-help="nombre_cuenta">Escribe y presiona Enter</span>
+                    </div>
+                </div>
+                <div class="filter-field">
+                    <label class="filter-field-label" for="filtroPoliza">Póliza</label>
+                    <div class="table-filter-control">
+                        <div class="filter-combobox" data-filter-combobox="poliza" data-filter-kind="text">
+                            <input type="text" id="filtroPoliza" placeholder="Póliza" autocomplete="off">
+                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Póliza">x</button>
+                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar sugerencias de Póliza">v</button>
+                            <div class="combo-menu" data-filter-menu hidden>
+                                <div class="combo-status" data-filter-status>Sugerencias disponibles</div>
+                                <div class="combo-options" data-filter-options></div>
+                            </div>
+                        </div>
+                        <span class="filter-help" data-filter-help="poliza">Escribe y presiona Enter</span>
+                    </div>
+                </div>
+                <div class="filter-field">
+                    <label class="filter-field-label" for="filtroBeneficiario">Beneficiario</label>
+                    <div class="table-filter-control">
+                        <div class="filter-combobox" data-filter-combobox="beneficiario" data-filter-kind="text">
+                            <input type="text" id="filtroBeneficiario" placeholder="Beneficiario" autocomplete="off">
+                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Beneficiario">x</button>
+                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar sugerencias de Beneficiario">v</button>
+                            <div class="combo-menu" data-filter-menu hidden>
+                                <div class="combo-status" data-filter-status>Sugerencias disponibles</div>
+                                <div class="combo-options" data-filter-options></div>
+                            </div>
+                        </div>
+                        <span class="filter-help" data-filter-help="beneficiario">Escribe y presiona Enter</span>
+                    </div>
+                </div>
+                <div class="filter-field filter-field--wide">
+                    <label class="filter-field-label" for="filtroDescripcion">Descripción</label>
+                    <div class="table-filter-control">
+                        <div class="filter-combobox" data-filter-combobox="descripcion" data-filter-kind="text">
+                            <input type="text" id="filtroDescripcion" placeholder="Descripción" autocomplete="off">
+                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Descripción">x</button>
+                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar sugerencias de Descripción">v</button>
+                            <div class="combo-menu" data-filter-menu hidden>
+                                <div class="combo-status" data-filter-status>Sugerencias disponibles</div>
+                                <div class="combo-options" data-filter-options></div>
+                            </div>
+                        </div>
+                        <span class="filter-help" data-filter-help="descripcion">Escribe y presiona Enter</span>
+                    </div>
+                </div>
+                <div class="filter-field">
+                    <label class="filter-field-label" for="filtroOrdenPago">Orden de Pago</label>
+                    <div class="table-filter-control">
+                        <div class="filter-combobox" data-filter-combobox="orden_pago" data-filter-kind="text">
+                            <input type="text" id="filtroOrdenPago" placeholder="O.P." autocomplete="off">
+                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Orden de Pago">x</button>
+                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar sugerencias de Orden de Pago">v</button>
+                            <div class="combo-menu" data-filter-menu hidden>
+                                <div class="combo-status" data-filter-status>Sugerencias disponibles</div>
+                                <div class="combo-options" data-filter-options></div>
+                            </div>
+                        </div>
+                        <span class="filter-help" data-filter-help="orden_pago">Escribe y presiona Enter</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="filters-panel-section">
+            <h4>Periodo</h4>
+            <div class="filters-panel-grid">
+                <div class="filter-field">
+                    <label class="filter-field-label" for="filtroFechaInicio">Fecha inicial</label>
+                    <div class="table-filter-date">
+                        <input type="date" id="filtroFechaInicio" aria-label="Fecha inicio">
+                    </div>
+                </div>
+                <div class="filter-field">
+                    <label class="filter-field-label" for="filtroFechaFin">Fecha final</label>
+                    <div class="table-filter-date">
+                        <input type="date" id="filtroFechaFin" aria-label="Fecha fin">
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    <div class="filters-drawer-footer">
+        <button class="btn-clear-filters" type="button" onclick="limpiarFiltros()">Limpiar</button>
+        <button class="btn-apply-filters" type="button" onclick="aplicarFiltros(); closeFiltersDrawer();">Aplicar filtros</button>
+    </div>
+</aside>
 {% endblock %}
 
 {% block extra_js %}
@@ -1645,15 +2209,18 @@ let filterOptionsUnavailableMessage = '';
 let baseDataAvailable = null;
 let currentResultTotal = 0;
 let floatingDockWidthOverride = null;
+const primaryEnteCatalogLabels = new Map();
+const primaryEnteCatalogMeta = new Map();
 
 const FACET_FILTERS = [
+    { key: 'ente_catalogo', inputId: 'consultaEnteSelect', label: 'Ente' },
+    { key: 'dependencia', inputId: 'filtroDependencia', label: 'Catálogo consulta' },
     { key: 'cuenta_contable', inputId: 'filtroCuenta', label: 'Cuenta Contable' },
     { key: 'genero', inputId: 'filtroGenero', label: 'Género' },
     { key: 'grupo', inputId: 'filtroGrupo', label: 'Grupo' },
     { key: 'rubro', inputId: 'filtroRubro', label: 'Rubro' },
     { key: 'cuenta', inputId: 'filtroCuentaNum', label: 'Cuenta' },
     { key: 'subcuenta', inputId: 'filtroSubcuenta', label: 'Subcuenta' },
-    { key: 'dependencia', inputId: 'filtroDependencia', label: 'Dependencia' },
     { key: 'unidad_responsable', inputId: 'filtroUnidadResponsable', label: 'Unidad Responsable' },
     { key: 'centro_costo', inputId: 'filtroCentroCosto', label: 'Centro de Costo' },
     { key: 'proyecto_presupuestario', inputId: 'filtroProyectoPresupuestario', label: 'Proyecto Presupuestario' },
@@ -1690,6 +2257,7 @@ const filterOptionsCache = new Map();
 const comboboxState = new Map();
 const FLOATING_DOCK_MIN_WIDTH = 280;
 const FLOATING_DOCK_MAX_WIDTH = 560;
+const alphaNumericCollator = new Intl.Collator('es-MX', { numeric: true, sensitivity: 'base' });
 
 function getFloatingFiltersDock() {
     return document.getElementById('floatingFiltersDock');
@@ -1813,7 +2381,7 @@ function formatActiveFilterValue(key, value) {
         return formatFilterDateValue(value);
     }
 
-    return normalizeValue(value);
+    return getFilterValueLabel(key, value);
 }
 
 function getActiveFilterEntries(filters = filtrosActuales) {
@@ -1884,6 +2452,181 @@ function setDensityMode(isCompact) {
     updateDensityToggleUI();
 }
 
+function openFiltersDrawer() {
+    const drawer = document.getElementById('filtersDrawer');
+    const overlay = document.getElementById('filtersDrawerOverlay');
+    const toggle = document.getElementById('filtersDrawerToggle');
+
+    if (!drawer || !overlay || !toggle) {
+        return;
+    }
+
+    drawer.classList.add('is-open');
+    overlay.classList.add('is-visible');
+    drawer.setAttribute('aria-hidden', 'false');
+    toggle.setAttribute('aria-expanded', 'true');
+}
+
+function closeFiltersDrawer() {
+    const drawer = document.getElementById('filtersDrawer');
+    const overlay = document.getElementById('filtersDrawerOverlay');
+    const toggle = document.getElementById('filtersDrawerToggle');
+
+    if (!drawer || !overlay || !toggle) {
+        return;
+    }
+
+    drawer.classList.remove('is-open');
+    overlay.classList.remove('is-visible');
+    drawer.setAttribute('aria-hidden', 'true');
+    toggle.setAttribute('aria-expanded', 'false');
+    closeAllComboboxes();
+}
+
+function initFiltersDrawer() {
+    const toggle = document.getElementById('filtersDrawerToggle');
+    const closeButton = document.getElementById('filtersDrawerClose');
+    const overlay = document.getElementById('filtersDrawerOverlay');
+
+    if (toggle) {
+        toggle.addEventListener('click', () => openFiltersDrawer());
+    }
+
+    if (closeButton) {
+        closeButton.addEventListener('click', () => closeFiltersDrawer());
+    }
+
+    if (overlay) {
+        overlay.addEventListener('click', () => closeFiltersDrawer());
+    }
+}
+
+function syncPrimaryEnteSelectFromFilters() {
+    const consultaEnteSelect = document.getElementById('consultaEnteSelect');
+    if (!consultaEnteSelect) {
+        return;
+    }
+
+    const selectedValues = getSelectedValues('ente_catalogo');
+    consultaEnteSelect.value = selectedValues.length === 1 ? selectedValues[0] : '';
+    updatePrimaryEntePreview();
+}
+
+function updatePrimaryEntePreview() {
+    const consultaEnteSelect = document.getElementById('consultaEnteSelect');
+    const consultaEntePreview = document.getElementById('consultaEntePreview');
+    if (!consultaEnteSelect || !consultaEntePreview) {
+        return;
+    }
+
+    const selectedValue = normalizeValue(consultaEnteSelect.value);
+    if (!selectedValue) {
+        consultaEntePreview.className = 'ente-meta is-empty';
+        consultaEntePreview.textContent = 'Sin filtro por ente';
+        return;
+    }
+
+    const meta = primaryEnteCatalogMeta.get(comparableValue(selectedValue)) || {};
+    const nombre = normalizeValue(meta.nombre) || normalizeValue(meta.label) || selectedValue;
+    const siglas = normalizeValue(meta.siglas) || selectedValue;
+    const ambito = normalizeValue(meta.ambito) || 'Catálogo general';
+
+    consultaEntePreview.className = 'ente-meta';
+    consultaEntePreview.innerHTML = `
+        <span class="ente-badge ente-badge-name" title="${nombre}">${siglas || nombre}</span>
+        <span class="ente-badge">${ambito}</span>
+    `;
+}
+
+function renderPrimaryEnteOptions(items = []) {
+    const consultaEnteSelect = document.getElementById('consultaEnteSelect');
+    if (!consultaEnteSelect) {
+        return;
+    }
+
+    const selectedValues = getSelectedValues('ente_catalogo');
+    const selectedValue = selectedValues.length === 1 ? selectedValues[0] : '';
+    const groupedItems = new Map();
+
+    consultaEnteSelect.innerHTML = '<option value="">Todos los entes</option>';
+    primaryEnteCatalogLabels.clear();
+    primaryEnteCatalogMeta.clear();
+
+    (Array.isArray(items) ? items : []).forEach((item) => {
+        const value = normalizeValue(item?.value || item?.siglas);
+        if (!value) {
+            return;
+        }
+
+        const label = normalizeValue(item?.label) || value;
+        const grupoLabel = normalizeValue(item?.grupo_label) || 'Catálogo general';
+        const meta = {
+            label,
+            nombre: normalizeValue(item?.nombre),
+            siglas: normalizeValue(item?.siglas) || value,
+            ambito: normalizeValue(item?.ambito) || '',
+            grupo_label: grupoLabel,
+        };
+
+        primaryEnteCatalogLabels.set(comparableValue(value), label);
+        primaryEnteCatalogMeta.set(comparableValue(value), meta);
+
+        if (!groupedItems.has(grupoLabel)) {
+            groupedItems.set(grupoLabel, []);
+        }
+        groupedItems.get(grupoLabel).push({ value, label, meta });
+    });
+
+    const getGroupSortOrder = (groupLabel) => {
+        const normalized = normalizeValue(groupLabel).toLowerCase();
+        if (normalized === 'entes estatales') return 0;
+        if (normalized === 'municipios y paramunicipales') return 1;
+        return 2;
+    };
+
+    Array.from(groupedItems.entries())
+        .sort(([leftLabel], [rightLabel]) => {
+            const leftOrder = getGroupSortOrder(leftLabel);
+            const rightOrder = getGroupSortOrder(rightLabel);
+            if (leftOrder !== rightOrder) {
+                return leftOrder - rightOrder;
+            }
+            return alphaNumericCollator.compare(leftLabel, rightLabel);
+        })
+        .forEach(([groupLabel, groupItems]) => {
+            const group = document.createElement('optgroup');
+            group.label = groupLabel;
+
+            groupItems
+                .sort((left, right) => alphaNumericCollator.compare(left.label, right.label))
+                .forEach((item) => {
+                    const option = document.createElement('option');
+                    option.value = item.value;
+                    option.textContent = item.label;
+                    option.dataset.nombre = item.meta.nombre || '';
+                    option.dataset.siglas = item.meta.siglas || item.value;
+                    option.dataset.ambito = item.meta.ambito || '';
+                    option.dataset.grupoLabel = item.meta.grupo_label || groupLabel;
+                    group.appendChild(option);
+                });
+
+            consultaEnteSelect.appendChild(group);
+        });
+
+    consultaEnteSelect.value = selectedValue;
+    syncPrimaryEnteSelectFromFilters();
+}
+
+async function loadPrimaryEnteOptions() {
+    try {
+        const data = await fetchFilterOptions(['ente_catalogo']);
+        renderPrimaryEnteOptions(data.options?.ente_catalogo?.items || []);
+    } catch (error) {
+        console.error('Error cargando catálogo general para consulta:', error);
+        renderPrimaryEnteOptions([]);
+    }
+}
+
 function updateFilterSummaryUI() {
     const criteriaCount = countActiveCriteria();
     const fieldCount = countActiveFields();
@@ -1891,9 +2634,21 @@ function updateFilterSummaryUI() {
     const heroFiltersCount = document.getElementById('heroFiltersCount');
     const statusHeading = document.getElementById('filtersStatusHeading');
     const statusText = document.getElementById('filtersStatusText');
+    const filtersDrawerCount = document.getElementById('filtersDrawerCount');
+    const filtersDrawerMeta = document.getElementById('filtersDrawerMeta');
 
     if (heroFiltersCount) {
         heroFiltersCount.textContent = criteriaCount.toLocaleString('es-MX');
+    }
+
+    if (filtersDrawerCount) {
+        filtersDrawerCount.textContent = criteriaCount.toLocaleString('es-MX');
+    }
+
+    if (filtersDrawerMeta) {
+        filtersDrawerMeta.textContent = criteriaCount
+            ? `${criteriaCount.toLocaleString('es-MX')} criterio${criteriaCount === 1 ? '' : 's'} activo${criteriaCount === 1 ? '' : 's'}`
+            : 'Sin filtros';
     }
 
     if (badge) {
@@ -1905,19 +2660,29 @@ function updateFilterSummaryUI() {
     if (statusHeading) {
         statusHeading.textContent = criteriaCount
             ? `${fieldCount.toLocaleString('es-MX')} filtro${fieldCount === 1 ? '' : 's'} en uso`
-            : 'Selecciona filtros y aplica cambios';
+            : 'Filtros listos';
     }
 
     if (statusText) {
         statusText.textContent = criteriaCount
-            ? `${criteriaCount.toLocaleString('es-MX')} criterio${criteriaCount === 1 ? '' : 's'} aplicado${criteriaCount === 1 ? '' : 's'}. Puedes quitarlos desde la barra de resultados.`
-            : 'Puedes combinar múltiples valores por campo y quitar criterios desde la barra de resultados.';
+            ? `${criteriaCount.toLocaleString('es-MX')} criterio${criteriaCount === 1 ? '' : 's'} activo${criteriaCount === 1 ? '' : 's'}.`
+            : 'Abre la barra cuando necesites acotar resultados.';
     }
 }
 
 function removeActiveFilter(key, value) {
     if (COMBOBOX_FILTER_KEYS.has(key)) {
         const state = comboboxState.get(key);
+        if (key === 'ente_catalogo' && !state) {
+            const consultaEnteSelect = document.getElementById('consultaEnteSelect');
+            if (consultaEnteSelect) {
+                consultaEnteSelect.value = '';
+            }
+            delete filtrosActuales.ente_catalogo;
+            updatePrimaryEntePreview();
+            refreshCurrentView();
+            return;
+        }
         if (!state) {
             return;
         }
@@ -1946,14 +2711,9 @@ function removeActiveFilter(key, value) {
 function renderActiveFilters() {
     const bar = document.getElementById('activeFiltersBar');
     const list = document.getElementById('activeFiltersList');
-    const floatingClearButton = document.getElementById('floatingClearFiltersButton');
     const entries = getActiveFilterEntries();
 
     updateFilterSummaryUI();
-
-    if (floatingClearButton) {
-        floatingClearButton.disabled = !entries.length;
-    }
 
     if (!bar || !list) {
         return;
@@ -2003,6 +2763,72 @@ function renderActiveFilters() {
     bar.hidden = false;
 }
 
+function setFiltersCompactState(isCondensed) {
+    const section = document.querySelector('.filters-section');
+    const toggleButton = document.getElementById('filtersCompactToggle');
+    const tableWrapper = document.querySelector('.results-section .table-wrapper');
+
+    if (!section || !toggleButton) {
+        return;
+    }
+
+    section.classList.toggle('is-condensed', Boolean(isCondensed));
+    if (tableWrapper) {
+        tableWrapper.classList.toggle('filters-collapsed', Boolean(isCondensed));
+    }
+    toggleButton.textContent = isCondensed ? 'Mostrar filtros' : 'Ocultar filtros';
+    toggleButton.setAttribute('aria-expanded', String(!isCondensed));
+
+    if (isCondensed) {
+        closeAllComboboxes();
+    }
+}
+
+function initFiltersCompactToggle() {
+    const section = document.querySelector('.filters-section');
+    const toggleButton = document.getElementById('filtersCompactToggle');
+
+    if (!section || !toggleButton) {
+        return;
+    }
+
+    toggleButton.addEventListener('click', () => {
+        setFiltersCompactState(!section.classList.contains('is-condensed'));
+    });
+
+    setFiltersCompactState(section.classList.contains('is-condensed'));
+}
+
+function initFiltersScroller() {
+    const scroller = document.getElementById('filtersScroller');
+    const prevButton = document.getElementById('filtersScrollPrev');
+    const nextButton = document.getElementById('filtersScrollNext');
+
+    if (!scroller || !prevButton || !nextButton) {
+        return;
+    }
+
+    const updateControls = () => {
+        const maxScrollLeft = Math.max(0, scroller.scrollWidth - scroller.clientWidth - 4);
+        prevButton.disabled = scroller.scrollLeft <= 4;
+        nextButton.disabled = scroller.scrollLeft >= maxScrollLeft;
+    };
+
+    const getStep = () => Math.max(260, Math.round(scroller.clientWidth * 0.72));
+
+    prevButton.addEventListener('click', () => {
+        scroller.scrollBy({ left: -getStep(), behavior: 'smooth' });
+    });
+
+    nextButton.addEventListener('click', () => {
+        scroller.scrollBy({ left: getStep(), behavior: 'smooth' });
+    });
+
+    scroller.addEventListener('scroll', updateControls, { passive: true });
+    window.addEventListener('resize', updateControls);
+    updateControls();
+}
+
 function initDensityToggle() {
     const compactButton = document.getElementById('densityCompact');
     const comfortButton = document.getElementById('densityComfort');
@@ -2020,6 +2846,68 @@ function initDensityToggle() {
     }
 
     updateDensityToggleUI();
+}
+
+function initResumenToggle() {
+    const toggle = document.getElementById('resumenToggle');
+    const body = document.getElementById('resumenGeneralBody');
+
+    if (!toggle || !body) {
+        return;
+    }
+
+    toggle.addEventListener('click', () => {
+        const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+        toggle.setAttribute('aria-expanded', String(!isExpanded));
+        body.hidden = isExpanded;
+    });
+}
+
+async function cargarResumenGeneral() {
+    try {
+        const params = new URLSearchParams();
+        appendFiltersToParams(params, filtrosActuales);
+
+        const response = await fetch(`/api/transacciones/resumen?${params.toString()}`);
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || 'Error al cargar resumen');
+        }
+
+        const totalRegistros = Number(data.total_registros || 0);
+        const totalCargos = parseFloat(data.total_cargos || 0);
+        const totalAbonos = parseFloat(data.total_abonos || 0);
+        const diferencia = parseFloat(data.diferencia || 0);
+        const coincide = Boolean(data.coincide);
+
+        document.getElementById('resumenTotalRegistros').textContent = totalRegistros.toLocaleString('es-MX');
+        document.getElementById('resumenTotalCargos').textContent = formatCurrency(totalCargos);
+        document.getElementById('resumenTotalAbonos').textContent = formatCurrency(totalAbonos);
+        document.getElementById('resumenTotalDiferencia').textContent = formatCurrency(diferencia);
+
+        const balanceLabel = document.getElementById('resumenEstadoBalance');
+        const coincideLabel = document.getElementById('resumenEstadoCoincidencia');
+
+        if (balanceLabel) {
+            balanceLabel.textContent = coincide
+                ? 'Balance general equilibrado'
+                : 'Balance general con diferencia';
+        }
+
+        if (coincideLabel) {
+            coincideLabel.textContent = coincide ? 'Coinciden' : 'No coinciden';
+            coincideLabel.classList.toggle('summary-balance-pill--ok', coincide);
+            coincideLabel.classList.toggle('summary-balance-pill--warn', !coincide);
+        }
+    } catch (error) {
+        console.error('Error cargando resumen general:', error);
+        const coincideLabel = document.getElementById('resumenEstadoCoincidencia');
+        if (coincideLabel) {
+            coincideLabel.textContent = 'Sin resumen';
+            coincideLabel.classList.remove('summary-balance-pill--ok');
+            coincideLabel.classList.add('summary-balance-pill--warn');
+        }
+    }
 }
 
 async function cargarTransacciones() {
@@ -2095,7 +2983,7 @@ function renderizarTabla(transacciones) {
             <td data-label="Rubro">${t.rubro || ''}</td>
             <td data-label="Cuenta">${t.cuenta || ''}</td>
             <td data-label="Subcuenta">${t.subcuenta || ''}</td>
-            <td data-label="Dependencia">${t.dependencia || ''}</td>
+            <td data-label="Catálogo consulta">${t.dependencia || ''}</td>
             <td data-label="Unidad Responsable">${t.unidad_responsable || ''}</td>
             <td data-label="Centro de Costo">${t.centro_costo || ''}</td>
             <td data-label="Proyecto Presupuestario">${t.proyecto_presupuestario || ''}</td>
@@ -2231,6 +3119,27 @@ function comparableValue(value) {
     return normalizeValue(value).toLowerCase();
 }
 
+function getFilterValueLabel(key, value) {
+    const normalized = normalizeValue(value);
+    if (!normalized) {
+        return '';
+    }
+
+    if (key === 'ente_catalogo') {
+        const mappedLabel = primaryEnteCatalogLabels.get(comparableValue(normalized));
+        if (mappedLabel) {
+            return mappedLabel;
+        }
+    }
+
+    const state = comboboxState.get(key);
+    if (!state?.optionLabels) {
+        return normalized;
+    }
+
+    return state.optionLabels.get(comparableValue(normalized)) || normalized;
+}
+
 function normalizeValueList(values) {
     const candidates = Array.isArray(values)
         ? values
@@ -2338,7 +3247,7 @@ function getNoDataLoadedMessage() {
     return 'No hay transacciones cargadas. Sube archivos para habilitar los filtros.';
 }
 
-function summarizeSelectedValues(values, maxItems = 2) {
+function summarizeSelectedValues(values, maxItems = 2, key = '') {
     const normalized = normalizeValueList(values);
     if (!normalized.length) {
         return '';
@@ -2346,7 +3255,7 @@ function summarizeSelectedValues(values, maxItems = 2) {
 
     const preview = normalized
         .slice(0, maxItems)
-        .map((value) => truncate(value, 20))
+        .map((value) => truncate(getFilterValueLabel(key, value), 20))
         .join(', ');
     const extra = normalized.length > maxItems ? ` +${normalized.length - maxItems}` : '';
     return `${preview}${extra}`;
@@ -2426,14 +3335,15 @@ function renderSelectedValues(state) {
     const fragment = document.createDocumentFragment();
 
     selectedValues.forEach((value) => {
+        const displayValue = getFilterValueLabel(state.key, value);
         const chip = document.createElement('button');
         chip.type = 'button';
         chip.className = 'combo-chip';
-        chip.title = value;
+        chip.title = displayValue;
 
         const labelNode = document.createElement('span');
         labelNode.className = 'combo-chip-label';
-        labelNode.textContent = value;
+        labelNode.textContent = displayValue;
 
         const removeNode = document.createElement('span');
         removeNode.className = 'combo-chip-remove';
@@ -2467,7 +3377,7 @@ function updateFilterHelpFromState(state) {
         if (selectedValues.length) {
             setFilterHelp(
                 state.key,
-                `${selectedValues.length.toLocaleString('es-MX')} seleccionados: ${summarizeSelectedValues(selectedValues)}`
+                `${selectedValues.length.toLocaleString('es-MX')} seleccionados: ${summarizeSelectedValues(selectedValues, 2, state.key)}`
             );
         } else {
             setFilterHelp(state.key, getComboboxUnavailableMessage(), true);
@@ -2483,7 +3393,7 @@ function updateFilterHelpFromState(state) {
     if (selectedValues.length) {
         setFilterHelp(
             state.key,
-            `${selectedValues.length.toLocaleString('es-MX')} seleccionados: ${summarizeSelectedValues(selectedValues)}`
+            `${selectedValues.length.toLocaleString('es-MX')} seleccionados: ${summarizeSelectedValues(selectedValues, 2, state.key)}`
         );
         return;
     }
@@ -2609,13 +3519,28 @@ function renderComboboxOptions(state) {
 }
 
 function applyOptionsPayload(key, payload) {
+    if (key === 'ente_catalogo') {
+        renderPrimaryEnteOptions(payload?.items || []);
+        renderActiveFilters();
+        return;
+    }
+
     const state = comboboxState.get(key);
     if (!state) return;
     state.options = Array.isArray(payload?.items) ? payload.items : [];
     state.truncated = Boolean(payload?.truncated);
+    state.optionLabels = new Map(state.optionLabels || []);
+    state.options.forEach((item) => {
+        const value = normalizeValue(item?.value);
+        if (!value) {
+            return;
+        }
+        state.optionLabels.set(comparableValue(value), item.label || value);
+    });
     renderSelectedValues(state);
     renderComboboxOptions(state);
     updateComboboxDecorators(state);
+    renderActiveFilters();
 }
 
 function closeCombobox(key) {
@@ -2776,7 +3701,7 @@ async function refreshFilterOptions() {
 async function refreshCurrentView() {
     totalsKey = null;
     paginaActual = 1;
-    await Promise.allSettled([refreshFilterOptions(), cargarTransacciones()]);
+    await Promise.allSettled([cargarResumenGeneral(), refreshFilterOptions(), cargarTransacciones()]);
 }
 
 function getSelectedValues(key, source = filtrosActuales) {
@@ -2806,6 +3731,10 @@ function setFilterValues(key, values, { clearInput = false } = {}) {
         renderComboboxOptions(state);
     }
 
+    if (key === 'ente_catalogo') {
+        syncPrimaryEnteSelectFromFilters();
+    }
+
     renderActiveFilters();
     return !areValueListsEqual(currentValues, normalizedValues);
 }
@@ -2816,14 +3745,22 @@ function resolveFacetInputValue(state) {
         return '';
     }
 
-    const exactMatch = state.options.find((item) => comparableValue(item.value) === comparableValue(rawValue));
+    const comparableRawValue = comparableValue(rawValue);
+    const exactMatch = state.options.find((item) => {
+        const candidateValue = comparableValue(item.value);
+        const candidateLabel = comparableValue(item.label || item.value);
+        return candidateValue === comparableRawValue || candidateLabel === comparableRawValue;
+    });
     if (exactMatch) {
         return exactMatch.value;
     }
 
     if (state.options.length === 1) {
         const [singleOption] = state.options;
-        if (comparableValue(singleOption.value).startsWith(comparableValue(rawValue))) {
+        const startsWithInput = [singleOption.value, singleOption.label || singleOption.value].some(
+            (candidate) => comparableValue(candidate).startsWith(comparableRawValue)
+        );
+        if (startsWithInput) {
             return singleOption.value;
         }
     }
@@ -2950,6 +3887,7 @@ function initComboboxes() {
             lastSearchTerm: '',
             hasPendingInput: false,
             options: [],
+            optionLabels: new Map(),
             truncated: false,
             requestId: 0,
             preventBlur: false,
@@ -3070,6 +4008,12 @@ function buildNextFilters() {
         }
     });
 
+    const consultaEnteSelect = document.getElementById('consultaEnteSelect');
+    const selectedEnte = normalizeValue(consultaEnteSelect?.value);
+    if (selectedEnte) {
+        nextFilters.ente_catalogo = [selectedEnte];
+    }
+
     return nextFilters;
 }
 
@@ -3093,11 +4037,11 @@ async function aplicarFiltros() {
     paginaActual = 1;
 
     if (!filtersChanged && !committedPending) {
-        await Promise.allSettled([refreshFilterOptions(), cargarTransacciones()]);
+        await Promise.allSettled([cargarResumenGeneral(), refreshFilterOptions(), cargarTransacciones()]);
         return;
     }
 
-    await Promise.allSettled([refreshFilterOptions(), cargarTransacciones()]);
+    await Promise.allSettled([cargarResumenGeneral(), refreshFilterOptions(), cargarTransacciones()]);
 }
 
 async function limpiarFiltros() {
@@ -3124,10 +4068,16 @@ async function limpiarFiltros() {
         }
     });
 
+    const consultaEnteSelect = document.getElementById('consultaEnteSelect');
+    if (consultaEnteSelect) {
+        consultaEnteSelect.value = '';
+    }
+    updatePrimaryEntePreview();
+
     renderActiveFilters();
     totalsKey = null;
     paginaActual = 1;
-    await Promise.allSettled([refreshFilterOptions(), cargarTransacciones()]);
+    await Promise.allSettled([cargarResumenGeneral(), refreshFilterOptions(), cargarTransacciones()]);
 }
 
 // Cargar al inicio
@@ -3139,13 +4089,26 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     syncFloatingDockWidth();
     initFloatingDockResize();
+    initResumenToggle();
     initDensityToggle();
+    initFiltersDrawer();
     initComboboxes();
+    initFiltersCompactToggle();
+    initFiltersScroller();
     renderActiveFilters();
+    await loadPrimaryEnteOptions();
 
     window.addEventListener('resize', () => {
         syncFloatingDockWidth();
     });
+
+    const consultaEnteSelect = document.getElementById('consultaEnteSelect');
+    if (consultaEnteSelect) {
+        consultaEnteSelect.addEventListener('change', async () => {
+            setFilterValues('ente_catalogo', consultaEnteSelect.value ? [consultaEnteSelect.value] : []);
+            await refreshCurrentView();
+        });
+    }
 
     const pageInput = document.getElementById('pageInput');
     if (pageInput) {
@@ -3171,7 +4134,37 @@ window.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    await Promise.allSettled([refreshFilterOptions(), cargarTransacciones()]);
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            const drawer = document.getElementById('filtersDrawer');
+            if (drawer && drawer.classList.contains('is-open')) {
+                closeFiltersDrawer();
+            }
+            return;
+        }
+        if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || event.target.tagName === 'SELECT' || event.target.isContentEditable) return;
+        if (event.shiftKey && (event.key === 'f' || event.key === 'F')) {
+            event.preventDefault();
+            const drawer = document.getElementById('filtersDrawer');
+            if (drawer && drawer.classList.contains('is-open')) {
+                closeFiltersDrawer();
+            } else {
+                openFiltersDrawer();
+            }
+        }
+        if (event.shiftKey && (event.key === 'c' || event.key === 'C')) {
+            event.preventDefault();
+            window.open('/catalogo', '_blank');
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closeFiltersDrawer();
+        }
+    });
+
+    await Promise.allSettled([cargarResumenGeneral(), refreshFilterOptions(), cargarTransacciones()]);
 });
 </script>
 {% endblock %}

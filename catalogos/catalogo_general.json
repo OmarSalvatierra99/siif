@@ -1,0 +1,822 @@
+{
+  "entes": [
+    {
+      "num": "1",
+      "nombre": "PODER EJECUTIVO DEL ESTADO DE TLAXCALA",
+      "siglas": "EJECUTIVO",
+      "clasificacion": "PODER DEL ESTADO"
+    },
+    {
+      "num": "1.1",
+      "nombre": "DESPACHO DE LA GOBERNADORA",
+      "siglas": "DG",
+      "clasificacion": "DEPENDENCIA"
+    },
+    {
+      "num": "1.2",
+      "nombre": "SECRETARÍA DE GOBIERNO",
+      "siglas": "SEGOB",
+      "clasificacion": "DEPENDENCIA"
+    },
+    {
+      "num": "1.3",
+      "nombre": "OFICIALIA MAYOR DE GOBIERNO",
+      "siglas": "OMG",
+      "clasificacion": "DEPENDENCIA"
+    },
+    {
+      "num": "1.4",
+      "nombre": "SECRETARÍA DE FINANZAS",
+      "siglas": "SF",
+      "clasificacion": "DEPENDENCIA"
+    },
+    {
+      "num": "1.5",
+      "nombre": "SECRETARÍA DE DESARROLLO ECONOMICO",
+      "siglas": "SEDECO",
+      "clasificacion": "DEPENDENCIA"
+    },
+    {
+      "num": "1.6",
+      "nombre": "SECRETARÍA DE TURISMO",
+      "siglas": "SECTUR",
+      "clasificacion": "DEPENDENCIA"
+    },
+    {
+      "num": "1.7",
+      "nombre": "SECRETARÍA DE INFRAESTRUCTURA",
+      "siglas": "SI",
+      "clasificacion": "DEPENDENCIA"
+    },
+    {
+      "num": "1.8",
+      "nombre": "SECRETARÍA DE EDUCACIÓN PÚBLICA",
+      "siglas": "SEPE",
+      "clasificacion": "DEPENDENCIA"
+    },
+    {
+      "num": "1.9",
+      "nombre": "SECRETARÍA DE MOVILIDAD Y TRANSPORTE",
+      "siglas": "SMYT",
+      "clasificacion": "DEPENDENCIA"
+    },
+    {
+      "num": "1.10",
+      "nombre": "SECRETARÍA DE LA FUNCIÓN PÚBLICA",
+      "siglas": "SFP",
+      "clasificacion": "DEPENDENCIA"
+    },
+    {
+      "num": "1.11",
+      "nombre": "SECRETARÍA DE IMPULSO AGROPECUARIO",
+      "siglas": "SIA",
+      "clasificacion": "DEPENDENCIA"
+    },
+    {
+      "num": "1.12",
+      "nombre": "COORDINACIÓN DE COMUNICACIÓN",
+      "siglas": "CCOM",
+      "clasificacion": "DEPENDENCIA"
+    },
+    {
+      "num": "1.13",
+      "nombre": "SECRETARÍA DE MEDIO AMBIENTE",
+      "siglas": "SMA",
+      "clasificacion": "DEPENDENCIA"
+    },
+    {
+      "num": "1.14",
+      "nombre": "SECRETARÍA DE CULTURA",
+      "siglas": "SC",
+      "clasificacion": "DEPENDENCIA"
+    },
+    {
+      "num": "1.15",
+      "nombre": "SECRETARÍA DE LAS MUJERES",
+      "siglas": "SMET",
+      "clasificacion": "DEPENDENCIA"
+    },
+    {
+      "num": "1.16",
+      "nombre": "SECRETARÍA DE ORDENAMIENTO TERRITORIAL Y VIVIENDA",
+      "siglas": "SOTYV",
+      "clasificacion": "DEPENDENCIA"
+    },
+    {
+      "num": "1.17",
+      "nombre": "SECRETARÍA DE SEGURIDAD CIUDADANA",
+      "siglas": "SSC",
+      "clasificacion": "DEPENDENCIA"
+    },
+    {
+      "num": "1.18",
+      "nombre": "COORDINACIÓN GENERAL DE PLANEACIÓN E INVERSIÓN",
+      "siglas": "CGPI",
+      "clasificacion": "DEPENDENCIA"
+    },
+    {
+      "num": "1.19",
+      "nombre": "SECRETARÍA DE BIENESTAR",
+      "siglas": "SB",
+      "clasificacion": "DEPENDENCIA"
+    },
+    {
+      "num": "1.20",
+      "nombre": "SECRETARÍA DE TRABAJO Y COMPETITIVIDAD",
+      "siglas": "STYC",
+      "clasificacion": "DEPENDENCIA"
+    },
+    {
+      "num": "1.21",
+      "nombre": "CONSEJERÍA JURÍDICA DEL EJECUTIVO",
+      "siglas": "CJE",
+      "clasificacion": "DEPENDENCIA"
+    },
+    {
+      "num": "1.22",
+      "nombre": "COORDINACIÓN ESTATAL DE PROTECCIÓN CIVIL",
+      "siglas": "CEPC",
+      "clasificacion": "DESCONCENTRADOS"
+    },
+    {
+      "num": "1.23",
+      "nombre": "SECRETARIADO EJECUTIVO DEL SISTEMA ESTATAL DE SEGURIDAD PÚBLICA",
+      "siglas": "SESESP",
+      "clasificacion": "DESCONCENTRADOS"
+    },
+    {
+      "num": "1.24",
+      "nombre": "INSTITUTO TLAXCALTECA DE DESARROLLO TAURINO",
+      "siglas": "ITDT",
+      "clasificacion": "DESCONCENTRADOS"
+    },
+    {
+      "num": "1.25",
+      "nombre": "INSTITUTO TLAXCALTECA DE ASISTENCIA ESPECIALIZADA A LA SALUD",
+      "siglas": "ITAES",
+      "clasificacion": "DESCONCENTRADOS"
+    },
+    {
+      "num": "1.26",
+      "nombre": "COMISIÓN ESTATAL DE ARBITRAJE MÉDICO",
+      "siglas": "CEAM",
+      "clasificacion": "DESCONCENTRADOS"
+    },
+    {
+      "num": "1.27",
+      "nombre": "CASA DE LAS ARTESANÍAS DE TLAXCALA",
+      "siglas": "CAT",
+      "clasificacion": "DESCONCENTRADOS"
+    },
+    {
+      "num": "1.28",
+      "nombre": "PROCURADURÍA DE PROTECCIÓN AL AMBIENTE DEL ESTADO DE TLAXCALA",
+      "siglas": "PROPAET",
+      "clasificacion": "DESCONCENTRADOS"
+    },
+    {
+      "num": "1.29",
+      "nombre": "INSTITUTO DE FAUNA SILVESTRE PARA EL ESTADO DE TLAXCALA",
+      "siglas": "IFAST",
+      "clasificacion": "DESCONCENTRADOS"
+    },
+    {
+      "num": "2",
+      "nombre": "PODER LEGISLATIVO DEL ESTADO DE TLAXCALA",
+      "siglas": "LEGISLATIVO",
+      "clasificacion": "PODERES DEL ESTADO"
+    },
+    {
+      "num": "3",
+      "nombre": "PODER JUDICIAL DEL ESTADO DE TLAXCALA",
+      "siglas": "PJET",
+      "clasificacion": "PODERES DEL ESTADO"
+    },
+    {
+      "num": "4",
+      "nombre": "CENTRO DE CONCILIACIÓN LABORAL DEL ESTADO DE TLAXCALA",
+      "siglas": "CCLET",
+      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+    },
+    {
+      "num": "5",
+      "nombre": "COMISIÓN ESTATAL DEL AGUA Y SANEAMIENTO DEL ESTADO DE TLAXCALA",
+      "siglas": "CEAS",
+      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+    },
+    {
+      "num": "6",
+      "nombre": "COLEGIO DE BACHILLERES DEL ESTADO DE TLAXCALA",
+      "siglas": "COBAT",
+      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+    },
+    {
+      "num": "7",
+      "nombre": "COLEGIO DE EDUCACIÓN PROFESIONAL TÉCNICA DEL ESTADO DE TLAXCALA",
+      "siglas": "CONALEP",
+      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+    },
+    {
+      "num": "8",
+      "nombre": "COLEGIO DE ESTUDIOS CIENTÍFICOS Y TECNOLÓGICOS DEL ESTADO DE TLAXCALA",
+      "siglas": "CECYTE",
+      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+    },
+    {
+      "num": "9",
+      "nombre": "CONSEJO ESTATAL DE POBLACIÓN",
+      "siglas": "COESPO",
+      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+    },
+    {
+      "num": "10",
+      "nombre": "COORDINACIÓN DE RADIO, CINE Y TELEVISIÓN",
+      "siglas": "CORACYT",
+      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+    },
+    {
+      "num": "11",
+      "nombre": "EL COLEGIO DE TLAXCALA, A.C.",
+      "siglas": "COLTLAX",
+      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+    },
+    {
+      "num": "12",
+      "nombre": "FIDEICOMISO DE LA CIUDAD INDUSTRIAL DE XICOTÉNCATL",
+      "siglas": "FIDECIX",
+      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+    },
+    {
+      "num": "13",
+      "nombre": "COMISIÓN EJECUTIVA DE ATENCIÓN A VÍCTIMAS DEL ESTADO DE TLAXCALA",
+      "siglas": "CEAVIT",
+      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+    },
+    {
+      "num": "14",
+      "nombre": "FONDO MACRO PARA EL DESARROLLO INTEGRAL DE TLAXCALA",
+      "siglas": "FOMTLAX",
+      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+    },
+    {
+      "num": "15",
+      "nombre": "INSTITUTO DE CAPACITACIÓN PARA EL TRABAJO DEL ESTADO DE TLAXCALA",
+      "siglas": "ICATLAX",
+      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+    },
+    {
+      "num": "16",
+      "nombre": "INSTITUTO DE CATASTRO DEL ESTADO DE TLAXCALA",
+      "siglas": "IDC",
+      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+    },
+    {
+      "num": "17",
+      "nombre": "INSTITUTO DEL DEPORTE DE TLAXCALA",
+      "siglas": "IDET",
+      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+    },
+    {
+      "num": "18",
+      "nombre": "INSTITUTO TECNOLÓGICO SUPERIOR DE TLAXCO",
+      "siglas": "ITST",
+      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+    },
+    {
+      "num": "19",
+      "nombre": "INSTITUTO TLAXCALTECA DE LA INFRAESTRUCTURA FÍSICA EDUCATIVA",
+      "siglas": "ITIFE",
+      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+    },
+    {
+      "num": "20",
+      "nombre": "INSTITUTO TLAXCALTECA DE LA JUVENTUD",
+      "siglas": "ITJ",
+      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+    },
+    {
+      "num": "21",
+      "nombre": "INSTITUTO TLAXCALTECA PARA LA EDUCACIÓN DE LOS ADULTOS, ITEA",
+      "siglas": "ITEA",
+      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+    },
+    {
+      "num": "22",
+      "nombre": "ÓRGANISMO PÚBLICO DESCENTRALIZADO SALUD DE TLAXCALA",
+      "siglas": "OPD_SALUD",
+      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+    },
+    {
+      "num": "23",
+      "nombre": "PATRONATO CENTRO DE REHABILITACIÓN INTEGRAL Y ESCUELA EN TERAPIA FÍSICA Y REHABILITACIÓN",
+      "siglas": "CRI-ESCUELA",
+      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+    },
+    {
+      "num": "24",
+      "nombre": "PATRONATO \"LA LIBERTAD CENTRO CULTURAL DE APIZACO\"",
+      "siglas": "LA_LIBERTAD",
+      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+    },
+    {
+      "num": "25",
+      "nombre": "PENSIONES CIVILES DEL ESTADO DE TLAXCALA",
+      "siglas": "PCET",
+      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+    },
+    {
+      "num": "26",
+      "nombre": "SISTEMA ESTATAL PARA EL DESARROLLO INTEGRAL DE LA FAMILIA",
+      "siglas": "SEDIF",
+      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+    },
+    {
+      "num": "27",
+      "nombre": "UNIDAD DE SERVICIOS EDUCATIVOS DEL ESTADO DE TLAXCALA",
+      "siglas": "USET",
+      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+    },
+    {
+      "num": "28",
+      "nombre": "UNIVERSIDAD POLITÉCNICA DE TLAXCALA",
+      "siglas": "UPT",
+      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+    },
+    {
+      "num": "29",
+      "nombre": "UNIVERSIDAD POLITÉCNICA DE TLAXCALA REGIÓN PONIENTE",
+      "siglas": "UTREP",
+      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+    },
+    {
+      "num": "30",
+      "nombre": "UNIVERSIDAD TECNOLÓGICA DE TLAXCALA",
+      "siglas": "UTT",
+      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+    },
+    {
+      "num": "31",
+      "nombre": "UNIVERSIDAD INTERCULTURAL DE TLAXCALA",
+      "siglas": "UIT",
+      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+    },
+    {
+      "num": "32",
+      "nombre": "ARCHIVO GENERAL E HISTORICO DEL ESTADO DE TLAXCALA",
+      "siglas": "AGHET",
+      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+    },
+    {
+      "num": "33",
+      "nombre": "TRIBUNAL DE JUSTICIA ADMINISTRATIVA DEL ESTADO DE TLAXCALA",
+      "siglas": "TJA",
+      "clasificacion": "ORGANISMO AUTÓNOMO"
+    },
+    {
+      "num": "34",
+      "nombre": "UNIVERSIDAD AUTÓNOMA DE TLAXCALA",
+      "siglas": "UAT",
+      "clasificacion": "ORGANISMO AUTÓNOMO"
+    },
+    {
+      "num": "35",
+      "nombre": "COMISIÓN ESTATAL DE DERECHOS HUMANOS",
+      "siglas": "CEDH",
+      "clasificacion": "ORGANISMO AUTÓNOMO"
+    },
+    {
+      "num": "36",
+      "nombre": "INSTITUTO TLAXCALTECA DE ELECCIONES",
+      "siglas": "ITE",
+      "clasificacion": "ORGANISMO AUTÓNOMO"
+    },
+    {
+      "num": "37",
+      "nombre": "INSTITUTO DE ACCESO A LA INFORMACIÓN PÚBLICA Y PROTECCIÓN DE DATOS PERSONALES DEL ESTADO DE TLAXCALA",
+      "siglas": "IAIP",
+      "clasificacion": "ORGANISMO AUTÓNOMO"
+    },
+    {
+      "num": "38",
+      "nombre": "TRIBUNAL DE CONCILIACIÓN Y ARBITRAJE DEL ESTADO DE TLAXCALA",
+      "siglas": "TCYA",
+      "clasificacion": "ORGANISMO AUTÓNOMO"
+    },
+    {
+      "num": "39",
+      "nombre": "TRIBUNAL ELECTORAL DE TLAXCALA",
+      "siglas": "TET",
+      "clasificacion": "ORGANISMO AUTÓNOMO"
+    },
+    {
+      "num": "40",
+      "nombre": "FISCALÍA GENERAL DE JUSTICIA DEL ESTADO DE TLAXCALA",
+      "siglas": "FGJET",
+      "clasificacion": "ORGANISMO AUTÓNOMO"
+    },
+    {
+      "num": "41",
+      "nombre": "SECRETARIA EJECUTIVA DEL SISTEMA ANTICORRUPCIÓN DEL ESTADO DE TLAXCALA",
+      "siglas": "SESAET",
+      "clasificacion": "ORGANISMO DESCENTRALIZADO NO SECTORIZADO"
+    },
+    {
+      "num": "42",
+      "nombre": "PATRONATO PARA LAS EXPOSICIONES Y FERIAS EN LA CIUDAD DE TLAXCALA",
+      "siglas": "P_FERIA",
+      "clasificacion": "PATRONATO"
+    }
+  ],
+  "municipios": [
+    {
+      "num": "1",
+      "nombre": "ACUAMANALA DE MIGUEL HIDALGO",
+      "siglas": "ACUAMANALA",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "2",
+      "nombre": "ATLTZAYANCA",
+      "siglas": "ATLTZAYANCA",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "3",
+      "nombre": "AMAXAC DE GUERRERO",
+      "siglas": "AMAXAC",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "4",
+      "nombre": "APETATITLÁN DE ANTONIO CARVAJAL",
+      "siglas": "APETATITLAN",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "5",
+      "nombre": "APIZACO",
+      "siglas": "APIZACO",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "6",
+      "nombre": "ATLANGATEPEC",
+      "siglas": "ATLANGATEPEC",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "7",
+      "nombre": "BENITO JUÁREZ",
+      "siglas": "BENITO JUÁREZ",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "8",
+      "nombre": "CALPULALPAN",
+      "siglas": "CALPULALPAN",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "9",
+      "nombre": "CHIAUTEMPAN",
+      "siglas": "CHIAUTEMPAN",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "10",
+      "nombre": "CONTLA DE JUAN CUAMATZI",
+      "siglas": "CONTLA",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "11",
+      "nombre": "CUAPIAXTLA",
+      "siglas": "CUAPIAXTLA",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "12",
+      "nombre": "CUAXOMULCO",
+      "siglas": "CUAXOMULCO",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "13",
+      "nombre": "EL CARMEN TEQUEXQUITLA",
+      "siglas": "EL CARMEN",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "14",
+      "nombre": "EMILIANO ZAPATA",
+      "siglas": "EMILIANO Z",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "15",
+      "nombre": "ESPAÑITA",
+      "siglas": "ESPAÑITA",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "16",
+      "nombre": "HUAMANTLA",
+      "siglas": "HUAMANTLA",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "17",
+      "nombre": "HUEYOTLIPAN",
+      "siglas": "HUEYOTLIPAN",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "18",
+      "nombre": "IXTACUIXTLA DE MARIANO MATAMOROS",
+      "siglas": "IXTACUIXTLA",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "19",
+      "nombre": "IXTENCO",
+      "siglas": "IXTENCO",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "20",
+      "nombre": "LA MAGDALENA TLALTELULCO",
+      "siglas": "LA MAGDALENA",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "21",
+      "nombre": "LÁZARO CÁRDENAS",
+      "siglas": "L. CARDENAS",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "22",
+      "nombre": "MAZATECOCHCO DE JOSÉ MARÍA MORELOS",
+      "siglas": "MAZATECOCHCO",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "23",
+      "nombre": "MUÑOZ DE DOMINGO ARENAS",
+      "siglas": "MUÑOZ",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "24",
+      "nombre": "NANACAMILPA DE MARIANO ARISTA",
+      "siglas": "NANACAMILPA",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "25",
+      "nombre": "NATIVITAS",
+      "siglas": "NATIVITAS",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "26",
+      "nombre": "PANOTLA",
+      "siglas": "PANOTLA",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "27",
+      "nombre": "PAPALOTLA DE XICOHTÉNCATL",
+      "siglas": "PAPALOTLA",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "28",
+      "nombre": "SAN DAMIÁN TEXOLOC",
+      "siglas": "TEXOLOC",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "29",
+      "nombre": "SAN FRANCISCO TETLANOHCAN",
+      "siglas": "TETLANOHCAN",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "30",
+      "nombre": "SAN JERÓNIMO ZACUALPAN",
+      "siglas": "ZACUALPAN",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "31",
+      "nombre": "SAN JOSÉ TEACALCO",
+      "siglas": "S.J. TEACALCO",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "32",
+      "nombre": "SAN JUAN HUACTZINCO",
+      "siglas": "HUACTZINCO",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "33",
+      "nombre": "SAN LORENZO AXOCOMANITLA",
+      "siglas": "AXOCOMANITLA",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "34",
+      "nombre": "SAN LUCAS TECOPILCO",
+      "siglas": "TECOPILCO",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "35",
+      "nombre": "SAN PABLO DEL MONTE",
+      "siglas": "SN. PABLO",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "36",
+      "nombre": "SANCTÓRUM DE LÁZARO CÁRDENAS",
+      "siglas": "S.L. CARDENAS",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "37",
+      "nombre": "SANTA ANA NOPALUCAN",
+      "siglas": "NOPALUCAN",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "38",
+      "nombre": "SANTA APOLONIA TEACALCO",
+      "siglas": "S.A. TEACALCO",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "39",
+      "nombre": "SANTA CATARINA AYOMETLA",
+      "siglas": "AYOMETLA",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "40",
+      "nombre": "SANTA CRUZ QUILEHTLA",
+      "siglas": "QUILEHTLA",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "41",
+      "nombre": "SANTA CRUZ TLAXCALA",
+      "siglas": "S.C. TLAXCALA",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "42",
+      "nombre": "SANTA ISABEL XILOXOXTLA",
+      "siglas": "XILOXOXTLA",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "43",
+      "nombre": "TENANCINGO",
+      "siglas": "TENANCINGO",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "44",
+      "nombre": "TEOLOCHOLCO",
+      "siglas": "TEOLOCHOLCO",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "45",
+      "nombre": "TEPETITLA DE LARDIZÁBAL",
+      "siglas": "TEPETITLA",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "46",
+      "nombre": "TEPEYANCO",
+      "siglas": "TEPEYANCO",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "47",
+      "nombre": "TERRENATE",
+      "siglas": "TERRENATE",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "48",
+      "nombre": "TETLA DE LA SOLIDARIDAD",
+      "siglas": "T. SOLIDARIDAD",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "49",
+      "nombre": "TETLATLAHUCA",
+      "siglas": "TETLATLAHUCA",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "50",
+      "nombre": "TLAXCALA",
+      "siglas": "TLAXCALA",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "51",
+      "nombre": "TLAXCO",
+      "siglas": "TLAXCO",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "52",
+      "nombre": "TOCATLÁN",
+      "siglas": "TOCATLÁN",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "53",
+      "nombre": "TOTOLAC",
+      "siglas": "TOTOLAC",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "54",
+      "nombre": "TZOMPANTEPEC",
+      "siglas": "TZOMPANTEPEC",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "55",
+      "nombre": "XALOZTOC",
+      "siglas": "XALOZTOC",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "56",
+      "nombre": "XALTOCAN",
+      "siglas": "XALTOCAN",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "57",
+      "nombre": "XICOHTZINCO",
+      "siglas": "XICOHTZINCO",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "58",
+      "nombre": "YAUHQUEMEHCAN",
+      "siglas": "YAUHQUEMEHCAN",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "59",
+      "nombre": "ZACATELCO",
+      "siglas": "ZACATELCO",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "60",
+      "nombre": "ZITLALTÉPEC DE TRINIDAD SÁNCHEZ SANTOS",
+      "siglas": "ZITLALTEPEC",
+      "clasificacion": "MUNICIPIO"
+    },
+    {
+      "num": "148",
+      "nombre": "COMISIÓN DE AGUA POTABLE Y ALCANTARILLADO DEL MUNICIPIO DE HUAMANTLA",
+      "siglas": "CAPAMH",
+      "clasificacion": "PARAMUNICIPAL"
+    },
+    {
+      "num": "150",
+      "nombre": "COMISIÓN DE AGUA POTABLE Y ALCANTARILLADO DEL MUNICIPIO DE APIZACO",
+      "siglas": "CAPAMA",
+      "clasificacion": "PARAMUNICIPAL"
+    },
+    {
+      "num": "151",
+      "nombre": "COMISIÓN DE AGUA POTABLE Y ALCANTARILLADO DEL MUNICIPIO DE CHIAUTEMPAN",
+      "siglas": "CAPACH",
+      "clasificacion": "PARAMUNICIPAL"
+    },
+    {
+      "num": "154",
+      "nombre": "COMISIÓN DE AGUA POTABLE Y ALCANTARILLADO DEL MUNICIPIO DE ZACATELCO",
+      "siglas": "CAPAZ",
+      "clasificacion": "PARAMUNICIPAL"
+    },
+    {
+      "num": "156",
+      "nombre": "COMISIÓN DE POTABLE Y Y ALCANTARILLADO DEL MUNICIPIO TLAXCALA",
+      "siglas": "CAPAMT",
+      "clasificacion": "PARAMUNICIPAL"
+    }
+  ]
+}

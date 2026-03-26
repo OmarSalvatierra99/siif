@@ -1,0 +1,888 @@
+{% extends "base.html" %}
+
+{% block title %}Catálogo - SIIF{% endblock %}
+
+{% block extra_css %}
+<style>
+    .catalogo-page {
+        width: min(100vw - 1.25rem, 1760px);
+        max-width: 1760px;
+        margin: 0 auto;
+        padding: 0 0 0.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.1rem;
+    }
+
+    .catalogo-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+        gap: 1.1rem;
+        align-items: stretch;
+    }
+
+    .catalogo-section {
+        background: rgba(255, 255, 255, 0.96);
+        border-radius: 20px;
+        border: 1px solid rgba(31, 59, 44, 0.10);
+        box-shadow: 0 14px 28px rgba(15, 23, 42, 0.06);
+        padding: 1.3rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.95rem;
+        min-height: calc(100vh - 190px);
+        overflow: hidden;
+    }
+
+    .section-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.38rem 0.7rem;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 0.45rem;
+    }
+
+    .section-badge-muted {
+        background: rgba(95, 107, 99, 0.10);
+        color: var(--color-muted);
+        border: 1px solid rgba(95, 107, 99, 0.12);
+    }
+
+    .header-flex {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .header-flex h2 {
+        color: var(--color-text);
+        font-size: 1.7rem;
+        margin-bottom: 0.3rem;
+    }
+
+    .header-flex .subtitle {
+        color: var(--color-muted);
+        font-size: 0.95rem;
+    }
+
+    .section-note {
+        padding: 0.9rem 1rem;
+        border-radius: 14px;
+        border: 1px solid rgba(31, 59, 44, 0.10);
+        background: #f7faf8;
+        color: var(--color-muted);
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .search-section {
+        background: #f7faf8;
+        border: 1px solid rgba(31, 59, 44, 0.08);
+        border-radius: 16px;
+        padding: 1rem;
+    }
+
+    .filter-chips {
+        display: flex;
+        gap: 0.65rem;
+        flex-wrap: wrap;
+    }
+
+    .chip {
+        padding: 0.56rem 0.95rem;
+        border-radius: 999px;
+        font-size: 0.83rem;
+        font-weight: 600;
+        border: 1px solid rgba(31, 59, 44, 0.12);
+        cursor: pointer;
+        transition: var(--transition);
+        background: #ffffff;
+        color: var(--color-muted);
+    }
+
+    .chip:hover {
+        border-color: rgba(31, 59, 44, 0.22);
+        color: var(--color-primary);
+    }
+
+    .chip.active {
+        background: var(--color-accent-soft);
+        color: var(--color-primary);
+        border-color: rgba(31, 59, 44, 0.22);
+    }
+
+    .search-box {
+        position: relative;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 0.82rem 1rem 0.82rem 2.8rem;
+        border: 1px solid rgba(31, 59, 44, 0.12);
+        border-radius: 14px;
+        font-size: 0.95rem;
+        transition: var(--transition);
+        background: white;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: rgba(31, 59, 44, 0.24);
+        box-shadow: 0 0 0 4px rgba(31, 59, 44, 0.08);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 0.95rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--color-muted);
+        font-size: 1rem;
+    }
+
+    .stats-bar {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 0.85rem;
+        margin-bottom: 0;
+    }
+
+    .stat-item {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 0.95rem 1rem;
+        border-radius: 16px;
+        background: #f7faf8;
+        border: 1px solid rgba(31, 59, 44, 0.08);
+    }
+
+    .stat-label {
+        font-size: 0.75rem;
+        color: var(--color-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-value {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--color-primary);
+    }
+
+    .table-wrapper {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid rgba(31, 59, 44, 0.10);
+    }
+
+    .catalogo-general {
+        background:
+            radial-gradient(circle at top right, rgba(31, 59, 44, 0.08), transparent 34%),
+            linear-gradient(180deg, #ffffff 0%, #f8fbf9 100%);
+    }
+
+    .general-intro {
+        color: var(--color-muted);
+        font-size: 0.95rem;
+        margin-bottom: 1rem;
+        max-width: 720px;
+    }
+
+    .general-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.25rem;
+    }
+
+    .general-card {
+        background: rgba(255, 255, 255, 0.92);
+        border-radius: 16px;
+        border: 1px solid rgba(31, 59, 44, 0.10);
+        padding: 1rem;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .general-card-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--color-text);
+    }
+
+    .general-table-wrapper {
+        border: 1px solid rgba(31, 59, 44, 0.10);
+        border-radius: 12px;
+        overflow: auto;
+        max-height: 360px;
+    }
+
+    .general-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 320px;
+    }
+
+    .general-table th,
+    .general-table td {
+        padding: 0.45rem 0.65rem;
+        font-size: 0.85rem;
+        text-align: left;
+    }
+
+    .general-table th {
+        background: #f2f6f3;
+        color: var(--color-primary);
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+
+    .catalogo-general-stats {
+        display: flex;
+        gap: 0.8rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+
+    .catalogo-general-stat {
+        font-weight: 700;
+        color: var(--color-primary);
+        padding: 0.5rem 0.8rem;
+        border-radius: 999px;
+        background: rgba(31, 59, 44, 0.08);
+    }
+
+    .table-scroll {
+        flex: 1;
+        min-height: 0;
+        overflow: auto;
+    }
+
+    .tabla-resultados {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .tabla-resultados thead {
+        background: #f2f6f3;
+    }
+
+    .tabla-resultados th {
+        background: #f2f6f3;
+        color: var(--color-primary);
+        padding: 0.8rem 1rem;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+
+    .tabla-resultados td {
+        border-bottom: 1px solid rgba(31, 59, 44, 0.08);
+        padding: 0.72rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .tabla-resultados tr:nth-child(even) td {
+        background: #fbfdfb;
+    }
+
+    .tabla-resultados tr:hover td {
+        background: #f6faf7;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.32rem 0.68rem;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .badge-poder {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .badge-dependencia {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .badge-desconcentrado {
+        background: #e0e7ff;
+        color: #3730a3;
+    }
+
+    .badge-descentralizado {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .badge-autonomo {
+        background: #fce7f3;
+        color: #9f1239;
+    }
+
+    .badge-patronato {
+        background: #f3e8ff;
+        color: #6b21a8;
+    }
+
+    .badge-estatal {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .badge-municipal {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .loading,
+    .no-results,
+    .section-loading {
+        text-align: center;
+        padding: 2.5rem 2rem;
+        color: var(--color-muted);
+    }
+
+    .msg-vacio {
+        text-align: center;
+        color: var(--color-muted);
+        margin-top: 2rem;
+        font-size: 0.95rem;
+    }
+
+    @media (max-width: 768px) {
+        .catalogo-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .catalogo-page {
+            width: min(100vw - 1rem, 100%);
+        }
+
+        .catalogo-section {
+            padding: 1.25rem;
+            min-height: auto;
+        }
+
+        .header-flex {
+            flex-direction: column;
+        }
+
+        .general-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .tabla-resultados th,
+        .tabla-resultados td {
+            font-size: 0.8rem;
+            padding: 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="catalogo-page">
+    <div class="catalogo-grid">
+        <section class="catalogo-section" id="catalogo-entes">
+            <div class="header-flex">
+                <div>
+                    <div class="section-badge section-badge-muted">Consulta</div>
+                    <h2>Catálogo de Entes</h2>
+                    <span class="subtitle">Consulta detallada de claves, DD, siglas y clasificación</span>
+                </div>
+            </div>
+            <div class="section-note">
+                Consulta aquí las claves institucionales mientras revisas transacciones. Este catálogo no reemplaza la selección operativa de carga.
+            </div>
+            <div class="search-section">
+                <div class="filter-chips">
+                    <button class="chip chip-ente active" type="button" data-ambito="TODOS" onclick="filtrarPorAmbitoEntes('TODOS')">
+                        Todos
+                    </button>
+                    <button class="chip chip-ente" type="button" data-ambito="ESTATAL" onclick="filtrarPorAmbitoEntes('ESTATAL')">
+                        Estatales
+                    </button>
+                    <button class="chip chip-ente" type="button" data-ambito="MUNICIPAL" onclick="filtrarPorAmbitoEntes('MUNICIPAL')">
+                        Municipales
+                    </button>
+                </div>
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input
+                        type="text"
+                        class="search-input"
+                        id="searchInputEntes"
+                        placeholder="Buscar por nombre, clave, DD, siglas o clasificación..."
+                        autocomplete="off"
+                    >
+                </div>
+            </div>
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <span class="stat-label">Total de Entes</span>
+                    <span class="stat-value" id="totalEntes">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Estatales</span>
+                    <span class="stat-value" id="totalEstatales">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Municipales</span>
+                    <span class="stat-value" id="totalMunicipales">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Mostrando</span>
+                    <span class="stat-value" id="mostrandoEntes">0</span>
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <div class="section-loading" id="entesLoading">
+                    <div class="spinner"></div>
+                    <p>Cargando catálogo...</p>
+                </div>
+                <div class="table-scroll" id="entesTableContainer" style="display: none;">
+                    <table class="tabla-resultados">
+                        <thead>
+                            <tr>
+                                <th>Clave</th>
+                                <th>DD</th>
+                                <th>Nombre</th>
+                                <th>Siglas</th>
+                                <th>Ámbito</th>
+                                <th>Clasificación</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaBodyEntes"></tbody>
+                    </table>
+                </div>
+                <div id="entesNoResults" class="no-results" style="display: none;">
+                    <p class="msg-vacio">No se encontraron registros en el catálogo de entes.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="catalogo-section" id="catalogo-fuentes">
+            <div class="header-flex">
+                <div>
+                    <div class="section-badge section-badge-muted">Consulta</div>
+                    <h2>Catálogo de Fuentes</h2>
+                    <span class="subtitle">Consulta de fuentes de financiamiento y sus atributos</span>
+                </div>
+            </div>
+            <div class="section-note">
+                Consulta claves, descripciones y ramo federal sin salir del flujo de auditoría.
+            </div>
+            <div class="search-section">
+                <div class="filter-chips">
+                    <button class="chip chip-fuente active" type="button" data-ramo="TODOS" onclick="filtrarPorRamoFuentes('TODOS')">
+                        Todas
+                    </button>
+                    <button class="chip chip-fuente" type="button" data-ramo="CON_RAMO" onclick="filtrarPorRamoFuentes('CON_RAMO')">
+                        Con ramo federal
+                    </button>
+                    <button class="chip chip-fuente" type="button" data-ramo="SIN_RAMO" onclick="filtrarPorRamoFuentes('SIN_RAMO')">
+                        Sin ramo federal
+                    </button>
+                </div>
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input
+                        type="text"
+                        class="search-input"
+                        id="searchInputFuentes"
+                        placeholder="Buscar por fuente, descripción o ID..."
+                        autocomplete="off"
+                    >
+                </div>
+            </div>
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <span class="stat-label">Total de Fuentes</span>
+                    <span class="stat-value" id="totalFuentes">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Con Ramo</span>
+                    <span class="stat-value" id="totalConRamo">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Sin Ramo</span>
+                    <span class="stat-value" id="totalSinRamo">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Mostrando</span>
+                    <span class="stat-value" id="mostrandoFuentes">0</span>
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <div class="section-loading" id="fuentesLoading">
+                    <div class="spinner"></div>
+                    <p>Cargando catálogo...</p>
+                </div>
+                <div class="table-scroll" id="fuentesTableContainer" style="display: none;">
+                    <table class="tabla-resultados">
+                        <thead>
+                            <tr>
+                                <th>FF</th>
+                                <th>Fuente de Financiamiento</th>
+                                <th>ID</th>
+                                <th>Alfa</th>
+                                <th>Descripción</th>
+                                <th>Ramo Federal</th>
+                                <th>Fondo de Ingreso</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaBodyFuentes"></tbody>
+                    </table>
+                </div>
+                <div id="fuentesNoResults" class="no-results" style="display: none;">
+                    <p class="msg-vacio">No se encontraron registros en el catálogo de fuentes.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const debounce = (func, wait) => {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    };
+
+    let todosLosEntes = [];
+    let entesFiltrados = [];
+    let ambitoActualEntes = 'TODOS';
+
+    async function cargarEntes() {
+        try {
+            const response = await fetch('/api/entes');
+            const data = await response.json();
+
+            todosLosEntes = data.entes || [];
+            entesFiltrados = [...todosLosEntes];
+
+            actualizarEstadisticasEntes();
+            renderizarTablaEntes();
+
+            const loading = document.getElementById('entesLoading');
+            const container = document.getElementById('entesTableContainer');
+            if (loading) loading.style.display = 'none';
+            if (container) container.style.display = 'block';
+        } catch (error) {
+            console.error('Error al cargar entes:', error);
+            const loading = document.getElementById('entesLoading');
+            if (loading) {
+                loading.innerHTML = `
+                    <div class="no-results">
+                        <p class="msg-vacio">⚠️ Error al cargar el catálogo</p>
+                    </div>
+                `;
+            }
+        }
+    }
+
+    function renderizarTablaEntes() {
+        const tbody = document.getElementById('tablaBodyEntes');
+        const noResults = document.getElementById('entesNoResults');
+        const tableContainer = document.getElementById('entesTableContainer');
+
+        if (!tbody || !noResults || !tableContainer) {
+            return;
+        }
+
+        tbody.innerHTML = '';
+
+        if (entesFiltrados.length === 0) {
+            tableContainer.style.display = 'none';
+            noResults.style.display = 'block';
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
+
+        entesFiltrados.forEach((ente) => {
+            const row = document.createElement('tr');
+            const tipoBadge = getBadgeClassEntes(ente.tipo);
+            const ambitoBadge = getAmbitoBadgeClassEntes(ente.ambito);
+
+            row.innerHTML = `
+                <td><strong>${ente.codigo || '-'}</strong></td>
+                <td><strong>${ente.dd || '-'}</strong></td>
+                <td>${ente.nombre || '-'}</td>
+                <td><strong>${ente.siglas || '-'}</strong></td>
+                <td><span class="badge ${ambitoBadge}">${ente.ambito || '-'}</span></td>
+                <td><span class="badge ${tipoBadge}">${ente.tipo || '-'}</span></td>
+            `;
+
+            fragment.appendChild(row);
+        });
+
+        tbody.appendChild(fragment);
+        tableContainer.style.display = 'block';
+        noResults.style.display = 'none';
+        actualizarEstadisticasEntes();
+    }
+
+    function getBadgeClassEntes(tipo) {
+        if (!tipo) return '';
+        const tipoLower = tipo.toLowerCase();
+        if (tipoLower.includes('municipio')) return 'badge-municipio';
+        if (tipoLower.includes('poder')) return 'badge-poder';
+        if (tipoLower.includes('dependencia')) return 'badge-dependencia';
+        if (tipoLower.includes('desconcentrado')) return 'badge-desconcentrado';
+        if (tipoLower.includes('descentralizado') || tipoLower.includes('paraestatal')) return 'badge-descentralizado';
+        if (tipoLower.includes('autónomo')) return 'badge-autonomo';
+        if (tipoLower.includes('patronato')) return 'badge-patronato';
+        return '';
+    }
+
+    function getAmbitoBadgeClassEntes(ambito) {
+        if (!ambito) return '';
+        const ambitoLower = ambito.toLowerCase();
+        if (ambitoLower === 'estatal') return 'badge-estatal';
+        if (ambitoLower === 'municipal') return 'badge-municipal';
+        return '';
+    }
+
+    function filtrarPorAmbitoEntes(ambito) {
+        ambitoActualEntes = ambito;
+        document.querySelectorAll('.chip-ente').forEach((chip) => {
+            chip.classList.toggle('active', chip.dataset.ambito === ambito);
+        });
+        aplicarFiltrosEntes();
+    }
+
+    function aplicarFiltrosEntes() {
+        const searchInput = document.getElementById('searchInputEntes');
+        const busqueda = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+        let resultado = todosLosEntes;
+        if (ambitoActualEntes !== 'TODOS') {
+            resultado = resultado.filter((ente) => ente.ambito === ambitoActualEntes);
+        }
+
+        if (busqueda) {
+            resultado = resultado.filter((ente) => {
+                const clave = (ente.clave || '');
+                return (
+                    (ente.nombre || '').toLowerCase().includes(busqueda) ||
+                    clave.toLowerCase().includes(busqueda) ||
+                    (ente.codigo || '').toLowerCase().includes(busqueda) ||
+                    (ente.dd || '').toLowerCase().includes(busqueda) ||
+                    (ente.siglas || '').toLowerCase().includes(busqueda) ||
+                    (ente.tipo || '').toLowerCase().includes(busqueda)
+                );
+            });
+        }
+
+        entesFiltrados = resultado;
+        renderizarTablaEntes();
+    }
+
+    function actualizarEstadisticasEntes() {
+        const totalEstatales = todosLosEntes.filter((ente) => ente.ambito === 'ESTATAL').length;
+        const totalMunicipales = todosLosEntes.filter((ente) => ente.ambito === 'MUNICIPAL').length;
+
+        const totalElement = document.getElementById('totalEntes');
+        const estatalesElement = document.getElementById('totalEstatales');
+        const municipalesElement = document.getElementById('totalMunicipales');
+        const mostrandoElement = document.getElementById('mostrandoEntes');
+
+        if (totalElement) totalElement.textContent = todosLosEntes.length;
+        if (estatalesElement) estatalesElement.textContent = totalEstatales;
+        if (municipalesElement) municipalesElement.textContent = totalMunicipales;
+        if (mostrandoElement) mostrandoElement.textContent = entesFiltrados.length;
+    }
+
+    let todasLasFuentes = [];
+    let fuentesFiltradas = [];
+    let ramoActualFuentes = 'TODOS';
+
+    async function cargarFuentes() {
+        try {
+            const response = await fetch('/api/fuentes');
+            const data = await response.json();
+
+            todasLasFuentes = data.fuentes || [];
+            fuentesFiltradas = [...todasLasFuentes];
+
+            actualizarEstadisticasFuentes();
+            renderizarTablaFuentes();
+
+            const loading = document.getElementById('fuentesLoading');
+            const container = document.getElementById('fuentesTableContainer');
+            if (loading) loading.style.display = 'none';
+            if (container) container.style.display = 'block';
+        } catch (error) {
+            console.error('Error al cargar fuentes:', error);
+            const loading = document.getElementById('fuentesLoading');
+            if (loading) {
+                loading.innerHTML = `
+                    <div class="no-results">
+                        <p class="msg-vacio">⚠️ Error al cargar el catálogo</p>
+                    </div>
+                `;
+            }
+        }
+    }
+
+    function formatValueFuente(value) {
+        if (value === null || value === undefined || value === '') {
+            return '-';
+        }
+        if (typeof value === 'number') {
+            return Number.isInteger(value) ? value.toString() : value.toString();
+        }
+        return value;
+    }
+
+    function tieneRamo(valor) {
+        if (valor === null || valor === undefined || valor === '') {
+            return false;
+        }
+        if (typeof valor === 'number') {
+            return valor !== 0;
+        }
+        const str = String(valor).trim();
+        return str !== '' && str !== '0';
+    }
+
+    function renderizarTablaFuentes() {
+        const tbody = document.getElementById('tablaBodyFuentes');
+        const noResults = document.getElementById('fuentesNoResults');
+        const tableContainer = document.getElementById('fuentesTableContainer');
+
+        if (!tbody || !noResults || !tableContainer) {
+            return;
+        }
+
+        tbody.innerHTML = '';
+
+        if (fuentesFiltradas.length === 0) {
+            tableContainer.style.display = 'none';
+            noResults.style.display = 'block';
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
+
+        fuentesFiltradas.forEach((fuente) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><strong>${formatValueFuente(fuente.ff)}</strong></td>
+                <td>${formatValueFuente(fuente.fuente)}</td>
+                <td>${formatValueFuente(fuente.id_fuente)}</td>
+                <td>${formatValueFuente(fuente.alfa)}</td>
+                <td>${formatValueFuente(fuente.descripcion)}</td>
+                <td>${formatValueFuente(fuente.ramo_federal)}</td>
+                <td>${formatValueFuente(fuente.fondo_ingreso)}</td>
+            `;
+            fragment.appendChild(row);
+        });
+
+        tbody.appendChild(fragment);
+        tableContainer.style.display = 'block';
+        noResults.style.display = 'none';
+        actualizarEstadisticasFuentes();
+    }
+
+    function filtrarPorRamoFuentes(ramo) {
+        ramoActualFuentes = ramo;
+        document.querySelectorAll('.chip-fuente').forEach((chip) => {
+            chip.classList.toggle('active', chip.dataset.ramo === ramo);
+        });
+        aplicarFiltrosFuentes();
+    }
+
+    function aplicarFiltrosFuentes() {
+        const searchInput = document.getElementById('searchInputFuentes');
+        const busqueda = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+        let resultado = todasLasFuentes;
+        if (ramoActualFuentes === 'CON_RAMO') {
+            resultado = resultado.filter((item) => tieneRamo(item.ramo_federal));
+        } else if (ramoActualFuentes === 'SIN_RAMO') {
+            resultado = resultado.filter((item) => !tieneRamo(item.ramo_federal));
+        }
+
+        if (busqueda) {
+            resultado = resultado.filter((item) => {
+                return (
+                    String(item.ff || '').toLowerCase().includes(busqueda) ||
+                    String(item.fuente || '').toLowerCase().includes(busqueda) ||
+                    String(item.descripcion || '').toLowerCase().includes(busqueda) ||
+                    String(item.alfa || '').toLowerCase().includes(busqueda) ||
+                    String(item.fondo_ingreso || '').toLowerCase().includes(busqueda) ||
+                    String(item.id_fuente || '').toLowerCase().includes(busqueda)
+                );
+            });
+        }
+
+        fuentesFiltradas = resultado;
+        renderizarTablaFuentes();
+    }
+
+    function actualizarEstadisticasFuentes() {
+        const totalConRamo = todasLasFuentes.filter((item) => tieneRamo(item.ramo_federal)).length;
+        const totalSinRamo = todasLasFuentes.length - totalConRamo;
+
+        const totalElement = document.getElementById('totalFuentes');
+        const conRamoElement = document.getElementById('totalConRamo');
+        const sinRamoElement = document.getElementById('totalSinRamo');
+        const mostrandoElement = document.getElementById('mostrandoFuentes');
+
+        if (totalElement) totalElement.textContent = todasLasFuentes.length;
+        if (conRamoElement) conRamoElement.textContent = totalConRamo;
+        if (sinRamoElement) sinRamoElement.textContent = totalSinRamo;
+        if (mostrandoElement) mostrandoElement.textContent = fuentesFiltradas.length;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        cargarEntes();
+        cargarFuentes();
+
+        const searchEntes = document.getElementById('searchInputEntes');
+        if (searchEntes) {
+            searchEntes.addEventListener('input', debounce(() => aplicarFiltrosEntes(), 300));
+        }
+
+        const searchFuentes = document.getElementById('searchInputFuentes');
+        if (searchFuentes) {
+            searchFuentes.addEventListener('input', debounce(() => aplicarFiltrosFuentes(), 300));
+        }
+    });
+</script>
+{% endblock %}

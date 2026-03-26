@@ -20,10 +20,9 @@
             </div>
             <nav class="nav-links">
                 <a href="/" class="nav-link{% if request.path == '/' %} active{% endif %}">Carga de Datos</a>
-                <a href="/reporte-online" class="nav-link{% if request.path == '/reporte-online' %} active{% endif %}">Consultar Transacciones</a>
-                <a href="/reporte-resumen" class="nav-link{% if request.path == '/reporte-resumen' %} active{% endif %}">Resumen General</a>
-                <a href="/catalogo-entes" class="nav-link{% if request.path == '/catalogo-entes' %} active{% endif %}">Catálogo de Entes</a>
-                <a href="/catalogo-fuentes" class="nav-link{% if request.path == '/catalogo-fuentes' %} active{% endif %}">Catálogo de Fuentes</a>
+                {% set auditoria_active = request.path in ['/reporte-online', '/reporte-resumen'] %}
+                <a href="/reporte-online" class="nav-link{% if auditoria_active %} active{% endif %}">Consultar Transacciones</a>
+                <a href="/catalogo" class="nav-link" target="_blank" rel="noopener">Catálogo</a>
                 {% if session.get('auth_user') %}
                 <a href="{{ url_for('logout') }}" class="nav-link nav-link-logout">Cerrar sesión</a>
                 {% endif %}

@@ -30,6 +30,9 @@ class Transaccion(db.Model):
     archivo_origen = db.Column(db.String(255), nullable=False)
     fecha_carga = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     usuario_carga = db.Column(db.String(100))
+    ente_siglas_catalogo = db.Column(db.String(80), index=True)
+    ente_nombre_catalogo = db.Column(db.String(255))
+    ente_grupo_catalogo = db.Column(db.String(20), index=True)
 
     # Cuenta contable completa
     cuenta_contable = db.Column(db.String(21), nullable=False, index=True)
@@ -78,6 +81,9 @@ class Transaccion(db.Model):
             'lote_id': self.lote_id,
             'archivo_origen': self.archivo_origen,
             'fecha_carga': self.fecha_carga.isoformat() if self.fecha_carga else None,
+            'ente_siglas_catalogo': self.ente_siglas_catalogo,
+            'ente_nombre_catalogo': self.ente_nombre_catalogo,
+            'ente_grupo_catalogo': self.ente_grupo_catalogo,
             'cuenta_contable': self.cuenta_contable,
             'nombre_cuenta': self.nombre_cuenta,
             'genero': self.genero,
@@ -115,6 +121,9 @@ class LoteCarga(db.Model):
     usuario = db.Column(db.String(100))
     archivos = db.Column(db.JSON)  # Lista de archivos procesados
     tipo_archivo = db.Column(db.String(20))
+    ente_siglas_catalogo = db.Column(db.String(80), index=True)
+    ente_nombre_catalogo = db.Column(db.String(255))
+    ente_grupo_catalogo = db.Column(db.String(20), index=True)
     total_registros = db.Column(db.Integer, default=0)
     estado = db.Column(db.String(20), default='procesando')  # procesando, completado, error
     mensaje = db.Column(db.Text)
@@ -127,6 +136,9 @@ class LoteCarga(db.Model):
             'usuario': self.usuario,
             'archivos': self.archivos,
             'tipo_archivo': self.tipo_archivo,
+            'ente_siglas_catalogo': self.ente_siglas_catalogo,
+            'ente_nombre_catalogo': self.ente_nombre_catalogo,
+            'ente_grupo_catalogo': self.ente_grupo_catalogo,
             'total_registros': self.total_registros,
             'estado': self.estado,
             'mensaje': self.mensaje
@@ -232,6 +244,13 @@ def _norm(s):
     return s
 
 
+def _normalize_dependency_code(value):
+    code = str(value or "").strip().upper().rstrip(".")
+    if len(code) == 1 and code.isdigit():
+        return code.zfill(2)
+    return code
+
+
 def _split_cuenta_contable_vertical(cuenta_str):
     """Divide la cuenta contable en componentes"""
     s = str(cuenta_str).strip().upper()
@@ -291,6 +310,8 @@ def _hash_transaccion_row(row):
         _norm(row.get("beneficiario")),
         _norm(row.get("descripcion")),
         _norm(row.get("orden_pago")),
+        _norm(row.get("ente_siglas_catalogo")),
+        _norm(row.get("ente_grupo_catalogo")),
         _format_amount(row.get("cargos")),
         _format_amount(row.get("abonos")),
     ]
@@ -771,7 +792,12 @@ def process_files_to_database(
     file_list: List[Tuple[str, BytesIO]],
     usuario: str = "sistema",
     progress_callback: Optional[Callable[[int, str], None]] = None,
-    tipo_archivo: str = "auxiliar"
+    tipo_archivo: str = "auxiliar",
+    expected_dependency: Optional[str] = None,
+    selected_ente: Optional[str] = None,
+    selected_ente_siglas: Optional[str] = None,
+    selected_ente_nombre: Optional[str] = None,
+    selected_ente_grupo: Optional[str] = None,
 ):
     """
     Procesa archivos Excel y guarda en base de datos
@@ -784,6 +810,10 @@ def process_files_to_database(
             print(f"[{p}%] {m}")
 
     lote_id = str(uuid.uuid4())
+    expected_dependency = _normalize_dependency_code(expected_dependency)
+    selected_ente_siglas = str(selected_ente_siglas or "").strip()
+    selected_ente_nombre = str(selected_ente_nombre or "").strip()
+    selected_ente_grupo = str(selected_ente_grupo or "").strip()
 
     # Crear registro de lote
     lote = LoteCarga(
@@ -791,6 +821,9 @@ def process_files_to_database(
         usuario=usuario,
         archivos=[f[0] for f in file_list],
         tipo_archivo=tipo_archivo,
+        ente_siglas_catalogo=selected_ente_siglas,
+        ente_nombre_catalogo=selected_ente_nombre,
+        ente_grupo_catalogo=selected_ente_grupo,
         estado='procesando'
     )
     db.session.add(lote)
@@ -851,6 +884,9 @@ def process_files_to_database(
             raise ValueError(error_msg)
 
         base = pd.concat(frames, ignore_index=True)
+        base["ente_siglas_catalogo"] = selected_ente_siglas
+        base["ente_nombre_catalogo"] = selected_ente_nombre
+        base["ente_grupo_catalogo"] = selected_ente_grupo
 
         base["poliza"] = base["poliza"].fillna("").astype(str).str.strip()
         base["orden_pago"] = base["orden_pago"].fillna("").astype(str).str.strip()
@@ -891,12 +927,45 @@ def process_files_to_database(
             "partida_presupuestal",
         ]:
             base[key] = componentes.apply(lambda x: x[key])
+        base["dependencia"] = base["dependencia"].apply(_normalize_dependency_code)
+
+        if expected_dependency:
+            report(40, "Validando selección del Catálogo General...")
+            dependencias_por_archivo = (
+                base.groupby("archivo_origen")["dependencia"]
+                .apply(lambda series: sorted({code for code in series if code}))
+                .to_dict()
+            )
+            archivos_invalidos = []
+            for filename, detected_codes in dependencias_por_archivo.items():
+                if not detected_codes or any(code != expected_dependency for code in detected_codes):
+                    archivos_invalidos.append((filename, detected_codes))
+
+            if archivos_invalidos:
+                selected_label = selected_ente or "el ente seleccionado"
+                detalles = []
+                for filename, detected_codes in archivos_invalidos[:6]:
+                    detected_text = ", ".join(detected_codes) if detected_codes else "sin dependencia identificada"
+                    detalles.append(f"{filename}: {detected_text}")
+                if len(archivos_invalidos) > 6:
+                    detalles.append(f"{len(archivos_invalidos) - 6} archivo(s) adicional(es)")
+
+                error_msg = (
+                    f"Los archivos no corresponden a {selected_label}. "
+                    f"Dependencia esperada: {expected_dependency}. "
+                    f"Detectadas: {' | '.join(detalles)}"
+                )
+                logger.error(error_msg)
+                lote.estado = 'error'
+                lote.mensaje = error_msg
+                db.session.commit()
+                raise ValueError(error_msg)
 
         # Convertir columnas monetarias
         report(50, "Convirtiendo valores monetarios...")
-        base["saldo_inicial"] = _to_numeric_fast(base["saldo_inicial"])
-        base["cargos"] = _to_numeric_fast(base["cargos"])
-        base["abonos"] = _to_numeric_fast(base["abonos"])
+        base["saldo_inicial"] = _to_numeric_fast(base["saldo_inicial"]).astype(float)
+        base["cargos"] = _to_numeric_fast(base["cargos"]).astype(float)
+        base["abonos"] = _to_numeric_fast(base["abonos"]).astype(float)
 
         # Calcular saldo final acumulativo por cuenta
         report(65, "Calculando saldos acumulativos...")
@@ -971,6 +1040,9 @@ def process_files_to_database(
                     lote_id=lote_id,
                     archivo_origen=row['archivo_origen'],
                     usuario_carga=usuario,
+                    ente_siglas_catalogo=row['ente_siglas_catalogo'],
+                    ente_nombre_catalogo=row['ente_nombre_catalogo'],
+                    ente_grupo_catalogo=row['ente_grupo_catalogo'],
                     cuenta_contable=row['cuenta_contable'],
                     nombre_cuenta=row['nombre_cuenta'],
                     genero=row['genero'],
