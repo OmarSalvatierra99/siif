@@ -350,6 +350,18 @@
         border-color: rgba(31, 59, 44, 0.14);
     }
 
+    .status-chip[data-tone="success"] {
+        background: #e8f6ee;
+        color: #1f5a39;
+        border-color: rgba(31, 90, 57, 0.16);
+    }
+
+    .status-chip[data-tone="error"] {
+        background: #fdecea;
+        color: #9b2c2c;
+        border-color: rgba(155, 44, 44, 0.18);
+    }
+
     .progress-bar-container {
         width: 100%;
         height: 10px;
@@ -771,6 +783,12 @@
 let selectedFiles = [];
 let isProcessing = false;
 let processedItemsCount = 0;
+const UPLOAD_PROGRESS_MAX = 30;
+const PROCESS_PROGRESS_START = 35;
+const MAX_PROGRESS_POLL_FAILURES = 4;
+let keepStatusVisible = false;
+let progressPollTimeout = null;
+let progressPollFailures = 0;
 
 const uploadArea = document.getElementById('uploadArea');
 const fileInput = document.getElementById('fileInput');
@@ -853,14 +871,30 @@ function closeProcessedDrawer() {
 }
 
 function syncProgressVisibility() {
-    statusBar.classList.toggle('is-visible', isProcessing);
-    if (!isProcessing) {
+    const shouldShow = isProcessing || keepStatusVisible;
+    statusBar.classList.toggle('is-visible', shouldShow);
+    if (!shouldShow) {
         progressBar.style.width = '0%';
         progressPercent.textContent = '0%';
         progressMessage.textContent = 'Preparando carga';
         progressFile.textContent = '—';
         progressFileRow.hidden = true;
+        statusState.textContent = 'Procesando';
+        statusState.dataset.tone = 'accent';
     }
+}
+
+function setStatusState(label, tone = 'accent') {
+    statusState.textContent = label;
+    statusState.dataset.tone = tone;
+}
+
+function clearProgressPolling() {
+    if (progressPollTimeout) {
+        window.clearTimeout(progressPollTimeout);
+        progressPollTimeout = null;
+    }
+    progressPollFailures = 0;
 }
 
 function handleFiles(files) {
@@ -999,6 +1033,89 @@ async function loadCatalogoGeneral() {
     }
 }
 
+function getUploadCurrentFileLabel() {
+    if (!selectedFiles.length) return null;
+    if (selectedFiles.length === 1) return selectedFiles[0].name;
+    return `${selectedFiles.length} archivos`;
+}
+
+function scaleProcessingProgress(progress) {
+    const normalized = Math.max(0, Math.min(100, Number(progress) || 0));
+    return PROCESS_PROGRESS_START + ((100 - PROCESS_PROGRESS_START) * normalized / 100);
+}
+
+function submitFilesForProcessing(formData) {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        const uploadLabel = getUploadCurrentFileLabel();
+
+        xhr.open('POST', '/api/process', true);
+        xhr.responseType = 'text';
+
+        xhr.upload.addEventListener('loadstart', () => {
+            setStatusState('Cargando');
+            updateProgress(1, 'Iniciando carga de archivos...', uploadLabel);
+        });
+
+        xhr.upload.addEventListener('progress', (event) => {
+            if (!event.lengthComputable) {
+                setStatusState('Cargando');
+                updateProgress(UPLOAD_PROGRESS_MAX * 0.5, 'Cargando archivos al servidor...', uploadLabel);
+                return;
+            }
+
+            const uploadProgress = Math.min(
+                UPLOAD_PROGRESS_MAX,
+                (event.loaded / event.total) * UPLOAD_PROGRESS_MAX
+            );
+            setStatusState('Cargando');
+            updateProgress(uploadProgress, 'Cargando archivos al servidor...', uploadLabel);
+        });
+
+        xhr.addEventListener('readystatechange', () => {
+            if (xhr.readyState === XMLHttpRequest.HEADERS_RECEIVED) {
+                setStatusState('Procesando');
+                updateProgress(PROCESS_PROGRESS_START, 'Archivos recibidos. Iniciando procesamiento...', null);
+            }
+        });
+
+        xhr.onload = () => {
+            const contentType = xhr.getResponseHeader('content-type') || '';
+            let data = null;
+
+            if (contentType.includes('application/json')) {
+                try {
+                    data = JSON.parse(xhr.responseText || '{}');
+                } catch (error) {
+                    data = null;
+                }
+            }
+
+            if (xhr.status >= 200 && xhr.status < 300) {
+                resolve(data || {});
+                return;
+            }
+
+            const requestError = new Error(
+                (data && data.error) || 'Error al iniciar el procesamiento'
+            );
+            requestError.status = xhr.status;
+            requestError.payload = data;
+            reject(requestError);
+        };
+
+        xhr.onerror = () => {
+            reject(new Error('Error de conexión al cargar archivos'));
+        };
+
+        xhr.onabort = () => {
+            reject(new Error('La carga fue cancelada'));
+        };
+
+        xhr.send(formData);
+    });
+}
+
 async function processFiles(force = false) {
     if (selectedFiles.length === 0) return;
     if (!enteSelect.value) {
@@ -1007,10 +1124,12 @@ async function processFiles(force = false) {
     }
 
     isProcessing = true;
+    keepStatusVisible = true;
+    clearProgressPolling();
     hideAlerts();
     updateButtons();
     updateProgressHeader();
-    statusState.textContent = 'Procesando';
+    setStatusState('Cargando');
     syncProgressVisibility();
     updateProgress(0, 'Preparando carga', null);
 
@@ -1021,50 +1140,10 @@ async function processFiles(force = false) {
     formData.append('allow_duplicates', force ? 'true' : 'false');
 
     try {
-        const response = await fetch('/api/process', {
-            method: 'POST',
-            body: formData
-        });
+        const data = await submitFilesForProcessing(formData);
 
-        const contentType = response.headers.get('content-type') || '';
-        let data = null;
-        if (contentType.includes('application/json')) {
-            data = await response.json();
-        } else {
-            const text = await response.text();
-            const preview = text.replace(/\s+/g, ' ').slice(0, 160);
-            throw new Error(
-                preview
-                    ? `Respuesta inesperada del servidor: ${preview}`
-                    : 'Respuesta inesperada del servidor'
-            );
-        }
-
-        if (!response.ok) {
-            if (
-                response.status === 409 &&
-                data &&
-                Array.isArray(data.duplicate_files) &&
-                data.duplicate_files.length
-            ) {
-                const shouldRetry = confirm(
-                    `Estos archivos ya fueron procesados: ${data.duplicate_files.join(', ')}. ` +
-                    '¿Deseas reprocesarlos de todos modos?'
-                );
-                isProcessing = false;
-                syncProgressVisibility();
-                updateButtons();
-                if (shouldRetry) {
-                    return processFiles(true);
-                }
-                return;
-            }
-
-            isProcessing = false;
-            syncProgressVisibility();
-            updateButtons();
-            showError(data.error || 'Error al iniciar el procesamiento');
-            return;
+        if (!data || !data.job_id) {
+            throw new Error('No se pudo iniciar el procesamiento');
         }
 
         if (data.duplicate_files && data.duplicate_files.length) {
@@ -1072,32 +1151,75 @@ async function processFiles(force = false) {
             showWarning(`${warningLabel}: ${data.duplicate_files.join(', ')}`);
         }
 
+        setStatusState('Procesando');
         monitorProgress(data.job_id);
     } catch (error) {
+        if (
+            error.status === 409 &&
+            error.payload &&
+            Array.isArray(error.payload.duplicate_files) &&
+            error.payload.duplicate_files.length
+        ) {
+            const shouldRetry = confirm(
+                `Estos archivos ya fueron procesados: ${error.payload.duplicate_files.join(', ')}. ` +
+                '¿Deseas reprocesarlos de todos modos?'
+            );
+            keepStatusVisible = false;
+            isProcessing = false;
+            syncProgressVisibility();
+            updateButtons();
+            if (shouldRetry) {
+                return processFiles(true);
+            }
+            return;
+        }
+
+        setStatusState('Error', 'error');
+        keepStatusVisible = true;
         isProcessing = false;
         syncProgressVisibility();
         updateButtons();
+        updateProgress(Math.max(Number(progressPercent.textContent.replace('%', '')) || 0, PROCESS_PROGRESS_START), error.message, null);
         showError(error.message);
     }
 }
 
-function monitorProgress(jobId) {
-    const eventSource = new EventSource(`/api/progress/${jobId}`);
-    let finished = false;
+async function monitorProgress(jobId) {
+    clearProgressPolling();
+    progressPollFailures = 0;
 
-    eventSource.onmessage = (event) => {
+    const poll = async () => {
         try {
-            const data = JSON.parse(event.data);
-            updateProgress(data.progress, data.message, data.current_file);
+            const response = await fetch(`/api/progress/${jobId}?format=json&ts=${Date.now()}`, {
+                cache: 'no-store',
+            });
+
+            if (!response.ok) {
+                throw new Error('No se pudo consultar el progreso del procesamiento');
+            }
+
+            const data = await response.json();
+            progressPollFailures = 0;
+            updateProgress(
+                data.done && !data.error ? 100 : scaleProcessingProgress(data.progress),
+                data.message,
+                data.current_file
+            );
 
             if (data.done && !data.error) {
-                finished = true;
-                eventSource.close();
+                clearProgressPolling();
+                setStatusState('Completado', 'success');
+                keepStatusVisible = true;
                 isProcessing = false;
                 syncProgressVisibility();
                 selectedFiles = [];
                 fileInput.value = '';
                 renderFileLists();
+                updateProgress(
+                    100,
+                    data.message || `Proceso completado. ${(data.total_registros || 0).toLocaleString('es-MX')} registros agregados.`,
+                    null
+                );
                 showSuccess(
                     data.message ||
                     `Archivo procesado con exito. ${(data.total_registros || 0).toLocaleString('es-MX')} registros agregados.`
@@ -1107,32 +1229,52 @@ function monitorProgress(jobId) {
             }
 
             if (data.error) {
-                finished = true;
-                eventSource.close();
+                clearProgressPolling();
+                setStatusState('Error', 'error');
+                keepStatusVisible = true;
                 isProcessing = false;
                 syncProgressVisibility();
                 updateButtons();
+                updateProgress(
+                    Math.max(Number(data.progress) || 0, PROCESS_PROGRESS_START),
+                    data.error,
+                    data.current_file
+                );
                 showError(data.error);
+                return;
             }
+
+            progressPollTimeout = window.setTimeout(poll, 350);
         } catch (error) {
-            console.error('Error leyendo progreso:', error);
+            progressPollFailures += 1;
+            if (progressPollFailures < MAX_PROGRESS_POLL_FAILURES) {
+                progressPollTimeout = window.setTimeout(poll, 750);
+                return;
+            }
+
+            clearProgressPolling();
+            setStatusState('Error', 'error');
+            keepStatusVisible = true;
+            isProcessing = false;
+            syncProgressVisibility();
+            updateButtons();
+            updateProgress(
+                Math.max(Number(progressPercent.textContent.replace('%', '')) || 0, PROCESS_PROGRESS_START),
+                error.message,
+                null
+            );
+            showError(error.message);
         }
     };
 
-    eventSource.onerror = () => {
-        if (finished) return;
-        eventSource.close();
-        isProcessing = false;
-        syncProgressVisibility();
-        updateButtons();
-        showError('Error de conexión con el servidor');
-    };
+    await poll();
 }
 
 function updateProgress(percent, message, currentFile) {
-    progressBar.style.width = `${Math.max(0, percent || 0)}%`;
+    const safePercent = Math.max(0, Math.min(100, Number(percent) || 0));
+    progressBar.style.width = `${safePercent}%`;
     progressMessage.textContent = message || 'Procesando';
-    progressPercent.textContent = `${Math.round(percent || 0)}%`;
+    progressPercent.textContent = `${Math.round(safePercent)}%`;
     progressFile.textContent = currentFile || '—';
     progressFileRow.hidden = !currentFile;
 }

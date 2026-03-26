@@ -682,6 +682,99 @@ def create_app(config_name="default"):
     jobs = {}
     jobs_lock = threading.Lock()
 
+    def _job_snapshot_dir():
+        configured_dir = app.config.get("JOB_STATUS_DIR")
+        base_dir = (
+            Path(configured_dir)
+            if configured_dir
+            else Path(app.config.get("UPLOAD_FOLDER", "/tmp/sipac_uploads")) / "jobs"
+        )
+        base_dir.mkdir(parents=True, exist_ok=True)
+        return base_dir
+
+    def _job_snapshot_path(job_id):
+        safe_job_id = re.sub(r"[^A-Za-z0-9_.-]", "_", str(job_id or ""))
+        return _job_snapshot_dir() / f"{safe_job_id or 'unknown'}.json"
+
+    def _serialize_job(job):
+        if not job:
+            return None
+        return {
+            "progress": job.get("progress", 0),
+            "message": job.get("message", ""),
+            "done": job.get("done", False),
+            "error": job.get("error", None),
+            "current_file": job.get("current_file"),
+            "lote_id": job.get("lote_id"),
+            "total_registros": job.get("total_registros", 0),
+        }
+
+    def _write_job_snapshot(job_id, job):
+        payload = _serialize_job(job)
+        if payload is None:
+            return
+
+        payload["updated_at"] = time.time()
+        target = _job_snapshot_path(job_id)
+        temp_name = f".{target.name}.{uuid.uuid4().hex}.tmp"
+        temp_path = target.with_name(temp_name)
+
+        try:
+            temp_path.write_text(
+                json.dumps(payload, ensure_ascii=False), encoding="utf-8"
+            )
+            os.replace(temp_path, target)
+        except Exception as exc:
+            app.logger.warning(
+                "[jobs] No se pudo persistir el estado de %s: %s", job_id, exc
+            )
+            try:
+                if temp_path.exists():
+                    temp_path.unlink()
+            except OSError:
+                pass
+
+    def _read_job_snapshot(job_id):
+        target = _job_snapshot_path(job_id)
+        if not target.exists():
+            return None
+
+        try:
+            payload = json.loads(target.read_text(encoding="utf-8"))
+        except Exception as exc:
+            app.logger.warning(
+                "[jobs] No se pudo leer el estado persistido de %s: %s", job_id, exc
+            )
+            return None
+
+        return _serialize_job(payload)
+
+    def _register_job(job_id, payload):
+        snapshot = dict(payload)
+        with jobs_lock:
+            jobs[job_id] = snapshot
+        _write_job_snapshot(job_id, snapshot)
+        return snapshot
+
+    def _update_job(job_id, **changes):
+        with jobs_lock:
+            job = jobs.get(job_id)
+            if job is None:
+                return None
+            job.update(changes)
+            snapshot = dict(job)
+        _write_job_snapshot(job_id, snapshot)
+        return snapshot
+
+    def _get_job_snapshot(job_id):
+        with jobs_lock:
+            job = jobs.get(job_id)
+            snapshot = dict(job) if job is not None else None
+
+        if snapshot is not None:
+            return _serialize_job(snapshot)
+        return _read_job_snapshot(job_id)
+
     stats_cache = {
         "resumen": {"ts": 0, "data": None},
         "dashboard": {"ts": 0, "data": None},
@@ -1439,8 +1532,9 @@ def create_app(config_name="default"):
                 files_to_process = valid_files
 
             job_id = str(uuid.uuid4())
-            with jobs_lock:
-                jobs[job_id] = {
+            _register_job(
+                job_id,
+                {
                     "progress": 0,
                     "message": "Iniciando...",
                     "done": False,
@@ -1448,15 +1542,17 @@ def create_app(config_name="default"):
                     "current_file": None,
                     "lote_id": None,
                     "total_registros": 0,
-                }
+                },
+            )
 
             def progress_callback(pct, msg, current_file=None):
-                with jobs_lock:
-                    if job_id in jobs:
-                        jobs[job_id]["progress"] = pct
-                        jobs[job_id]["message"] = msg
-                        if current_file is not None:
-                            jobs[job_id]["current_file"] = current_file
+                payload = {
+                    "progress": pct,
+                    "message": msg,
+                }
+                if current_file is not None:
+                    payload["current_file"] = current_file
+                _update_job(job_id, **payload)
 
             files_in_memory = []
             for f in files_to_process:
@@ -1478,20 +1574,18 @@ def create_app(config_name="default"):
                             selected_ente_grupo=selected_catalog_item.get("grupo"),
                         )
 
-                        with jobs_lock:
-                            jobs[job_id]["lote_id"] = lote_id
-                            jobs[job_id]["total_registros"] = total
-                            jobs[job_id]["done"] = True
-                            jobs[job_id]["progress"] = 100
-                            jobs[job_id]["message"] = (
-                                f"✅ {total:,} registros guardados en BD"
-                            )
+                        _update_job(
+                            job_id,
+                            lote_id=lote_id,
+                            total_registros=total,
+                            done=True,
+                            progress=100,
+                            message=f"✅ {total:,} registros guardados en BD",
+                        )
                         _invalidate_stats_cache()
 
                 except Exception as e:
-                    with jobs_lock:
-                        jobs[job_id]["error"] = str(e)
-                        jobs[job_id]["done"] = True
+                    _update_job(job_id, error=str(e), done=True)
 
             thread = threading.Thread(target=process_files)
             thread.daemon = True
@@ -1563,8 +1657,9 @@ def create_app(config_name="default"):
                     files_in_memory.append((path.name, io.BytesIO(handle.read())))
 
             job_id = str(uuid.uuid4())
-            with jobs_lock:
-                jobs[job_id] = {
+            _register_job(
+                job_id,
+                {
                     "progress": 0,
                     "message": "Iniciando...",
                     "done": False,
@@ -1572,15 +1667,17 @@ def create_app(config_name="default"):
                     "current_file": None,
                     "lote_id": None,
                     "total_registros": 0,
-                }
+                },
+            )
 
             def progress_callback(pct, msg, current_file=None):
-                with jobs_lock:
-                    if job_id in jobs:
-                        jobs[job_id]["progress"] = pct
-                        jobs[job_id]["message"] = msg
-                        if current_file is not None:
-                            jobs[job_id]["current_file"] = current_file
+                payload = {
+                    "progress": pct,
+                    "message": msg,
+                }
+                if current_file is not None:
+                    payload["current_file"] = current_file
+                _update_job(job_id, **payload)
 
             def process_files():
                 try:
@@ -1589,19 +1686,17 @@ def create_app(config_name="default"):
                             files_in_memory, usuario, progress_callback
                         )
 
-                        with jobs_lock:
-                            jobs[job_id]["lote_id"] = lote_id
-                            jobs[job_id]["total_registros"] = total
-                            jobs[job_id]["done"] = True
-                            jobs[job_id]["progress"] = 100
-                            jobs[job_id]["message"] = (
-                                f"✅ {total:,} registros guardados en BD"
-                            )
+                        _update_job(
+                            job_id,
+                            lote_id=lote_id,
+                            total_registros=total,
+                            done=True,
+                            progress=100,
+                            message=f"✅ {total:,} registros guardados en BD",
+                        )
 
                 except Exception as e:
-                    with jobs_lock:
-                        jobs[job_id]["error"] = str(e)
-                        jobs[job_id]["done"] = True
+                    _update_job(job_id, error=str(e), done=True)
 
             thread = threading.Thread(target=process_files)
             thread.daemon = True
@@ -1619,6 +1714,12 @@ def create_app(config_name="default"):
 
     @app.route("/api/progress/<job_id>")
     def progress_stream(job_id):
+        if request.args.get("format") == "json":
+            payload = _get_job_snapshot(job_id)
+            if payload is None:
+                return jsonify({"error": "Trabajo no encontrado"}), 404
+            return jsonify(payload)
+
         def generate():
             last_progress = -1
             max_wait = 300
@@ -1629,20 +1730,19 @@ def create_app(config_name="default"):
                     yield f"data: {json.dumps({'progress': 100, 'message': 'Timeout', 'done': True})}\n\n"
                     break
 
-                with jobs_lock:
-                    job = jobs.get(job_id)
+                job = _get_job_snapshot(job_id)
 
                 if not job:
                     time.sleep(0.1)
                     continue
 
-                current_progress = job.get("progress", 0)
-                message = job.get("message", "")
-                done = job.get("done", False)
-                error = job.get("error", None)
-                current_file = job.get("current_file")
-                lote_id = job.get("lote_id")
-                total_registros = job.get("total_registros", 0)
+                current_progress = job["progress"]
+                message = job["message"]
+                done = job["done"]
+                error = job["error"]
+                current_file = job["current_file"]
+                lote_id = job["lote_id"]
+                total_registros = job["total_registros"]
 
                 if current_progress != last_progress or done or error:
                     data = {

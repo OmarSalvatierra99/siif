@@ -28,6 +28,10 @@
         z-index: 1;
     }
 
+    body.filters-drawer-open {
+        overflow: hidden;
+    }
+
     .consulta-layout,
     .results-section {
         display: flex;
@@ -469,39 +473,39 @@
     .table-filter-date {
         display: flex;
         flex-direction: column;
-        gap: 0.28rem;
+        gap: 0.35rem;
         min-width: 0;
     }
 
     .table-filter-control .filter-combobox input,
     .table-filter-date input {
-        min-height: 32px;
-        padding: 0.45rem 0.6rem;
-        border-radius: 9px;
-        font-size: 0.74rem;
-        border: 1px solid rgba(31, 59, 44, 0.14);
-        background: rgba(255, 255, 255, 0.96);
+        min-height: 40px;
+        padding: 0.62rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        border: 1px solid rgba(31, 59, 44, 0.12);
+        background: #fcfdfc;
         color: var(--color-text);
-        box-shadow: inset 0 1px 2px rgba(31, 59, 44, 0.03);
+        box-shadow: none;
     }
 
     .table-filter-control .filter-combobox input {
-        padding-right: 3.8rem;
+        padding-right: 4.15rem;
     }
 
     .table-filter-control .combo-toggle,
     .table-filter-control .combo-clear {
-        width: 1.45rem;
-        height: 1.45rem;
-        border-radius: 6px;
+        width: 1.7rem;
+        height: 1.7rem;
+        border-radius: 8px;
     }
 
     .table-filter-control .combo-clear {
-        right: 1.9rem;
+        right: 2.25rem;
     }
 
     .table-filter-control .combo-toggle {
-        right: 0.28rem;
+        right: 0.4rem;
     }
 
     .table-filter-control .combo-menu {
@@ -554,7 +558,7 @@
     }
 
     .filter-combobox input {
-        padding-right: 4.2rem;
+        padding-right: 4.4rem;
     }
 
     .combo-selected {
@@ -605,8 +609,8 @@
     }
 
     .filter-combobox.is-open input {
-        border-color: rgba(31, 59, 44, 0.72);
-        box-shadow: 0 0 0 3px rgba(31, 59, 44, 0.14);
+        border-color: rgba(31, 59, 44, 0.34);
+        box-shadow: 0 0 0 4px rgba(31, 59, 44, 0.08);
         background: #ffffff;
     }
 
@@ -622,17 +626,38 @@
         height: 1.8rem;
         border-radius: 8px;
         cursor: pointer;
+        font-size: 0;
         transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .combo-toggle::before,
+    .combo-clear::before {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        font-size: 0.86rem;
+        line-height: 1;
+    }
+
+    .combo-toggle::before {
+        content: "▾";
+    }
+
+    .combo-clear::before {
+        content: "×";
+        font-size: 1rem;
     }
 
     .combo-toggle:hover,
     .combo-clear:hover {
-        background: rgba(31, 59, 44, 0.08);
+        background: rgba(31, 59, 44, 0.06);
         color: var(--color-primary);
     }
 
     .combo-clear {
-        right: 2.15rem;
+        right: 2.3rem;
         opacity: 0;
         pointer-events: none;
     }
@@ -644,7 +669,7 @@
     }
 
     .combo-toggle {
-        right: 0.4rem;
+        right: 0.5rem;
     }
 
     .combo-menu {
@@ -655,7 +680,7 @@
         background: #ffffff;
         border: 1px solid rgba(31, 59, 44, 0.16);
         border-radius: 16px;
-        box-shadow: 0 18px 36px rgba(31, 59, 44, 0.14);
+        box-shadow: 0 16px 32px rgba(31, 59, 44, 0.12);
         overflow: hidden;
         z-index: 40;
     }
@@ -738,8 +763,9 @@
     .filter-help {
         min-height: 1rem;
         color: var(--color-muted);
-        font-size: 0.76rem;
-        line-height: 1.4;
+        padding-left: 0.1rem;
+        font-size: 0.72rem;
+        line-height: 1.35;
     }
 
     .filter-help.is-empty {
@@ -758,73 +784,95 @@
         box-shadow: none;
     }
 
+    .filters-launcher {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        padding: 1rem 1.1rem;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.94);
+        border: 1px solid rgba(31, 59, 44, 0.12);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .filters-launcher-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        min-width: 0;
+    }
+
+    .filters-launcher-title {
+        margin: 0;
+        color: var(--color-primary);
+        font-size: 1rem;
+        font-weight: 700;
+    }
+
+    .filters-launcher-meta {
+        margin: 0;
+        color: var(--color-muted);
+        font-size: 0.82rem;
+        line-height: 1.45;
+    }
+
+    .filters-launcher-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-shrink: 0;
+    }
+
     .filters-drawer-toggle {
         display: inline-flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 0.75rem;
-        min-width: 148px;
-        padding: 0.85rem 1.25rem;
-        border: 1px solid var(--color-accent);
-        border-radius: 999px;
-        background: var(--color-accent);
-        color: #ffffff;
-        font-size: 0.92rem;
+        justify-content: center;
+        gap: 0.65rem;
+        min-width: 168px;
+        padding: 0.78rem 1.05rem;
+        border: 1px solid rgba(31, 59, 44, 0.14);
+        border-radius: 12px;
+        background: #ffffff;
+        color: var(--color-primary);
+        font-size: 0.86rem;
         font-weight: 700;
-        box-shadow: 0 18px 36px rgba(15, 23, 42, 0.18);
         cursor: pointer;
-        transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease, background 0.2s ease;
-        position: fixed;
-        right: 1.5rem;
-        bottom: 1.5rem;
-        z-index: 1185;
+        transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
     }
 
     .filters-drawer-toggle:hover {
-        background: var(--color-accent-strong);
-        border-color: var(--color-accent-strong);
-        transform: translateY(-2px);
-        box-shadow: 0 22px 40px rgba(31, 59, 44, 0.28);
+        background: rgba(31, 59, 44, 0.05);
+        border-color: rgba(31, 59, 44, 0.2);
+    }
+
+    .filters-drawer-toggle:active {
+        transform: scale(0.985);
     }
 
     .filters-drawer-toggle .kbd-hint {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        padding: 0.15rem 0.45rem;
-        border-radius: 6px;
-        background: rgba(255, 255, 255, 0.15);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: rgba(255, 255, 255, 0.85);
-        font-size: 0.68rem;
-        font-weight: 600;
-        font-family: inherit;
-        letter-spacing: 0.03em;
-        line-height: 1;
-    }
-
-    .filters-drawer-toggle-count {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 1.8rem;
-        height: 1.8rem;
-        padding: 0 0.42rem;
+        padding: 0.22rem 0.46rem;
         border-radius: 999px;
-        background: rgba(255, 255, 255, 0.18);
-        border: 1px solid rgba(255, 255, 255, 0.22);
-        color: #ffffff;
-        font-size: 0.76rem;
-        font-weight: 700;
+        background: rgba(31, 59, 44, 0.06);
+        color: var(--color-muted);
+        font-size: 0.72rem;
+        font-weight: 600;
         line-height: 1;
+        white-space: nowrap;
     }
 
     .filters-drawer-overlay {
         position: fixed;
         inset: 0;
         background: rgba(15, 23, 42, 0.34);
+        backdrop-filter: blur(5px);
         opacity: 0;
         visibility: hidden;
+        pointer-events: none;
         transition: opacity 0.2s ease, visibility 0.2s ease;
         z-index: 1190;
     }
@@ -832,175 +880,234 @@
     .filters-drawer-overlay.is-visible {
         opacity: 1;
         visibility: visible;
+        pointer-events: auto;
     }
 
     .filters-drawer {
         position: fixed;
-        top: 0;
-        right: 0;
-        width: min(540px, 100vw);
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-        background: #f7faf8;
+        top: 1rem;
+        right: 1rem;
+        width: min(720px, calc(100vw - 2rem));
+        height: calc(100dvh - 2rem);
+        max-height: calc(100dvh - 2rem);
+        opacity: 0;
         visibility: hidden;
-        border-left: 1px solid rgba(31, 59, 44, 0.12);
-        box-shadow: -24px 0 48px rgba(15, 23, 42, 0.16);
-        transform: translateX(100%);
-        transition: transform 0.24s ease;
+        pointer-events: none;
+        transform: translateX(20px);
+        transition: transform 0.22s ease, opacity 0.22s ease, visibility 0.22s ease;
         z-index: 1200;
+        overscroll-behavior: contain;
     }
 
     .filters-drawer.is-open {
+        opacity: 1;
         visibility: visible;
+        pointer-events: auto;
         transform: translateX(0);
     }
 
-    .filters-drawer-header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 1rem;
-        padding: 1.15rem 1.2rem 1rem;
-        border-bottom: 1px solid rgba(31, 59, 44, 0.10);
-        background: rgba(255, 255, 255, 0.98);
-    }
-
-    .filters-drawer-title {
-        color: var(--color-primary);
-        font-size: 1.08rem;
-        font-weight: 700;
-    }
-
-    .filters-drawer-meta {
-        margin-top: 0.25rem;
-        color: var(--color-muted);
-        font-size: 0.82rem;
-    }
-
-    .filters-drawer-close {
-        border: none;
-        background: rgba(31, 59, 44, 0.08);
-        color: var(--color-primary);
-        width: 2.2rem;
-        height: 2.2rem;
-        border-radius: 999px;
-        cursor: pointer;
-        font-size: 1rem;
-        transition: var(--transition);
-    }
-
-    .filters-drawer-close:hover {
-        background: rgba(31, 59, 44, 0.14);
-    }
-
-    .filters-drawer-body {
-        flex: 1;
-        overflow-y: auto;
-        padding: 1rem 1.2rem 1.4rem;
+    .filters-static {
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        height: 100%;
+        border-radius: 22px;
+        border: 1px solid rgba(31, 59, 44, 0.12);
+        background: rgba(255, 255, 255, 0.92);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
     }
 
-    .filters-drawer .active-filters-bar {
-        box-shadow: none;
-    }
-
-    .filters-drawer .active-filters-resizer,
-    .filters-drawer .text-action {
-        display: none;
-    }
-
-    .filters-drawer-actions {
-        display: flex;
-    }
-
-    .filters-drawer-actions .floating-clear-btn {
-        width: 100%;
-        justify-content: center;
-        box-shadow: none;
-    }
-
-    .filters-drawer-footer {
+    .filters-static-header {
         display: flex;
         align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+        padding: 0.95rem 1.1rem;
+        background: rgba(255, 255, 255, 0.88);
+        border-bottom: 1px solid rgba(31, 59, 44, 0.08);
+    }
+
+    .filters-static-header-left {
+        display: flex;
+        align-items: center;
+        min-width: 0;
+        flex: 1;
+    }
+
+    .filters-static-header-copy {
+        min-width: 0;
+    }
+
+    .filters-static-header-actions {
+        display: inline-flex;
+        align-items: center;
         gap: 0.65rem;
-        padding: 0.85rem 1.2rem;
-        border-top: 1px solid rgba(31, 59, 44, 0.10);
-        background: rgba(255, 255, 255, 0.98);
         flex-shrink: 0;
     }
 
-    .filters-drawer-footer .btn-apply-filters {
+    .filters-static-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 2rem;
+        height: 2rem;
+        padding: 0 0.55rem;
+        border-radius: 999px;
+        border: 1px solid rgba(31, 59, 44, 0.12);
+        background: rgba(31, 59, 44, 0.06);
+        color: var(--color-primary);
+        font-size: 0.76rem;
+        font-weight: 700;
+        line-height: 1;
+        flex-shrink: 0;
+    }
+
+    .filters-drawer-close {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        border: 1px solid rgba(31, 59, 44, 0.12);
+        border-radius: 999px;
+        background: rgba(31, 59, 44, 0.04);
+        color: var(--color-primary);
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .filters-drawer-close:hover {
+        background: rgba(31, 59, 44, 0.08);
+        border-color: rgba(31, 59, 44, 0.18);
+    }
+
+    .filters-static-count[data-count="0"] {
+        background: rgba(255, 255, 255, 0.72);
+        color: var(--color-muted);
+    }
+
+    .filters-static-body {
         flex: 1;
+        overflow-y: auto;
+        padding: 0.2rem 1.1rem 0.85rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .filters-static-footer {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        flex-shrink: 0;
+        padding: 0.9rem 1.1rem 1rem;
+        border-top: 1px solid rgba(31, 59, 44, 0.10);
+        background: rgba(255, 255, 255, 0.84);
+    }
+
+    .filters-static-footer .btn-apply-filters {
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 0.5rem;
-        padding: 0.75rem 1.2rem;
+        min-width: 168px;
+        padding: 0.74rem 1.15rem;
         border: 1px solid var(--color-accent);
-        border-radius: 14px;
+        border-radius: 12px;
         background: var(--color-accent);
         color: #ffffff;
-        font-size: 0.9rem;
+        font-size: 0.88rem;
         font-weight: 700;
         cursor: pointer;
         transition: background 0.2s ease, transform 0.15s ease;
     }
 
-    .filters-drawer-footer .btn-apply-filters:hover {
+    .filters-static-footer .btn-apply-filters:hover {
         background: var(--color-accent-strong);
         border-color: var(--color-accent-strong);
     }
 
-    .filters-drawer-footer .btn-apply-filters:active {
+    .filters-static-footer .btn-apply-filters:active {
         transform: scale(0.98);
     }
 
-    .filters-drawer-footer .btn-clear-filters {
+    .filters-static-footer .btn-clear-filters {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        padding: 0.75rem 1rem;
+        padding: 0.72rem 0.95rem;
         border: 1px solid rgba(31, 59, 44, 0.14);
-        border-radius: 14px;
-        background: transparent;
+        border-radius: 12px;
+        background: rgba(31, 59, 44, 0.03);
         color: var(--color-muted);
-        font-size: 0.84rem;
+        font-size: 0.82rem;
         font-weight: 600;
         cursor: pointer;
         transition: background 0.15s ease, color 0.15s ease;
     }
 
-    .filters-drawer-footer .btn-clear-filters:hover {
+    .filters-static-footer .btn-clear-filters:hover {
         background: rgba(31, 59, 44, 0.06);
         color: var(--color-primary);
+    }
+
+    .filters-static .active-filters-bar {
+        box-shadow: none;
+        gap: 0.55rem;
+        padding: 0.2rem 0 0.9rem;
+        border-bottom: 1px solid rgba(31, 59, 44, 0.08);
+    }
+
+    .filters-static .active-filters-resizer,
+    .filters-static .text-action {
+        display: none;
+    }
+
+    .filters-static-title {
+        color: var(--color-primary);
+        font-size: 1rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+    }
+
+    .filters-static-meta {
+        margin-top: 0.1rem;
+        color: var(--color-muted);
+        font-size: 0.78rem;
+        line-height: 1.35;
     }
 
     .filters-panel-section {
         display: flex;
         flex-direction: column;
-        gap: 0.9rem;
-        padding: 1rem;
-        border-radius: 18px;
-        border: 1px solid rgba(31, 59, 44, 0.10);
-        background: rgba(255, 255, 255, 0.96);
+        gap: 0.85rem;
+        padding: 0.95rem 0;
+        border-top: 1px solid rgba(31, 59, 44, 0.08);
+        background: transparent;
+    }
+
+    .filters-panel-section:first-of-type {
+        border-top: none;
     }
 
     .filters-panel-section h4 {
         margin: 0;
-        color: var(--color-primary);
-        font-size: 0.94rem;
+        color: var(--color-muted);
+        font-size: 0.72rem;
         font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
     }
 
     /* ente select now inside drawer */
 
     .filters-panel-grid {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0.9rem;
+        grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+        gap: 0.85rem 0.9rem;
     }
 
     .filter-field {
@@ -1015,11 +1122,10 @@
     }
 
     .filter-field-label {
-        color: var(--color-muted);
-        font-size: 0.74rem;
-        font-weight: 700;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
+        color: var(--color-primary);
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
     }
 
     .floating-clear-btn {
@@ -1198,28 +1304,32 @@
 
     .active-filters-copy {
         display: flex;
-        flex-direction: column;
-        gap: 0.15rem;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.5rem;
+        flex-wrap: wrap;
         min-width: 0;
     }
 
     .active-filters-copy strong {
         color: var(--color-primary);
-        font-size: 0.95rem;
+        font-size: 0.75rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
     }
 
     .active-filters-copy span {
         color: var(--color-muted);
-        font-size: 0.76rem;
+        font-size: 0.74rem;
     }
 
     .active-filters-list {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.55rem;
-        max-height: min(46vh, 320px);
-        overflow-y: auto;
-        padding-right: 0.2rem;
+        gap: 0.45rem;
+        max-height: none;
+        overflow: visible;
+        padding-right: 0;
     }
 
     .active-filters-resizer {
@@ -1259,42 +1369,49 @@
     .active-filter-chip {
         display: inline-flex;
         align-items: center;
-        gap: 0.45rem;
+        gap: 0.4rem;
         max-width: 100%;
-        border: 1px solid rgba(31, 59, 44, 0.14);
-        background: rgba(31, 59, 44, 0.06);
+        border: 1px solid rgba(31, 59, 44, 0.12);
+        background: #ffffff;
         color: var(--color-primary);
         border-radius: 999px;
-        padding: 0.42rem 0.75rem;
-        font-size: 0.8rem;
+        padding: 0.38rem 0.65rem;
+        font-size: 0.77rem;
         cursor: pointer;
-        transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+        box-shadow: 0 1px 2px rgba(31, 59, 44, 0.04);
+        transition: background 0.2s ease, border-color 0.2s ease;
     }
 
     .active-filter-chip:hover {
-        background: rgba(31, 59, 44, 0.1);
-        border-color: rgba(31, 59, 44, 0.24);
-        transform: translateY(-1px);
+        background: rgba(31, 59, 44, 0.05);
+        border-color: rgba(31, 59, 44, 0.18);
     }
 
     .active-filter-label {
         color: var(--color-muted);
-        font-size: 0.74rem;
+        font-size: 0.68rem;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.06em;
     }
 
     .active-filter-value {
-        max-width: 180px;
+        max-width: 170px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        font-weight: 700;
+        font-weight: 600;
     }
 
     .active-filter-remove {
         color: var(--color-muted);
-        font-size: 0.78rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1rem;
+        height: 1rem;
+        border-radius: 999px;
+        background: rgba(31, 59, 44, 0.06);
+        font-size: 0.72rem;
         font-weight: 700;
     }
 
@@ -1672,19 +1789,55 @@
             width: 100%;
         }
 
-        .filters-drawer-toggle {
-            right: 1rem;
-            left: 1rem;
-            bottom: 1rem;
-            width: calc(100vw - 2rem);
+        .filters-launcher {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .filters-launcher-actions {
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        .filters-drawer {
+            top: 0;
+            right: 0;
+            width: 100vw;
+            height: 100dvh;
+            max-height: 100dvh;
+            max-width: none;
+        }
+
+        .filters-static {
+            border-radius: 0;
+        }
+
+        .filters-static-header {
+            align-items: flex-start;
         }
 
         .active-filter-chip {
             max-width: 100%;
         }
 
-        .filters-drawer {
-            width: 100vw;
+        .filters-static-header-actions {
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        .filters-static-body {
+            padding: 0.15rem 0.9rem 0.75rem;
+        }
+
+        .filters-static-footer {
+            flex-direction: column-reverse;
+            align-items: stretch;
+            padding: 0.85rem 0.9rem 0.95rem;
+        }
+
+        .filters-static-footer .btn-apply-filters,
+        .filters-static-footer .btn-clear-filters {
+            width: 100%;
         }
 
         .filters-panel-grid {
@@ -1749,6 +1902,374 @@
             </div>
         </div>
     </section>
+
+    <section class="filters-launcher" aria-label="Panel de filtros">
+        <div class="filters-launcher-copy">
+            <span class="section-eyebrow">Filtros</span>
+            <h3 class="filters-launcher-title">Refina la consulta</h3>
+            <p class="filters-launcher-meta" id="filtersLauncherMeta">Sin filtros activos. Usa Shift + F para abrir el panel.</p>
+        </div>
+        <div class="filters-launcher-actions">
+            <span class="filters-static-count" id="filtersLauncherCount" data-count="0">0</span>
+            <button class="filters-drawer-toggle" id="filtersDrawerToggle" type="button" aria-controls="filtersDrawer" aria-expanded="false">
+                Abrir filtros
+                <span class="kbd-hint">Shift + F</span>
+            </button>
+        </div>
+    </section>
+
+    <div class="filters-drawer-overlay" id="filtersDrawerOverlay"></div>
+
+    <aside class="filters-drawer" id="filtersDrawer" aria-hidden="true" aria-labelledby="filtersDrawerTitle" aria-modal="true" role="dialog">
+        <div class="filters-static">
+            <div class="filters-static-header">
+                <div class="filters-static-header-left">
+                    <div class="filters-static-header-copy">
+                        <div class="filters-static-title" id="filtersDrawerTitle">Filtros</div>
+                        <div class="filters-static-meta" id="filtersDrawerMeta">Sin filtros</div>
+                    </div>
+                </div>
+                <div class="filters-static-header-actions">
+                    <span class="filters-static-count" id="filtersDrawerCount" data-count="0">0</span>
+                    <button class="filters-drawer-close" id="filtersDrawerClose" type="button" aria-label="Cerrar filtros">×</button>
+                </div>
+            </div>
+            <div class="filters-static-body" id="filtersStaticBody">
+            <div class="active-filters-bar" id="activeFiltersBar" hidden>
+                <div class="active-filters-copy">
+                    <strong>Filtros activos</strong>
+                    <span>Revisa o elimina criterios desde aquí.</span>
+                </div>
+                <div class="active-filters-list" id="activeFiltersList"></div>
+            </div>
+
+            <section class="filters-panel-section">
+                <h4>Estructura contable</h4>
+                <div class="filters-panel-grid">
+                    <div class="filter-field filter-field--wide">
+                        <label class="filter-field-label" for="filtroCuenta">Cuenta Contable</label>
+                        <div class="table-filter-control">
+                            <div class="filter-combobox" data-filter-combobox="cuenta_contable" data-filter-kind="facet">
+                                <input type="text" id="filtroCuenta" placeholder="Cuenta" autocomplete="off">
+                                <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Cuenta Contable">x</button>
+                                <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Cuenta Contable">v</button>
+                                <div class="combo-menu" data-filter-menu hidden>
+                                    <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                                    <div class="combo-options" data-filter-options></div>
+                                </div>
+                            </div>
+                            <span class="filter-help" data-filter-help="cuenta_contable">Sin filtro</span>
+                        </div>
+                    </div>
+                    <div class="filter-field">
+                        <label class="filter-field-label" for="filtroGenero">Género</label>
+                        <div class="table-filter-control">
+                            <div class="filter-combobox" data-filter-combobox="genero" data-filter-kind="facet">
+                                <input type="text" id="filtroGenero" placeholder="Género" autocomplete="off">
+                                <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Género">x</button>
+                                <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Género">v</button>
+                                <div class="combo-menu" data-filter-menu hidden>
+                                    <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                                    <div class="combo-options" data-filter-options></div>
+                                </div>
+                            </div>
+                            <span class="filter-help" data-filter-help="genero">Sin filtro</span>
+                        </div>
+                    </div>
+                    <div class="filter-field">
+                        <label class="filter-field-label" for="filtroGrupo">Grupo</label>
+                        <div class="table-filter-control">
+                            <div class="filter-combobox" data-filter-combobox="grupo" data-filter-kind="facet">
+                                <input type="text" id="filtroGrupo" placeholder="Grupo" autocomplete="off">
+                                <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Grupo">x</button>
+                                <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Grupo">v</button>
+                                <div class="combo-menu" data-filter-menu hidden>
+                                    <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                                    <div class="combo-options" data-filter-options></div>
+                                </div>
+                            </div>
+                            <span class="filter-help" data-filter-help="grupo">Sin filtro</span>
+                        </div>
+                    </div>
+                    <div class="filter-field">
+                        <label class="filter-field-label" for="filtroRubro">Rubro</label>
+                        <div class="table-filter-control">
+                            <div class="filter-combobox" data-filter-combobox="rubro" data-filter-kind="facet">
+                                <input type="text" id="filtroRubro" placeholder="Rubro" autocomplete="off">
+                                <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Rubro">x</button>
+                                <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Rubro">v</button>
+                                <div class="combo-menu" data-filter-menu hidden>
+                                    <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                                    <div class="combo-options" data-filter-options></div>
+                                </div>
+                            </div>
+                            <span class="filter-help" data-filter-help="rubro">Sin filtro</span>
+                        </div>
+                    </div>
+                    <div class="filter-field">
+                        <label class="filter-field-label" for="filtroCuentaNum">Cuenta</label>
+                        <div class="table-filter-control">
+                            <div class="filter-combobox" data-filter-combobox="cuenta" data-filter-kind="facet">
+                                <input type="text" id="filtroCuentaNum" placeholder="Cuenta" autocomplete="off">
+                                <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Cuenta">x</button>
+                                <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Cuenta">v</button>
+                                <div class="combo-menu" data-filter-menu hidden>
+                                    <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                                    <div class="combo-options" data-filter-options></div>
+                                </div>
+                            </div>
+                            <span class="filter-help" data-filter-help="cuenta">Sin filtro</span>
+                        </div>
+                    </div>
+                    <div class="filter-field">
+                        <label class="filter-field-label" for="filtroSubcuenta">Subcuenta</label>
+                        <div class="table-filter-control">
+                            <div class="filter-combobox" data-filter-combobox="subcuenta" data-filter-kind="facet">
+                                <input type="text" id="filtroSubcuenta" placeholder="Subcuenta" autocomplete="off">
+                                <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Subcuenta">x</button>
+                                <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Subcuenta">v</button>
+                                <div class="combo-menu" data-filter-menu hidden>
+                                    <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                                    <div class="combo-options" data-filter-options></div>
+                                </div>
+                            </div>
+                            <span class="filter-help" data-filter-help="subcuenta">Sin filtro</span>
+                        </div>
+                    </div>
+                    <div class="filter-field">
+                        <label class="filter-field-label" for="filtroDependencia">Catálogo consulta</label>
+                        <div class="table-filter-control">
+                            <div class="filter-combobox" data-filter-combobox="dependencia" data-filter-kind="facet">
+                                <input type="text" id="filtroDependencia" placeholder="Dependencia" autocomplete="off">
+                                <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Catálogo consulta">x</button>
+                                <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Catálogo consulta">v</button>
+                                <div class="combo-menu" data-filter-menu hidden>
+                                    <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                                    <div class="combo-options" data-filter-options></div>
+                                </div>
+                            </div>
+                            <span class="filter-help" data-filter-help="dependencia">Sin filtro</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="filters-panel-section">
+                <h4>Consulta institucional</h4>
+                <div class="filters-panel-grid">
+                    <div class="filter-field">
+                        <label class="filter-field-label" for="filtroUnidadResponsable">Unidad Responsable</label>
+                        <div class="table-filter-control">
+                            <div class="filter-combobox" data-filter-combobox="unidad_responsable" data-filter-kind="facet">
+                                <input type="text" id="filtroUnidadResponsable" placeholder="Unidad" autocomplete="off">
+                                <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Unidad Responsable">x</button>
+                                <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Unidad Responsable">v</button>
+                                <div class="combo-menu" data-filter-menu hidden>
+                                    <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                                    <div class="combo-options" data-filter-options></div>
+                                </div>
+                            </div>
+                            <span class="filter-help" data-filter-help="unidad_responsable">Sin filtro</span>
+                        </div>
+                    </div>
+                    <div class="filter-field">
+                        <label class="filter-field-label" for="filtroCentroCosto">Centro de Costo</label>
+                        <div class="table-filter-control">
+                            <div class="filter-combobox" data-filter-combobox="centro_costo" data-filter-kind="facet">
+                                <input type="text" id="filtroCentroCosto" placeholder="Centro" autocomplete="off">
+                                <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Centro de Costo">x</button>
+                                <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Centro de Costo">v</button>
+                                <div class="combo-menu" data-filter-menu hidden>
+                                    <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                                    <div class="combo-options" data-filter-options></div>
+                                </div>
+                            </div>
+                            <span class="filter-help" data-filter-help="centro_costo">Sin filtro</span>
+                        </div>
+                    </div>
+                    <div class="filter-field filter-field--wide">
+                        <label class="filter-field-label" for="filtroProyectoPresupuestario">Proyecto Presupuestario</label>
+                        <div class="table-filter-control">
+                            <div class="filter-combobox" data-filter-combobox="proyecto_presupuestario" data-filter-kind="facet">
+                                <input type="text" id="filtroProyectoPresupuestario" placeholder="Proyecto" autocomplete="off">
+                                <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Proyecto Presupuestario">x</button>
+                                <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Proyecto Presupuestario">v</button>
+                                <div class="combo-menu" data-filter-menu hidden>
+                                    <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                                    <div class="combo-options" data-filter-options></div>
+                                </div>
+                            </div>
+                            <span class="filter-help" data-filter-help="proyecto_presupuestario">Sin filtro</span>
+                        </div>
+                    </div>
+                    <div class="filter-field">
+                        <label class="filter-field-label" for="filtroFuente">Fuente</label>
+                        <div class="table-filter-control">
+                            <div class="filter-combobox" data-filter-combobox="fuente" data-filter-kind="facet">
+                                <input type="text" id="filtroFuente" placeholder="Fuente" autocomplete="off">
+                                <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Fuente">x</button>
+                                <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Fuente">v</button>
+                                <div class="combo-menu" data-filter-menu hidden>
+                                    <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                                    <div class="combo-options" data-filter-options></div>
+                                </div>
+                            </div>
+                            <span class="filter-help" data-filter-help="fuente">Sin filtro</span>
+                        </div>
+                    </div>
+                    <div class="filter-field">
+                        <label class="filter-field-label" for="filtroSubfuente">SubFuente</label>
+                        <div class="table-filter-control">
+                            <div class="filter-combobox" data-filter-combobox="subfuente" data-filter-kind="facet">
+                                <input type="text" id="filtroSubfuente" placeholder="Subfuente" autocomplete="off">
+                                <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar SubFuente">x</button>
+                                <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de SubFuente">v</button>
+                                <div class="combo-menu" data-filter-menu hidden>
+                                    <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                                    <div class="combo-options" data-filter-options></div>
+                                </div>
+                            </div>
+                            <span class="filter-help" data-filter-help="subfuente">Sin filtro</span>
+                        </div>
+                    </div>
+                    <div class="filter-field">
+                        <label class="filter-field-label" for="filtroTipoRecurso">Tipo de Recurso</label>
+                        <div class="table-filter-control">
+                            <div class="filter-combobox" data-filter-combobox="tipo_recurso" data-filter-kind="facet">
+                                <input type="text" id="filtroTipoRecurso" placeholder="Tipo" autocomplete="off">
+                                <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Tipo de Recurso">x</button>
+                                <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Tipo de Recurso">v</button>
+                                <div class="combo-menu" data-filter-menu hidden>
+                                    <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                                    <div class="combo-options" data-filter-options></div>
+                                </div>
+                            </div>
+                            <span class="filter-help" data-filter-help="tipo_recurso">Sin filtro</span>
+                        </div>
+                    </div>
+                    <div class="filter-field">
+                        <label class="filter-field-label" for="filtroPartidaPresupuestal">Partida Presupuestal</label>
+                        <div class="table-filter-control">
+                            <div class="filter-combobox" data-filter-combobox="partida_presupuestal" data-filter-kind="facet">
+                                <input type="text" id="filtroPartidaPresupuestal" placeholder="Partida" autocomplete="off">
+                                <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Partida Presupuestal">x</button>
+                                <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Partida Presupuestal">v</button>
+                                <div class="combo-menu" data-filter-menu hidden>
+                                    <div class="combo-status" data-filter-status>Opciones disponibles</div>
+                                    <div class="combo-options" data-filter-options></div>
+                                </div>
+                            </div>
+                            <span class="filter-help" data-filter-help="partida_presupuestal">Sin filtro</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="filters-panel-section">
+                <h4>Búsqueda libre</h4>
+                <div class="filters-panel-grid">
+                    <div class="filter-field filter-field--wide">
+                        <label class="filter-field-label" for="filtroNombreCuenta">Nombre de la Cuenta</label>
+                        <div class="table-filter-control">
+                            <div class="filter-combobox" data-filter-combobox="nombre_cuenta" data-filter-kind="text">
+                                <input type="text" id="filtroNombreCuenta" placeholder="Nombre" autocomplete="off">
+                                <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Nombre de Cuenta">x</button>
+                                <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar sugerencias de Nombre de Cuenta">v</button>
+                                <div class="combo-menu" data-filter-menu hidden>
+                                    <div class="combo-status" data-filter-status>Sugerencias disponibles</div>
+                                    <div class="combo-options" data-filter-options></div>
+                                </div>
+                            </div>
+                            <span class="filter-help" data-filter-help="nombre_cuenta">Escribe y presiona Enter</span>
+                        </div>
+                    </div>
+                    <div class="filter-field">
+                        <label class="filter-field-label" for="filtroPoliza">Póliza</label>
+                        <div class="table-filter-control">
+                            <div class="filter-combobox" data-filter-combobox="poliza" data-filter-kind="text">
+                                <input type="text" id="filtroPoliza" placeholder="Póliza" autocomplete="off">
+                                <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Póliza">x</button>
+                                <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar sugerencias de Póliza">v</button>
+                                <div class="combo-menu" data-filter-menu hidden>
+                                    <div class="combo-status" data-filter-status>Sugerencias disponibles</div>
+                                    <div class="combo-options" data-filter-options></div>
+                                </div>
+                            </div>
+                            <span class="filter-help" data-filter-help="poliza">Escribe y presiona Enter</span>
+                        </div>
+                    </div>
+                    <div class="filter-field">
+                        <label class="filter-field-label" for="filtroBeneficiario">Beneficiario</label>
+                        <div class="table-filter-control">
+                            <div class="filter-combobox" data-filter-combobox="beneficiario" data-filter-kind="text">
+                                <input type="text" id="filtroBeneficiario" placeholder="Beneficiario" autocomplete="off">
+                                <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Beneficiario">x</button>
+                                <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar sugerencias de Beneficiario">v</button>
+                                <div class="combo-menu" data-filter-menu hidden>
+                                    <div class="combo-status" data-filter-status>Sugerencias disponibles</div>
+                                    <div class="combo-options" data-filter-options></div>
+                                </div>
+                            </div>
+                            <span class="filter-help" data-filter-help="beneficiario">Escribe y presiona Enter</span>
+                        </div>
+                    </div>
+                    <div class="filter-field filter-field--wide">
+                        <label class="filter-field-label" for="filtroDescripcion">Descripción</label>
+                        <div class="table-filter-control">
+                            <div class="filter-combobox" data-filter-combobox="descripcion" data-filter-kind="text">
+                                <input type="text" id="filtroDescripcion" placeholder="Descripción" autocomplete="off">
+                                <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Descripción">x</button>
+                                <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar sugerencias de Descripción">v</button>
+                                <div class="combo-menu" data-filter-menu hidden>
+                                    <div class="combo-status" data-filter-status>Sugerencias disponibles</div>
+                                    <div class="combo-options" data-filter-options></div>
+                                </div>
+                            </div>
+                            <span class="filter-help" data-filter-help="descripcion">Escribe y presiona Enter</span>
+                        </div>
+                    </div>
+                    <div class="filter-field">
+                        <label class="filter-field-label" for="filtroOrdenPago">Orden de Pago</label>
+                        <div class="table-filter-control">
+                            <div class="filter-combobox" data-filter-combobox="orden_pago" data-filter-kind="text">
+                                <input type="text" id="filtroOrdenPago" placeholder="O.P." autocomplete="off">
+                                <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Orden de Pago">x</button>
+                                <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar sugerencias de Orden de Pago">v</button>
+                                <div class="combo-menu" data-filter-menu hidden>
+                                    <div class="combo-status" data-filter-status>Sugerencias disponibles</div>
+                                    <div class="combo-options" data-filter-options></div>
+                                </div>
+                            </div>
+                            <span class="filter-help" data-filter-help="orden_pago">Escribe y presiona Enter</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="filters-panel-section">
+                <h4>Periodo</h4>
+                <div class="filters-panel-grid">
+                    <div class="filter-field">
+                        <label class="filter-field-label" for="filtroFechaInicio">Fecha inicial</label>
+                        <div class="table-filter-date">
+                            <input type="date" id="filtroFechaInicio" aria-label="Fecha inicio">
+                        </div>
+                    </div>
+                    <div class="filter-field">
+                        <label class="filter-field-label" for="filtroFechaFin">Fecha final</label>
+                        <div class="table-filter-date">
+                            <input type="date" id="filtroFechaFin" aria-label="Fecha fin">
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+            <div class="filters-static-footer">
+                <button class="btn-clear-filters" type="button" onclick="limpiarFiltros()">Limpiar</button>
+                <button class="btn-apply-filters" type="button" onclick="aplicarFiltrosDesdeDrawer()">Aplicar filtros</button>
+            </div>
+        </div>
+    </aside>
 
     <div class="consulta-layout">
         <section class="results-section" id="detalle-operativo">
@@ -1841,357 +2362,6 @@
     </div>
 </div>
 
-<button class="filters-drawer-toggle" id="filtersDrawerToggle" type="button" aria-controls="filtersDrawer" aria-expanded="false">
-    <span>Filtros</span>
-    <span class="filters-drawer-toggle-count" id="filtersDrawerCount">0</span>
-    <span class="kbd-hint">Shift+F</span>
-</button>
-
-<div class="filters-drawer-overlay" id="filtersDrawerOverlay"></div>
-
-<aside class="filters-drawer" id="filtersDrawer" aria-hidden="true">
-    <div class="filters-drawer-header">
-        <div>
-            <div class="filters-drawer-title">Filtros</div>
-            <div class="filters-drawer-meta" id="filtersDrawerMeta">Sin filtros</div>
-        </div>
-        <button class="filters-drawer-close" id="filtersDrawerClose" type="button" aria-label="Cerrar panel">✕</button>
-    </div>
-    <div class="filters-drawer-body">
-        <div class="active-filters-bar" id="activeFiltersBar" hidden>
-            <div class="active-filters-copy">
-                <strong>Filtros activos</strong>
-                <span>Revisa o elimina criterios desde aquí.</span>
-            </div>
-            <div class="active-filters-list" id="activeFiltersList"></div>
-        </div>
-
-        <section class="filters-panel-section">
-            <h4>Estructura contable</h4>
-            <div class="filters-panel-grid">
-                <div class="filter-field filter-field--wide">
-                    <label class="filter-field-label" for="filtroCuenta">Cuenta Contable</label>
-                    <div class="table-filter-control">
-                        <div class="filter-combobox" data-filter-combobox="cuenta_contable" data-filter-kind="facet">
-                            <input type="text" id="filtroCuenta" placeholder="Cuenta" autocomplete="off">
-                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Cuenta Contable">x</button>
-                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Cuenta Contable">v</button>
-                            <div class="combo-menu" data-filter-menu hidden>
-                                <div class="combo-status" data-filter-status>Opciones disponibles</div>
-                                <div class="combo-options" data-filter-options></div>
-                            </div>
-                        </div>
-                        <span class="filter-help" data-filter-help="cuenta_contable">Sin filtro</span>
-                    </div>
-                </div>
-                <div class="filter-field">
-                    <label class="filter-field-label" for="filtroGenero">Género</label>
-                    <div class="table-filter-control">
-                        <div class="filter-combobox" data-filter-combobox="genero" data-filter-kind="facet">
-                            <input type="text" id="filtroGenero" placeholder="Género" autocomplete="off">
-                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Género">x</button>
-                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Género">v</button>
-                            <div class="combo-menu" data-filter-menu hidden>
-                                <div class="combo-status" data-filter-status>Opciones disponibles</div>
-                                <div class="combo-options" data-filter-options></div>
-                            </div>
-                        </div>
-                        <span class="filter-help" data-filter-help="genero">Sin filtro</span>
-                    </div>
-                </div>
-                <div class="filter-field">
-                    <label class="filter-field-label" for="filtroGrupo">Grupo</label>
-                    <div class="table-filter-control">
-                        <div class="filter-combobox" data-filter-combobox="grupo" data-filter-kind="facet">
-                            <input type="text" id="filtroGrupo" placeholder="Grupo" autocomplete="off">
-                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Grupo">x</button>
-                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Grupo">v</button>
-                            <div class="combo-menu" data-filter-menu hidden>
-                                <div class="combo-status" data-filter-status>Opciones disponibles</div>
-                                <div class="combo-options" data-filter-options></div>
-                            </div>
-                        </div>
-                        <span class="filter-help" data-filter-help="grupo">Sin filtro</span>
-                    </div>
-                </div>
-                <div class="filter-field">
-                    <label class="filter-field-label" for="filtroRubro">Rubro</label>
-                    <div class="table-filter-control">
-                        <div class="filter-combobox" data-filter-combobox="rubro" data-filter-kind="facet">
-                            <input type="text" id="filtroRubro" placeholder="Rubro" autocomplete="off">
-                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Rubro">x</button>
-                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Rubro">v</button>
-                            <div class="combo-menu" data-filter-menu hidden>
-                                <div class="combo-status" data-filter-status>Opciones disponibles</div>
-                                <div class="combo-options" data-filter-options></div>
-                            </div>
-                        </div>
-                        <span class="filter-help" data-filter-help="rubro">Sin filtro</span>
-                    </div>
-                </div>
-                <div class="filter-field">
-                    <label class="filter-field-label" for="filtroCuentaNum">Cuenta</label>
-                    <div class="table-filter-control">
-                        <div class="filter-combobox" data-filter-combobox="cuenta" data-filter-kind="facet">
-                            <input type="text" id="filtroCuentaNum" placeholder="Cuenta" autocomplete="off">
-                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Cuenta">x</button>
-                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Cuenta">v</button>
-                            <div class="combo-menu" data-filter-menu hidden>
-                                <div class="combo-status" data-filter-status>Opciones disponibles</div>
-                                <div class="combo-options" data-filter-options></div>
-                            </div>
-                        </div>
-                        <span class="filter-help" data-filter-help="cuenta">Sin filtro</span>
-                    </div>
-                </div>
-                <div class="filter-field">
-                    <label class="filter-field-label" for="filtroSubcuenta">Subcuenta</label>
-                    <div class="table-filter-control">
-                        <div class="filter-combobox" data-filter-combobox="subcuenta" data-filter-kind="facet">
-                            <input type="text" id="filtroSubcuenta" placeholder="Subcuenta" autocomplete="off">
-                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Subcuenta">x</button>
-                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Subcuenta">v</button>
-                            <div class="combo-menu" data-filter-menu hidden>
-                                <div class="combo-status" data-filter-status>Opciones disponibles</div>
-                                <div class="combo-options" data-filter-options></div>
-                            </div>
-                        </div>
-                        <span class="filter-help" data-filter-help="subcuenta">Sin filtro</span>
-                    </div>
-                </div>
-                <div class="filter-field">
-                    <label class="filter-field-label" for="filtroDependencia">Catálogo consulta</label>
-                    <div class="table-filter-control">
-                        <div class="filter-combobox" data-filter-combobox="dependencia" data-filter-kind="facet">
-                            <input type="text" id="filtroDependencia" placeholder="Dependencia" autocomplete="off">
-                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Catálogo consulta">x</button>
-                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Catálogo consulta">v</button>
-                            <div class="combo-menu" data-filter-menu hidden>
-                                <div class="combo-status" data-filter-status>Opciones disponibles</div>
-                                <div class="combo-options" data-filter-options></div>
-                            </div>
-                        </div>
-                        <span class="filter-help" data-filter-help="dependencia">Sin filtro</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="filters-panel-section">
-            <h4>Consulta institucional</h4>
-            <div class="filters-panel-grid">
-                <div class="filter-field">
-                    <label class="filter-field-label" for="filtroUnidadResponsable">Unidad Responsable</label>
-                    <div class="table-filter-control">
-                        <div class="filter-combobox" data-filter-combobox="unidad_responsable" data-filter-kind="facet">
-                            <input type="text" id="filtroUnidadResponsable" placeholder="Unidad" autocomplete="off">
-                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Unidad Responsable">x</button>
-                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Unidad Responsable">v</button>
-                            <div class="combo-menu" data-filter-menu hidden>
-                                <div class="combo-status" data-filter-status>Opciones disponibles</div>
-                                <div class="combo-options" data-filter-options></div>
-                            </div>
-                        </div>
-                        <span class="filter-help" data-filter-help="unidad_responsable">Sin filtro</span>
-                    </div>
-                </div>
-                <div class="filter-field">
-                    <label class="filter-field-label" for="filtroCentroCosto">Centro de Costo</label>
-                    <div class="table-filter-control">
-                        <div class="filter-combobox" data-filter-combobox="centro_costo" data-filter-kind="facet">
-                            <input type="text" id="filtroCentroCosto" placeholder="Centro" autocomplete="off">
-                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Centro de Costo">x</button>
-                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Centro de Costo">v</button>
-                            <div class="combo-menu" data-filter-menu hidden>
-                                <div class="combo-status" data-filter-status>Opciones disponibles</div>
-                                <div class="combo-options" data-filter-options></div>
-                            </div>
-                        </div>
-                        <span class="filter-help" data-filter-help="centro_costo">Sin filtro</span>
-                    </div>
-                </div>
-                <div class="filter-field filter-field--wide">
-                    <label class="filter-field-label" for="filtroProyectoPresupuestario">Proyecto Presupuestario</label>
-                    <div class="table-filter-control">
-                        <div class="filter-combobox" data-filter-combobox="proyecto_presupuestario" data-filter-kind="facet">
-                            <input type="text" id="filtroProyectoPresupuestario" placeholder="Proyecto" autocomplete="off">
-                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Proyecto Presupuestario">x</button>
-                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Proyecto Presupuestario">v</button>
-                            <div class="combo-menu" data-filter-menu hidden>
-                                <div class="combo-status" data-filter-status>Opciones disponibles</div>
-                                <div class="combo-options" data-filter-options></div>
-                            </div>
-                        </div>
-                        <span class="filter-help" data-filter-help="proyecto_presupuestario">Sin filtro</span>
-                    </div>
-                </div>
-                <div class="filter-field">
-                    <label class="filter-field-label" for="filtroFuente">Fuente</label>
-                    <div class="table-filter-control">
-                        <div class="filter-combobox" data-filter-combobox="fuente" data-filter-kind="facet">
-                            <input type="text" id="filtroFuente" placeholder="Fuente" autocomplete="off">
-                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Fuente">x</button>
-                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Fuente">v</button>
-                            <div class="combo-menu" data-filter-menu hidden>
-                                <div class="combo-status" data-filter-status>Opciones disponibles</div>
-                                <div class="combo-options" data-filter-options></div>
-                            </div>
-                        </div>
-                        <span class="filter-help" data-filter-help="fuente">Sin filtro</span>
-                    </div>
-                </div>
-                <div class="filter-field">
-                    <label class="filter-field-label" for="filtroSubfuente">SubFuente</label>
-                    <div class="table-filter-control">
-                        <div class="filter-combobox" data-filter-combobox="subfuente" data-filter-kind="facet">
-                            <input type="text" id="filtroSubfuente" placeholder="Subfuente" autocomplete="off">
-                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar SubFuente">x</button>
-                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de SubFuente">v</button>
-                            <div class="combo-menu" data-filter-menu hidden>
-                                <div class="combo-status" data-filter-status>Opciones disponibles</div>
-                                <div class="combo-options" data-filter-options></div>
-                            </div>
-                        </div>
-                        <span class="filter-help" data-filter-help="subfuente">Sin filtro</span>
-                    </div>
-                </div>
-                <div class="filter-field">
-                    <label class="filter-field-label" for="filtroTipoRecurso">Tipo de Recurso</label>
-                    <div class="table-filter-control">
-                        <div class="filter-combobox" data-filter-combobox="tipo_recurso" data-filter-kind="facet">
-                            <input type="text" id="filtroTipoRecurso" placeholder="Tipo" autocomplete="off">
-                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Tipo de Recurso">x</button>
-                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Tipo de Recurso">v</button>
-                            <div class="combo-menu" data-filter-menu hidden>
-                                <div class="combo-status" data-filter-status>Opciones disponibles</div>
-                                <div class="combo-options" data-filter-options></div>
-                            </div>
-                        </div>
-                        <span class="filter-help" data-filter-help="tipo_recurso">Sin filtro</span>
-                    </div>
-                </div>
-                <div class="filter-field">
-                    <label class="filter-field-label" for="filtroPartidaPresupuestal">Partida Presupuestal</label>
-                    <div class="table-filter-control">
-                        <div class="filter-combobox" data-filter-combobox="partida_presupuestal" data-filter-kind="facet">
-                            <input type="text" id="filtroPartidaPresupuestal" placeholder="Partida" autocomplete="off">
-                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Partida Presupuestal">x</button>
-                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar opciones de Partida Presupuestal">v</button>
-                            <div class="combo-menu" data-filter-menu hidden>
-                                <div class="combo-status" data-filter-status>Opciones disponibles</div>
-                                <div class="combo-options" data-filter-options></div>
-                            </div>
-                        </div>
-                        <span class="filter-help" data-filter-help="partida_presupuestal">Sin filtro</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="filters-panel-section">
-            <h4>Búsqueda libre</h4>
-            <div class="filters-panel-grid">
-                <div class="filter-field filter-field--wide">
-                    <label class="filter-field-label" for="filtroNombreCuenta">Nombre de la Cuenta</label>
-                    <div class="table-filter-control">
-                        <div class="filter-combobox" data-filter-combobox="nombre_cuenta" data-filter-kind="text">
-                            <input type="text" id="filtroNombreCuenta" placeholder="Nombre" autocomplete="off">
-                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Nombre de Cuenta">x</button>
-                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar sugerencias de Nombre de Cuenta">v</button>
-                            <div class="combo-menu" data-filter-menu hidden>
-                                <div class="combo-status" data-filter-status>Sugerencias disponibles</div>
-                                <div class="combo-options" data-filter-options></div>
-                            </div>
-                        </div>
-                        <span class="filter-help" data-filter-help="nombre_cuenta">Escribe y presiona Enter</span>
-                    </div>
-                </div>
-                <div class="filter-field">
-                    <label class="filter-field-label" for="filtroPoliza">Póliza</label>
-                    <div class="table-filter-control">
-                        <div class="filter-combobox" data-filter-combobox="poliza" data-filter-kind="text">
-                            <input type="text" id="filtroPoliza" placeholder="Póliza" autocomplete="off">
-                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Póliza">x</button>
-                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar sugerencias de Póliza">v</button>
-                            <div class="combo-menu" data-filter-menu hidden>
-                                <div class="combo-status" data-filter-status>Sugerencias disponibles</div>
-                                <div class="combo-options" data-filter-options></div>
-                            </div>
-                        </div>
-                        <span class="filter-help" data-filter-help="poliza">Escribe y presiona Enter</span>
-                    </div>
-                </div>
-                <div class="filter-field">
-                    <label class="filter-field-label" for="filtroBeneficiario">Beneficiario</label>
-                    <div class="table-filter-control">
-                        <div class="filter-combobox" data-filter-combobox="beneficiario" data-filter-kind="text">
-                            <input type="text" id="filtroBeneficiario" placeholder="Beneficiario" autocomplete="off">
-                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Beneficiario">x</button>
-                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar sugerencias de Beneficiario">v</button>
-                            <div class="combo-menu" data-filter-menu hidden>
-                                <div class="combo-status" data-filter-status>Sugerencias disponibles</div>
-                                <div class="combo-options" data-filter-options></div>
-                            </div>
-                        </div>
-                        <span class="filter-help" data-filter-help="beneficiario">Escribe y presiona Enter</span>
-                    </div>
-                </div>
-                <div class="filter-field filter-field--wide">
-                    <label class="filter-field-label" for="filtroDescripcion">Descripción</label>
-                    <div class="table-filter-control">
-                        <div class="filter-combobox" data-filter-combobox="descripcion" data-filter-kind="text">
-                            <input type="text" id="filtroDescripcion" placeholder="Descripción" autocomplete="off">
-                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Descripción">x</button>
-                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar sugerencias de Descripción">v</button>
-                            <div class="combo-menu" data-filter-menu hidden>
-                                <div class="combo-status" data-filter-status>Sugerencias disponibles</div>
-                                <div class="combo-options" data-filter-options></div>
-                            </div>
-                        </div>
-                        <span class="filter-help" data-filter-help="descripcion">Escribe y presiona Enter</span>
-                    </div>
-                </div>
-                <div class="filter-field">
-                    <label class="filter-field-label" for="filtroOrdenPago">Orden de Pago</label>
-                    <div class="table-filter-control">
-                        <div class="filter-combobox" data-filter-combobox="orden_pago" data-filter-kind="text">
-                            <input type="text" id="filtroOrdenPago" placeholder="O.P." autocomplete="off">
-                            <button type="button" class="combo-clear" data-filter-clear aria-label="Limpiar Orden de Pago">x</button>
-                            <button type="button" class="combo-toggle" data-filter-toggle aria-label="Mostrar sugerencias de Orden de Pago">v</button>
-                            <div class="combo-menu" data-filter-menu hidden>
-                                <div class="combo-status" data-filter-status>Sugerencias disponibles</div>
-                                <div class="combo-options" data-filter-options></div>
-                            </div>
-                        </div>
-                        <span class="filter-help" data-filter-help="orden_pago">Escribe y presiona Enter</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="filters-panel-section">
-            <h4>Periodo</h4>
-            <div class="filters-panel-grid">
-                <div class="filter-field">
-                    <label class="filter-field-label" for="filtroFechaInicio">Fecha inicial</label>
-                    <div class="table-filter-date">
-                        <input type="date" id="filtroFechaInicio" aria-label="Fecha inicio">
-                    </div>
-                </div>
-                <div class="filter-field">
-                    <label class="filter-field-label" for="filtroFechaFin">Fecha final</label>
-                    <div class="table-filter-date">
-                        <input type="date" id="filtroFechaFin" aria-label="Fecha fin">
-                    </div>
-                </div>
-            </div>
-        </section>
-    </div>
-    <div class="filters-drawer-footer">
-        <button class="btn-clear-filters" type="button" onclick="limpiarFiltros()">Limpiar</button>
-        <button class="btn-apply-filters" type="button" onclick="aplicarFiltros(); closeFiltersDrawer();">Aplicar filtros</button>
-    </div>
-</aside>
 {% endblock %}
 
 {% block extra_js %}
@@ -2209,6 +2379,7 @@ let filterOptionsUnavailableMessage = '';
 let baseDataAvailable = null;
 let currentResultTotal = 0;
 let floatingDockWidthOverride = null;
+let lastFiltersDrawerTrigger = null;
 const primaryEnteCatalogLabels = new Map();
 const primaryEnteCatalogMeta = new Map();
 
@@ -2261,6 +2432,19 @@ const alphaNumericCollator = new Intl.Collator('es-MX', { numeric: true, sensiti
 
 function getFloatingFiltersDock() {
     return document.getElementById('floatingFiltersDock');
+}
+
+function mountFiltersDrawerToBody() {
+    const overlay = document.getElementById('filtersDrawerOverlay');
+    const drawer = document.getElementById('filtersDrawer');
+
+    if (overlay && overlay.parentElement !== document.body) {
+        document.body.appendChild(overlay);
+    }
+
+    if (drawer && drawer.parentElement !== document.body) {
+        document.body.appendChild(drawer);
+    }
 }
 
 function getFloatingDockPreferredWidth() {
@@ -2452,35 +2636,78 @@ function setDensityMode(isCompact) {
     updateDensityToggleUI();
 }
 
-function openFiltersDrawer() {
+function isFiltersDrawerOpen() {
+    const drawer = document.getElementById('filtersDrawer');
+    return Boolean(drawer && drawer.classList.contains('is-open'));
+}
+
+function toggleFiltersPanel(trigger = null) {
+    if (isFiltersDrawerOpen()) {
+        closeFiltersDrawer();
+        return;
+    }
+
+    openFiltersDrawer(trigger);
+}
+
+function openFiltersDrawer(trigger = null) {
+    mountFiltersDrawerToBody();
+
     const drawer = document.getElementById('filtersDrawer');
     const overlay = document.getElementById('filtersDrawerOverlay');
     const toggle = document.getElementById('filtersDrawerToggle');
 
-    if (!drawer || !overlay || !toggle) {
+    if (!drawer || !overlay || drawer.classList.contains('is-open')) {
         return;
     }
+
+    const activeElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    lastFiltersDrawerTrigger = trigger instanceof HTMLElement ? trigger : (toggle || activeElement);
 
     drawer.classList.add('is-open');
     overlay.classList.add('is-visible');
     drawer.setAttribute('aria-hidden', 'false');
-    toggle.setAttribute('aria-expanded', 'true');
+    if (toggle) {
+        toggle.setAttribute('aria-expanded', 'true');
+    }
+
+    document.body.classList.add('filters-drawer-open');
+
+    const firstField = drawer.querySelector('input, select, textarea, button');
+    if (firstField instanceof HTMLElement) {
+        window.requestAnimationFrame(() => {
+            firstField.focus();
+        });
+    }
 }
 
-function closeFiltersDrawer() {
+function closeFiltersDrawer({ returnFocus = true } = {}) {
     const drawer = document.getElementById('filtersDrawer');
     const overlay = document.getElementById('filtersDrawerOverlay');
     const toggle = document.getElementById('filtersDrawerToggle');
 
-    if (!drawer || !overlay || !toggle) {
+    if (!drawer || !overlay || !drawer.classList.contains('is-open')) {
         return;
     }
 
     drawer.classList.remove('is-open');
     overlay.classList.remove('is-visible');
     drawer.setAttribute('aria-hidden', 'true');
-    toggle.setAttribute('aria-expanded', 'false');
+    if (toggle) {
+        toggle.setAttribute('aria-expanded', 'false');
+    }
+
+    document.body.classList.remove('filters-drawer-open');
     closeAllComboboxes();
+
+    const focusTarget = lastFiltersDrawerTrigger;
+    lastFiltersDrawerTrigger = null;
+
+    if (returnFocus && focusTarget instanceof HTMLElement && focusTarget.isConnected) {
+        window.requestAnimationFrame(() => {
+            focusTarget.focus();
+        });
+    }
 }
 
 function initFiltersDrawer() {
@@ -2489,7 +2716,7 @@ function initFiltersDrawer() {
     const overlay = document.getElementById('filtersDrawerOverlay');
 
     if (toggle) {
-        toggle.addEventListener('click', () => openFiltersDrawer());
+        toggle.addEventListener('click', () => toggleFiltersPanel(toggle));
     }
 
     if (closeButton) {
@@ -2634,21 +2861,36 @@ function updateFilterSummaryUI() {
     const heroFiltersCount = document.getElementById('heroFiltersCount');
     const statusHeading = document.getElementById('filtersStatusHeading');
     const statusText = document.getElementById('filtersStatusText');
+    const filtersLauncherCount = document.getElementById('filtersLauncherCount');
+    const filtersLauncherMeta = document.getElementById('filtersLauncherMeta');
     const filtersDrawerCount = document.getElementById('filtersDrawerCount');
     const filtersDrawerMeta = document.getElementById('filtersDrawerMeta');
+    const criteriaSummary = criteriaCount
+        ? `${criteriaCount.toLocaleString('es-MX')} criterio${criteriaCount === 1 ? '' : 's'} activo${criteriaCount === 1 ? '' : 's'}`
+        : 'Sin filtros';
 
     if (heroFiltersCount) {
         heroFiltersCount.textContent = criteriaCount.toLocaleString('es-MX');
     }
 
+    if (filtersLauncherCount) {
+        filtersLauncherCount.textContent = criteriaCount.toLocaleString('es-MX');
+        filtersLauncherCount.setAttribute('data-count', criteriaCount);
+    }
+
     if (filtersDrawerCount) {
         filtersDrawerCount.textContent = criteriaCount.toLocaleString('es-MX');
+        filtersDrawerCount.setAttribute('data-count', criteriaCount);
+    }
+
+    if (filtersLauncherMeta) {
+        filtersLauncherMeta.textContent = criteriaCount
+            ? `${fieldCount.toLocaleString('es-MX')} filtro${fieldCount === 1 ? '' : 's'} en uso. Abre el panel para editar.`
+            : 'Sin filtros activos. Usa Shift + F para abrir el panel.';
     }
 
     if (filtersDrawerMeta) {
-        filtersDrawerMeta.textContent = criteriaCount
-            ? `${criteriaCount.toLocaleString('es-MX')} criterio${criteriaCount === 1 ? '' : 's'} activo${criteriaCount === 1 ? '' : 's'}`
-            : 'Sin filtros';
+        filtersDrawerMeta.textContent = criteriaSummary;
     }
 
     if (badge) {
@@ -2744,7 +2986,7 @@ function renderActiveFilters() {
 
         const removeNode = document.createElement('span');
         removeNode.className = 'active-filter-remove';
-        removeNode.textContent = 'x';
+        removeNode.textContent = '×';
 
         chip.appendChild(labelNode);
         chip.appendChild(valueNode);
@@ -3922,6 +4164,7 @@ function initComboboxes() {
             }
 
             if (event.key === 'Escape') {
+                event.stopPropagation();
                 closeCombobox(state.key);
                 return;
             }
@@ -4044,6 +4287,11 @@ async function aplicarFiltros() {
     await Promise.allSettled([cargarResumenGeneral(), refreshFilterOptions(), cargarTransacciones()]);
 }
 
+async function aplicarFiltrosDesdeDrawer() {
+    await aplicarFiltros();
+    closeFiltersDrawer();
+}
+
 async function limpiarFiltros() {
     filtrosActuales = {};
 
@@ -4086,6 +4334,8 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (floatingFiltersDock && floatingFiltersDock.parentElement !== document.body) {
         document.body.appendChild(floatingFiltersDock);
     }
+
+    mountFiltersDrawerToBody();
 
     syncFloatingDockWidth();
     initFloatingDockResize();
@@ -4135,22 +4385,16 @@ window.addEventListener('DOMContentLoaded', async () => {
     });
 
     document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') {
-            const drawer = document.getElementById('filtersDrawer');
-            if (drawer && drawer.classList.contains('is-open')) {
-                closeFiltersDrawer();
-            }
+        if (event.key === 'Escape' && isFiltersDrawerOpen()) {
+            event.preventDefault();
+            closeFiltersDrawer();
             return;
         }
+
         if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || event.target.tagName === 'SELECT' || event.target.isContentEditable) return;
         if (event.shiftKey && (event.key === 'f' || event.key === 'F')) {
             event.preventDefault();
-            const drawer = document.getElementById('filtersDrawer');
-            if (drawer && drawer.classList.contains('is-open')) {
-                closeFiltersDrawer();
-            } else {
-                openFiltersDrawer();
-            }
+            toggleFiltersPanel(document.getElementById('filtersDrawerToggle'));
         }
         if (event.shiftKey && (event.key === 'c' || event.key === 'C')) {
             event.preventDefault();
@@ -4158,11 +4402,6 @@ window.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') {
-            closeFiltersDrawer();
-        }
-    });
 
     await Promise.allSettled([cargarResumenGeneral(), refreshFilterOptions(), cargarTransacciones()]);
 });
