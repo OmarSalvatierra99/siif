@@ -244,6 +244,22 @@ def _norm(s):
     return s
 
 
+def _norm_header_label(value):
+    return re.sub(r"[^a-z0-9]+", "", _norm(value))
+
+
+def _header_label_matches(value, options):
+    token = _norm_header_label(value)
+    if not token:
+        return False
+
+    for option in options:
+        candidate = _norm_header_label(option)
+        if token == candidate or token.startswith(candidate):
+            return True
+    return False
+
+
 def _normalize_dependency_code(value):
     code = str(value or "").strip().upper().rstrip(".")
     if len(code) == 1 and code.isdigit():
@@ -288,9 +304,263 @@ def _format_amount(val):
         return "0.00"
 
 
-def _hash_transaccion_row(row):
-    # Exclude saldo fields since they are recalculated and can differ across sources.
+def _extract_period_start(text):
+    match = re.search(r"\b(\d{2}/\d{2}/\d{4})\b", str(text or ""))
+    return match.group(1) if match else ""
+
+
+def _infer_account_balance_side(account_rows, tolerance=0.01):
+    best_side = None
+    best_diff = None
+
+    for _, row in account_rows.iterrows():
+        saldo_inicial = float(row.get("saldo_inicial") or 0)
+        cargos = float(row.get("cargos") or 0)
+        abonos = float(row.get("abonos") or 0)
+        saldo_final_origen = float(row.get("saldo_final_origen") or 0)
+
+        if abs(cargos) <= tolerance and abs(abonos) <= tolerance:
+            continue
+
+        saldo_deudor = saldo_inicial + cargos - abonos
+        saldo_acreedor = saldo_inicial - cargos + abonos
+        diff_deudor = abs(saldo_deudor - saldo_final_origen)
+        diff_acreedor = abs(saldo_acreedor - saldo_final_origen)
+
+        if diff_deudor <= tolerance and diff_acreedor > tolerance:
+            return "deudora"
+        if diff_acreedor <= tolerance and diff_deudor > tolerance:
+            return "acreedora"
+
+        current_diff = min(diff_deudor, diff_acreedor)
+        if best_diff is None or current_diff < best_diff:
+            best_diff = current_diff
+            best_side = "deudora" if diff_deudor <= diff_acreedor else "acreedora"
+
+    if best_side:
+        return best_side
+
+    genero = str(account_rows["genero"].iloc[0] if not account_rows.empty else "").strip()
+    if genero in {"2", "3", "4", "9"}:
+        return "acreedora"
+    return "deudora"
+
+
+def _rebuild_account_balances(base):
+    if base.empty:
+        return base
+
+    sort_columns = ["cuenta_contable", "_periodo_inicio_dt", "_archivo_orden", "_orden_auxiliar"]
+    base = base.sort_values(sort_columns, kind="stable").copy()
+    base["saldo_final"] = 0.0
+
+    for _, account_rows in base.groupby("cuenta_contable", sort=False):
+        balance_side = _infer_account_balance_side(account_rows)
+        saldo_actual = None
+
+        for position, idx in enumerate(account_rows.index):
+            saldo_inicial = float(base.loc[idx, "saldo_inicial"] or 0)
+            cargos = float(base.loc[idx, "cargos"] or 0)
+            abonos = float(base.loc[idx, "abonos"] or 0)
+
+            if position > 0 and saldo_actual is not None:
+                saldo_inicial = saldo_actual
+                base.loc[idx, "saldo_inicial"] = saldo_inicial
+
+            if balance_side == "acreedora":
+                saldo_actual = saldo_inicial - cargos + abonos
+            else:
+                saldo_actual = saldo_inicial + cargos - abonos
+
+            base.loc[idx, "saldo_final"] = saldo_actual
+
+    return base
+
+
+def _detect_fixed_auxiliar_layout(raw, header_row_idx):
+    if header_row_idx is None or raw.shape[1] < 9:
+        return None
+
+    header_row = raw.iloc[header_row_idx]
+    required_headers = {
+        0: ["fecha"],
+        1: ["poliza", "póliza"],
+        4: ["o.p.", "o.p", "op", "orden pago", "orden de pago"],
+        5: ["saldo inicial"],
+        6: ["cargos", "cargo", "debe"],
+        7: ["abonos", "abono", "haber"],
+        8: ["saldo final"],
+    }
+
+    for col_idx, options in required_headers.items():
+        if not _header_label_matches(header_row.iloc[col_idx], options):
+            return None
+
+    return {
+        "beneficiario": 2,
+        "descripcion": 3,
+        "orden_pago": 4,
+        "saldo_inicial": 5,
+        "cargos": 6,
+        "abonos": 7,
+        "saldo_final": 8,
+    }
+
+
+CONTABLE_GENEROS = {"1", "2", "3", "4", "5"}
+
+
+def _build_balance_error_message(
+    total_cargos,
+    total_abonos,
+    balance_diff,
+    invalid_polizas,
+    scope_label="La carga contable",
+):
     parts = [
+        (
+            f"{scope_label} esta desbalanceada. "
+            f"Cargos={total_cargos:,.2f} Abonos={total_abonos:,.2f} "
+            f"Diferencia={balance_diff:,.2f}"
+        )
+    ]
+
+    if invalid_polizas:
+        detalles = []
+        for row in invalid_polizas[:10]:
+            detalles.append(
+                f"{row['fecha']} | {row['poliza']}: "
+                f"Cargos={row['cargos']:,.2f} Abonos={row['abonos']:,.2f} "
+                f"Diff={row['diff']:,.2f}"
+            )
+        if len(invalid_polizas) > 10:
+            detalles.append(f"{len(invalid_polizas) - 10} poliza(s) adicional(es)")
+        parts.append("Polizas desbalanceadas: " + " ; ".join(detalles))
+
+    return " ".join(parts)
+
+
+def _build_rollforward_error_message(invalid_rows):
+    parts = [
+        (
+            "La secuencia de saldos del auxiliar no coincide con los saldos "
+            "finales reportados en el origen."
+        )
+    ]
+
+    detalles = []
+    for row in invalid_rows[:10]:
+        fecha = str(row.get("fecha") or "").strip() or "sin fecha"
+        poliza = str(row.get("poliza") or "").strip() or "sin poliza"
+        detalles.append(
+            f"{row['archivo_origen']} | {row['cuenta_contable']} | {fecha} | {poliza}: "
+            f"Calculado={row['saldo_final']:,.2f} "
+            f"Origen={row['saldo_final_origen']:,.2f} "
+            f"Diff={row['diff']:,.2f}"
+        )
+
+    if len(invalid_rows) > 10:
+        detalles.append(f"{len(invalid_rows) - 10} movimiento(s) adicional(es)")
+
+    if detalles:
+        parts.append("Ejemplos: " + " ; ".join(detalles))
+
+    return " ".join(parts)
+
+
+def _validate_reconstructed_rollforwards(base, lote_id, tolerance=0.01):
+    validation_rows = base[base["_saldo_final_origen_present"]].copy()
+    if validation_rows.empty:
+        logger.info(f"Sin saldos finales origen para validar en lote {lote_id}")
+        return
+
+    validation_rows["diff"] = (
+        validation_rows["saldo_final"] - validation_rows["saldo_final_origen"]
+    ).abs()
+    invalid_rows = validation_rows[validation_rows["diff"] > tolerance]
+
+    if invalid_rows.empty:
+        logger.info(
+            f"Rollforward OK en lote {lote_id}: "
+            f"{len(validation_rows):,} movimientos conciliados contra el auxiliar"
+        )
+        return
+
+    invalid_rows = invalid_rows.sort_values("diff", ascending=False)
+    logger.error(
+        f"Inconsistencia de saldos detectada en lote {lote_id}: "
+        f"{len(invalid_rows):,} movimiento(s) con diferencia"
+    )
+    raise ValueError(
+        _build_rollforward_error_message(invalid_rows.to_dict("records"))
+    )
+
+
+def _validate_contable_balance(base, lote_id, tolerance=0.01):
+    contable = base[base["genero"].isin(CONTABLE_GENEROS)].copy()
+    if contable.empty:
+        logger.info(
+            f"Sin movimientos contables de generos 1-5 en lote {lote_id}; "
+            "se omite validación de pólizas balanceadas"
+        )
+        return
+
+    total_cargos = float(contable["cargos"].sum())
+    total_abonos = float(contable["abonos"].sum())
+    balance_diff = total_cargos - total_abonos
+
+    polizas = contable.copy()
+    polizas["poliza"] = polizas["poliza"].fillna("").astype(str).str.strip()
+    polizas["fecha"] = polizas["fecha"].fillna("").astype(str).str.strip()
+    polizas = polizas[polizas["poliza"] != ""]
+
+    invalid_polizas = []
+    if not polizas.empty:
+        poliza_totals = (
+            polizas.groupby(["fecha", "poliza"], sort=False)[["cargos", "abonos"]]
+            .sum()
+            .reset_index()
+        )
+        poliza_totals["diff"] = poliza_totals["cargos"] - poliza_totals["abonos"]
+        invalid_polizas = (
+            poliza_totals[poliza_totals["diff"].abs() > tolerance]
+            .sort_values("diff", key=lambda series: series.abs(), ascending=False)
+            .to_dict("records")
+        )
+
+    if abs(balance_diff) <= tolerance and not invalid_polizas:
+        logger.info(
+            f"Validación contable OK en lote {lote_id}: "
+            f"Cargos={total_cargos:,.2f} Abonos={total_abonos:,.2f}"
+        )
+        return
+
+    logger.error(
+        f"Desbalance contable detectado en lote {lote_id}: "
+        f"Cargos={total_cargos:,.2f} Abonos={total_abonos:,.2f} "
+        f"Diferencia={balance_diff:,.2f}"
+    )
+    for arch, grp in contable.groupby("archivo_origen"):
+        fc = float(grp["cargos"].sum())
+        fa = float(grp["abonos"].sum())
+        logger.info(f"  {arch}: Cargos={fc:,.2f} Abonos={fa:,.2f} Diff={fc - fa:,.2f}")
+
+    raise ValueError(
+        _build_balance_error_message(
+            total_cargos,
+            total_abonos,
+            balance_diff,
+            invalid_polizas,
+            scope_label="La carga contable de generos 1-5",
+        )
+    )
+
+
+def _hash_transaccion_row(row):
+    # Include source file and auxiliary row order so repeated source lines are preserved.
+    parts = [
+        _norm(row.get("archivo_origen")),
+        _norm(row.get("orden_auxiliar")),
         _norm(row.get("cuenta_contable")),
         _norm(row.get("nombre_cuenta")),
         _norm(row.get("genero")),
@@ -350,7 +620,7 @@ def _read_one_excel(file_data):
     # Buscar la fila de encabezados
     header_row_idx = None
     for idx in range(min(20, len(raw))):
-        row_text = " ".join(raw.iloc[idx].fillna("").astype(str).str.lower())
+        row_text = _norm(" ".join(raw.iloc[idx].fillna("").astype(str)))
         if "fecha" in row_text and ("poliza" in row_text or "saldo" in row_text):
             header_row_idx = idx
             logger.info(f"Encabezado encontrado en fila {idx} de {filename}")
@@ -372,11 +642,64 @@ def _read_one_excel(file_data):
     if "beneficiario" in next_row_text or "descripcion" in next_row_text or "no." in next_row_text:
         start_idx += 1
 
+    fixed_layout = _detect_fixed_auxiliar_layout(raw, header_row_idx)
+    if fixed_layout:
+        _pos_benef = fixed_layout["beneficiario"]
+        _pos_desc = fixed_layout["descripcion"]
+        _pos_op = fixed_layout["orden_pago"]
+        _pos_si = fixed_layout["saldo_inicial"]
+        _pos_cargos = fixed_layout["cargos"]
+        _pos_abonos = fixed_layout["abonos"]
+        _pos_sf = fixed_layout["saldo_final"]
+        _use_mapped = True
+        logger.info(
+            f"Detectado layout auxiliar fijo de 9 columnas en {filename}: "
+            f"op=col{_pos_op} si=col{_pos_si} cargos=col{_pos_cargos} "
+            f"abonos=col{_pos_abonos} sf=col{_pos_sf}"
+        )
+    else:
+        # --- Position-based column mapping from header row ---
+        header_cells = raw.iloc[header_row_idx].fillna("").astype(str)
+        _hdr_map = {}
+        for _ci in range(len(header_cells)):
+            _cn = header_cells.iloc[_ci]
+            if str(_cn).strip():
+                _hdr_map[_ci] = _cn
+        # Also merge sub-header row (beneficiario, descripcion)
+        if start_idx == header_row_idx + 2:
+            sub_cells = raw.iloc[header_row_idx + 1].fillna("").astype(str)
+            for _ci in range(len(sub_cells)):
+                _cn = sub_cells.iloc[_ci]
+                if str(_cn).strip() and _ci not in _hdr_map:
+                    _hdr_map[_ci] = _cn
+
+        def _find_hdr_pos(options):
+            for ci, cn in _hdr_map.items():
+                if _header_label_matches(cn, options):
+                    return ci
+            return None
+
+        _pos_op = _find_hdr_pos(["o.p.", "o.p", "op", "orden pago", "orden de pago"])
+        _pos_si = _find_hdr_pos(["saldo inicial"])
+        _pos_cargos = _find_hdr_pos(["cargos", "cargo", "debe"])
+        _pos_abonos = _find_hdr_pos(["abonos", "abono", "haber"])
+        _pos_sf = _find_hdr_pos(["saldo final"])
+        _pos_benef = _find_hdr_pos(["beneficiario", "proveedor"])
+        _pos_desc = _find_hdr_pos(["descripcion", "concepto", "detalle"])
+        _use_mapped = _pos_cargos is not None and _pos_abonos is not None
+        if _use_mapped:
+            logger.info(
+                f"Usando mapeo por encabezado en {filename}: "
+                f"cargos=col{_pos_cargos} abonos=col{_pos_abonos} "
+                f"op=col{_pos_op} si=col{_pos_si} sf=col{_pos_sf}"
+            )
+
     # Procesar todas las filas
     records = []
     current_cuenta = None
     current_nombre = None
     current_saldo_inicial = None
+    current_period_start = ""
 
     for idx in range(start_idx, len(raw)):
         row = raw.iloc[idx]
@@ -395,11 +718,16 @@ def _read_one_excel(file_data):
                     current_cuenta = cuenta_nombre
                     current_nombre = ""
             current_saldo_inicial = None
+            current_period_start = ""
             continue
 
         # Detectar línea de saldo inicial
-        row_text_upper = " ".join(row.fillna("").astype(str)).upper()
+        row_text_full = " ".join(row.fillna("").astype(str))
+        row_text_upper = row_text_full.upper()
         if "SALDO INICIAL CUENTA" in row_text_upper and current_cuenta:
+            period_start = _extract_period_start(row_text_full)
+            if period_start:
+                current_period_start = period_start
             for col_idx in range(len(row)):
                 val = str(row.iloc[col_idx] if not pd.isna(row.iloc[col_idx]) else "").strip()
                 if val and any(c.isdigit() for c in val):
@@ -446,84 +774,104 @@ def _read_one_excel(file_data):
 
             poliza = str(row.iloc[1] if len(row) > 1 and not pd.isna(row.iloc[1]) else "").strip()
 
-            # Analizar columnas
-            col_data = []
-            for i in range(2, min(len(row), 15)):
-                val = str(row.iloc[i] if not pd.isna(row.iloc[i]) else "").strip()
-                col_data.append({
-                    'idx': i,
-                    'value': val,
-                    'is_empty': not val,
-                    'is_numeric': False,
-                    'is_monetary': False,
-                    'numeric_value': None
-                })
+            def _cell(ci):
+                if ci is None or ci >= len(row):
+                    return ""
+                v = row.iloc[ci]
+                return "" if pd.isna(v) else str(v).strip()
 
-                if val:
-                    cleaned = val.replace(",", "").replace(" ", "")
-                    try:
-                        num_val = float(cleaned)
-                        col_data[-1]['is_numeric'] = True
-                        col_data[-1]['numeric_value'] = num_val
-                        has_comma = "," in val
-                        has_decimal = "." in cleaned
-                        is_zero_str = val.strip() == "0"
+            if _use_mapped:
+                # ── Position-based extraction (reliable) ──
+                beneficiario = _cell(_pos_benef)
+                descripcion = _cell(_pos_desc)
+                op = _cell(_pos_op)
+                saldo_inicial = _cell(_pos_si) or (current_saldo_inicial if current_saldo_inicial else "")
+                cargos = _cell(_pos_cargos)
+                abonos = _cell(_pos_abonos)
+                saldo_final = _cell(_pos_sf)
 
-                        if has_comma or has_decimal or is_zero_str:
-                            col_data[-1]['is_monetary'] = True
-                    except ValueError:
-                        pass
-
-            # Separar columnas
-            text_cols = []
-            op_col = None
-            monetary_cols = []
-
-            for col in col_data:
-                if col['is_empty']:
+                # Need at least one non-empty monetary value
+                if not cargos and not abonos and not saldo_final:
                     continue
-                elif col['is_monetary']:
-                    monetary_cols.append(col)
-                elif col['is_numeric'] and not col['is_monetary']:
-                    if op_col is None and col['numeric_value'] and col['numeric_value'].is_integer():
-                        op_col = col
-                    else:
-                        monetary_cols.append(col)
-                else:
-                    text_cols.append(col)
-
-            if len(monetary_cols) < 2:
-                continue
-
-            # Extraer campos de texto
-            beneficiario = ""
-            descripcion = ""
-            if len(text_cols) >= 2:
-                beneficiario = text_cols[0]['value']
-                descripcion = " ".join([c['value'] for c in text_cols[1:]])
-            elif len(text_cols) == 1:
-                descripcion = text_cols[0]['value']
-
-            op = op_col['value'] if op_col else ""
-
-            # Determinar columnas monetarias
-            if len(monetary_cols) >= 4:
-                saldo_inicial = monetary_cols[0]['value']
-                cargos = monetary_cols[1]['value']
-                abonos = monetary_cols[2]['value']
-                saldo_final = monetary_cols[3]['value']
-            elif len(monetary_cols) == 3:
-                saldo_inicial = current_saldo_inicial if current_saldo_inicial else ""
-                cargos = monetary_cols[0]['value']
-                abonos = monetary_cols[1]['value']
-                saldo_final = monetary_cols[2]['value']
-            elif len(monetary_cols) == 2:
-                saldo_inicial = current_saldo_inicial if current_saldo_inicial else ""
-                cargos = ""
-                abonos = monetary_cols[0]['value']
-                saldo_final = monetary_cols[1]['value']
             else:
-                continue
+                # ── Heuristic-based extraction (fallback) ──
+                col_data = []
+                for i in range(2, min(len(row), 15)):
+                    val = _cell(i)
+                    col_data.append({
+                        'idx': i,
+                        'value': val,
+                        'is_empty': not val,
+                        'is_numeric': False,
+                        'is_monetary': False,
+                        'numeric_value': None
+                    })
+
+                    if val:
+                        cleaned = val.replace(",", "").replace(" ", "")
+                        try:
+                            num_val = float(cleaned)
+                            col_data[-1]['is_numeric'] = True
+                            col_data[-1]['numeric_value'] = num_val
+                            has_comma = "," in val
+                            has_decimal = "." in cleaned
+                            is_zero_str = val.strip() == "0"
+
+                            if has_comma or has_decimal or is_zero_str:
+                                col_data[-1]['is_monetary'] = True
+                        except ValueError:
+                            pass
+
+                # Separar columnas
+                text_cols = []
+                op_col = None
+                monetary_cols = []
+
+                for col in col_data:
+                    if col['is_empty']:
+                        continue
+                    elif col['is_monetary']:
+                        monetary_cols.append(col)
+                    elif col['is_numeric'] and not col['is_monetary']:
+                        if op_col is None and col['numeric_value'] and col['numeric_value'].is_integer():
+                            op_col = col
+                        else:
+                            monetary_cols.append(col)
+                    else:
+                        text_cols.append(col)
+
+                if len(monetary_cols) < 2:
+                    continue
+
+                # Extraer campos de texto
+                beneficiario = ""
+                descripcion = ""
+                if len(text_cols) >= 2:
+                    beneficiario = text_cols[0]['value']
+                    descripcion = " ".join([c['value'] for c in text_cols[1:]])
+                elif len(text_cols) == 1:
+                    descripcion = text_cols[0]['value']
+
+                op = op_col['value'] if op_col else ""
+
+                # Determinar columnas monetarias
+                if len(monetary_cols) >= 4:
+                    saldo_inicial = monetary_cols[0]['value']
+                    cargos = monetary_cols[1]['value']
+                    abonos = monetary_cols[2]['value']
+                    saldo_final = monetary_cols[3]['value']
+                elif len(monetary_cols) == 3:
+                    saldo_inicial = current_saldo_inicial if current_saldo_inicial else ""
+                    cargos = monetary_cols[0]['value']
+                    abonos = monetary_cols[1]['value']
+                    saldo_final = monetary_cols[2]['value']
+                elif len(monetary_cols) == 2:
+                    saldo_inicial = current_saldo_inicial if current_saldo_inicial else ""
+                    cargos = ""
+                    abonos = monetary_cols[0]['value']
+                    saldo_final = monetary_cols[1]['value']
+                else:
+                    continue
 
             # Crear registro
             record = {
@@ -538,6 +886,8 @@ def _read_one_excel(file_data):
                 "cargos": cargos,
                 "abonos": abonos,
                 "saldo_final": saldo_final,
+                "periodo_inicio": current_period_start or fecha,
+                "orden_auxiliar": idx,
             }
             records.append(record)
         except Exception:
@@ -719,7 +1069,7 @@ def _read_one_excel_macro(file_data):
         saldo_final_col = _select_column(col_map, ["saldo final", "saldo final cuenta", "saldo"])
 
         records = []
-        for _, row in data.iterrows():
+        for order_idx, (_, row) in enumerate(data.iterrows()):
             cuenta_val = str(row.get(cuenta_col, "")).strip() if cuenta_col else ""
             if not cuenta_val:
                 continue
@@ -760,6 +1110,8 @@ def _read_one_excel_macro(file_data):
                 "cargos": cargos,
                 "abonos": abonos,
                 "saldo_final": saldo_final,
+                "periodo_inicio": fecha,
+                "orden_auxiliar": order_idx,
             })
 
         if not records:
@@ -837,6 +1189,7 @@ def process_files_to_database(
         archivos_fallidos = []
         total_files = len(file_list)
         completed_files = 0
+        file_order = {file_info[0]: idx for idx, file_info in enumerate(file_list)}
 
         reader = _read_one_excel_macro if tipo_archivo == "macro" else _read_one_excel
         with ThreadPoolExecutor(max_workers=min(4, len(file_list))) as ex:
@@ -847,6 +1200,7 @@ def process_files_to_database(
                     df, filename = f.result()
                     if not df.empty:
                         df['archivo_origen'] = filename
+                        df["_archivo_orden"] = file_order.get(filename, completed_files - 1)
                         frames.append(df)
                         archivos_procesados.append(filename)
                         logger.info(f"Archivo procesado exitosamente: {filename}")
@@ -963,31 +1317,28 @@ def process_files_to_database(
 
         # Convertir columnas monetarias
         report(50, "Convirtiendo valores monetarios...")
+        base["_saldo_final_origen_text"] = base["saldo_final"].fillna("").astype(str).str.strip()
         base["saldo_inicial"] = _to_numeric_fast(base["saldo_inicial"]).astype(float)
         base["cargos"] = _to_numeric_fast(base["cargos"]).astype(float)
         base["abonos"] = _to_numeric_fast(base["abonos"]).astype(float)
+        base["saldo_final_origen"] = _to_numeric_fast(base["saldo_final"]).astype(float)
+        base["_saldo_final_origen_present"] = base["_saldo_final_origen_text"] != ""
+        base["_archivo_orden"] = pd.to_numeric(base.get("_archivo_orden", 0), errors="coerce").fillna(0).astype(int)
+        base["_orden_auxiliar"] = pd.to_numeric(base.get("orden_auxiliar", 0), errors="coerce").fillna(0).astype(int)
+        periodo_inicio_series = base["periodo_inicio"] if "periodo_inicio" in base.columns else base["fecha"]
+        base["_periodo_inicio_dt"] = pd.to_datetime(
+            periodo_inicio_series,
+            format="%d/%m/%Y",
+            errors="coerce"
+        )
 
-        # Calcular saldo final acumulativo por cuenta
-        report(65, "Calculando saldos acumulativos...")
-        base["saldo_final"] = 0.0
+        # Reconstruir el auxiliar en orden estable y respetando la naturaleza de la cuenta.
+        report(60, "Calculando saldos acumulativos...")
+        base = _rebuild_account_balances(base)
 
-        for cuenta in base["cuenta_contable"].unique():
-            mask = base["cuenta_contable"] == cuenta
-            indices = base[mask].index
-
-            saldo_actual = 0.0
-            for i, idx in enumerate(indices):
-                if i == 0:
-                    saldo_actual = (
-                        base.loc[idx, "saldo_inicial"]
-                        + base.loc[idx, "cargos"]
-                        - base.loc[idx, "abonos"]
-                    )
-                else:
-                    base.loc[idx, "saldo_inicial"] = saldo_actual
-                    saldo_actual = saldo_actual + base.loc[idx, "cargos"] - base.loc[idx, "abonos"]
-
-                base.loc[idx, "saldo_final"] = saldo_actual
+        report(65, "Validando integridad del auxiliar...")
+        _validate_reconstructed_rollforwards(base, lote_id)
+        _validate_contable_balance(base, lote_id)
 
         # Convertir fechas
         base["fecha_transaccion"] = pd.to_datetime(

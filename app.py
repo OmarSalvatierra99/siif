@@ -6,7 +6,7 @@ from datetime import datetime
 from logging.handlers import RotatingFileHandler
 from werkzeug.security import check_password_hash
 from config import config
-from scripts.utils import db, Transaccion, LoteCarga, Usuario, ReporteGenerado, Ente
+from scripts.utils import db, Transaccion, LoteCarga, Usuario, ReporteGenerado, Ente, CONTABLE_GENEROS
 from scripts.utils import process_files_to_database
 from sqlalchemy import func, and_, or_, inspect, text
 from sqlalchemy.exc import IntegrityError
@@ -169,6 +169,42 @@ def create_app(config_name="default"):
                 func.upper(func.coalesce(Transaccion.ente_siglas_catalogo, "")) == miguel_allowed_catalog_siglas
             )
         return Transaccion.query
+
+    def _build_balance_metrics(query):
+        visible_totals = query.with_entities(
+            func.count(Transaccion.id),
+            func.coalesce(func.sum(Transaccion.cargos), 0),
+            func.coalesce(func.sum(Transaccion.abonos), 0),
+        ).first()
+
+        total_registros = int(visible_totals[0] or 0)
+        visible_total_cargos = float(visible_totals[1] or 0)
+        visible_total_abonos = float(visible_totals[2] or 0)
+
+        contable_query = query.filter(Transaccion.genero.in_(sorted(CONTABLE_GENEROS)))
+        contable_totals = contable_query.with_entities(
+            func.count(Transaccion.id),
+            func.coalesce(func.sum(Transaccion.cargos), 0),
+            func.coalesce(func.sum(Transaccion.abonos), 0),
+        ).first()
+
+        total_registros_contables = int(contable_totals[0] or 0)
+        total_cargos = float(contable_totals[1] or 0)
+        total_abonos = float(contable_totals[2] or 0)
+        diferencia = total_cargos - total_abonos
+
+        return {
+            "total_registros": total_registros,
+            "total_registros_contables": total_registros_contables,
+            "registros_no_contables": max(total_registros - total_registros_contables, 0),
+            "visible_total_cargos": visible_total_cargos,
+            "visible_total_abonos": visible_total_abonos,
+            "visible_total_diferencia": visible_total_cargos - visible_total_abonos,
+            "total_cargos": total_cargos,
+            "total_abonos": total_abonos,
+            "diferencia": diferencia,
+            "coincide": abs(diferencia) < 0.005,
+        }
 
     def _safe_next_url(raw_url):
         url = (raw_url or "").strip()
@@ -1860,17 +1896,7 @@ def create_app(config_name="default"):
             }
 
             if include_totals:
-                totales = base_query.with_entities(
-                    func.coalesce(func.sum(Transaccion.cargos), 0),
-                    func.coalesce(func.sum(Transaccion.abonos), 0),
-                ).first()
-                total_cargos = float(totales[0] or 0)
-                total_abonos = float(totales[1] or 0)
-                response_payload.update({
-                    "total_cargos": total_cargos,
-                    "total_abonos": total_abonos,
-                    "total_diferencia": total_cargos - total_abonos,
-                })
+                response_payload.update(_build_balance_metrics(base_query))
 
             return jsonify(response_payload)
         except Exception as e:
@@ -1930,25 +1956,7 @@ def create_app(config_name="default"):
             user_query = _apply_transaccion_filters(_user_transaccion_base_query(), filtros)
 
             def compute_resumen():
-                totales = user_query.with_entities(
-                    func.count(Transaccion.id),
-                    func.coalesce(func.sum(Transaccion.cargos), 0),
-                    func.coalesce(func.sum(Transaccion.abonos), 0),
-                ).first()
-
-                total_registros = int(totales[0] or 0)
-                total_cargos = float(totales[1] or 0)
-                total_abonos = float(totales[2] or 0)
-                diferencia = total_cargos - total_abonos
-                coincide = abs(diferencia) < 0.005
-
-                return {
-                    "total_registros": total_registros,
-                    "total_cargos": total_cargos,
-                    "total_abonos": total_abonos,
-                    "diferencia": diferencia,
-                    "coincide": coincide,
-                }
+                return _build_balance_metrics(user_query)
 
             filtros_cache_key = json.dumps(filtros, sort_keys=True, ensure_ascii=False)
             payload = _get_cached_stats(

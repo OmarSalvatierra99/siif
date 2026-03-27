@@ -1207,6 +1207,13 @@
         font-size: 0.78rem;
     }
 
+    .stats-scope-note {
+        margin: -0.15rem 0 0.15rem;
+        color: var(--color-muted);
+        font-size: 0.8rem;
+        line-height: 1.45;
+    }
+
     .results-toolbar {
         display: flex;
         align-items: center;
@@ -1887,17 +1894,17 @@
                     <span class="stat-value" id="resumenTotalRegistros">0</span>
                 </div>
                 <div class="stat-item stat-item--cargos">
-                    <span class="stat-label">Cargos globales</span>
+                    <span class="stat-label">Cargos contables globales</span>
                     <span class="stat-value money positive" id="resumenTotalCargos">$0.00</span>
                 </div>
                 <div class="stat-item stat-item--abonos">
-                    <span class="stat-label">Abonos globales</span>
+                    <span class="stat-label">Abonos contables globales</span>
                     <span class="stat-value money negative" id="resumenTotalAbonos">$0.00</span>
                 </div>
                 <div class="stat-item stat-item--difference">
-                    <span class="stat-label">Diferencia global</span>
+                    <span class="stat-label">Diferencia contable</span>
                     <span class="stat-value" id="resumenTotalDiferencia">$0.00</span>
-                    <span class="stat-note" id="resumenEstadoBalance">Balance general</span>
+                    <span class="stat-note" id="resumenEstadoBalance">Balance contable sobre géneros 1 a 5</span>
                 </div>
             </div>
         </div>
@@ -2279,14 +2286,15 @@
                     <span class="stat-value" id="totalRegistros">0</span>
                 </div>
                 <div class="stat-item stat-item--cargos">
-                    <span class="stat-label">Cargos visibles</span>
+                    <span class="stat-label">Cargos contables visibles</span>
                     <span class="stat-value money positive" id="totalCargos">$0.00</span>
                 </div>
                 <div class="stat-item stat-item--abonos">
-                    <span class="stat-label">Abonos visibles</span>
+                    <span class="stat-label">Abonos contables visibles</span>
                     <span class="stat-value money negative" id="totalAbonos">$0.00</span>
                 </div>
             </div>
+            <p class="stats-scope-note" id="statsScopeNote">Los cargos y abonos visibles corresponden al balance contable de géneros 1 a 5.</p>
 
             <div class="results-toolbar">
                 <div class="table-title">
@@ -3117,6 +3125,8 @@ async function cargarResumenGeneral() {
         }
 
         const totalRegistros = Number(data.total_registros || 0);
+        const totalRegistrosContables = Number(data.total_registros_contables || 0);
+        const registrosNoContables = Number(data.registros_no_contables || 0);
         const totalCargos = parseFloat(data.total_cargos || 0);
         const totalAbonos = parseFloat(data.total_abonos || 0);
         const diferencia = parseFloat(data.diferencia || 0);
@@ -3131,23 +3141,36 @@ async function cargarResumenGeneral() {
         const coincideLabel = document.getElementById('resumenEstadoCoincidencia');
 
         if (balanceLabel) {
-            balanceLabel.textContent = coincide
-                ? 'Balance general equilibrado'
-                : 'Balance general con diferencia';
+            if (totalRegistros > 0 && totalRegistrosContables === 0) {
+                balanceLabel.textContent = 'Solo hay movimientos presupuestales visibles';
+            } else if (registrosNoContables > 0) {
+                balanceLabel.textContent = 'Balance contable sobre géneros 1 a 5';
+            } else {
+                balanceLabel.textContent = coincide
+                    ? 'Balance contable visible equilibrado'
+                    : 'Balance contable visible con diferencia';
+            }
         }
 
         if (coincideLabel) {
-            coincideLabel.textContent = coincide ? 'Coinciden' : 'No coinciden';
-            coincideLabel.classList.toggle('summary-balance-pill--ok', coincide);
-            coincideLabel.classList.toggle('summary-balance-pill--warn', !coincide);
+            const noAplica = totalRegistros > 0 && totalRegistrosContables === 0;
+            coincideLabel.textContent = noAplica
+                ? 'No aplica'
+                : (coincide ? 'Coinciden' : 'No coinciden');
+            coincideLabel.classList.toggle('summary-balance-pill--ok', !noAplica && coincide);
+            coincideLabel.classList.toggle('summary-balance-pill--warn', noAplica || !coincide);
         }
     } catch (error) {
         console.error('Error cargando resumen general:', error);
         const coincideLabel = document.getElementById('resumenEstadoCoincidencia');
+        const balanceLabel = document.getElementById('resumenEstadoBalance');
         if (coincideLabel) {
             coincideLabel.textContent = 'Sin resumen';
             coincideLabel.classList.remove('summary-balance-pill--ok');
             coincideLabel.classList.add('summary-balance-pill--warn');
+        }
+        if (balanceLabel) {
+            balanceLabel.textContent = 'No se pudo calcular el balance contable';
         }
     }
 }
@@ -3258,12 +3281,26 @@ function actualizarEstadisticas(data) {
         heroResultCount.textContent = total.toLocaleString('es-MX');
     }
 
+    const totalRegistrosContables = Number(data.total_registros_contables || 0);
+    const registrosNoContables = Number(data.registros_no_contables || 0);
+
     if (data.total_cargos !== undefined && data.total_abonos !== undefined) {
         const totalCargos = parseFloat(data.total_cargos || 0);
         const totalAbonos = parseFloat(data.total_abonos || 0);
 
         document.getElementById('totalCargos').textContent = formatCurrency(totalCargos);
         document.getElementById('totalAbonos').textContent = formatCurrency(totalAbonos);
+    }
+
+    const scopeNote = document.getElementById('statsScopeNote');
+    if (scopeNote) {
+        if (total > 0 && totalRegistrosContables === 0) {
+            scopeNote.textContent = 'Los registros visibles son presupuestales; el balance contable no aplica.';
+        } else if (registrosNoContables > 0) {
+            scopeNote.textContent = `Los cargos y abonos visibles excluyen ${registrosNoContables.toLocaleString('es-MX')} registro(s) presupuestal(es).`;
+        } else {
+            scopeNote.textContent = 'Los cargos y abonos visibles corresponden al balance contable de géneros 1 a 5.';
+        }
     }
 
     const inicio = total === 0 ? 0 : (paginaActual - 1) * registrosPorPagina + 1;

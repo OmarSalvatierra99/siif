@@ -376,7 +376,7 @@
         width: 0;
         border-radius: 999px;
         background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
-        transition: width 0.25s ease;
+        /* Width is animated via requestAnimationFrame for smoother interpolation */
     }
 
     .status-message {
@@ -785,10 +785,14 @@ let isProcessing = false;
 let processedItemsCount = 0;
 const UPLOAD_PROGRESS_MAX = 30;
 const PROCESS_PROGRESS_START = 35;
-const MAX_PROGRESS_POLL_FAILURES = 4;
+const MAX_PROGRESS_POLL_FAILURES = 8;
 let keepStatusVisible = false;
 let progressPollTimeout = null;
 let progressPollFailures = 0;
+let activeXhr = null;
+let displayedPercent = 0;
+let animationFrameId = null;
+let targetPercent = 0;
 
 const uploadArea = document.getElementById('uploadArea');
 const fileInput = document.getElementById('fileInput');
@@ -822,7 +826,7 @@ const processedDrawer = document.getElementById('processedDrawer');
 const processedDrawerClose = document.getElementById('processedDrawerClose');
 const btnRefreshProcessed = document.getElementById('btnRefreshProcessed');
 
-uploadArea.addEventListener('click', () => fileInput.click());
+uploadArea.addEventListener('click', () => { if (!isProcessing) fileInput.click(); });
 fileInput.addEventListener('change', (e) => handleFiles(Array.from(e.target.files)));
 btnRefreshProcessed.addEventListener('click', () => loadProcessedFiles());
 enteSelect.addEventListener('change', () => {
@@ -843,7 +847,7 @@ document.addEventListener('keydown', (event) => {
 
 uploadArea.addEventListener('dragover', (e) => {
     e.preventDefault();
-    uploadArea.classList.add('drag-over');
+    if (!isProcessing) uploadArea.classList.add('drag-over');
 });
 
 uploadArea.addEventListener('dragleave', () => {
@@ -853,7 +857,15 @@ uploadArea.addEventListener('dragleave', () => {
 uploadArea.addEventListener('drop', (e) => {
     e.preventDefault();
     uploadArea.classList.remove('drag-over');
-    handleFiles(Array.from(e.dataTransfer.files));
+    if (!isProcessing) handleFiles(Array.from(e.dataTransfer.files));
+});
+
+// Warn before leaving during processing
+window.addEventListener('beforeunload', (e) => {
+    if (isProcessing) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
 });
 
 function openProcessedDrawer() {
@@ -874,13 +886,19 @@ function syncProgressVisibility() {
     const shouldShow = isProcessing || keepStatusVisible;
     statusBar.classList.toggle('is-visible', shouldShow);
     if (!shouldShow) {
+        displayedPercent = 0;
+        targetPercent = 0;
         progressBar.style.width = '0%';
         progressPercent.textContent = '0%';
         progressMessage.textContent = 'Preparando carga';
-        progressFile.textContent = '—';
+        progressFile.textContent = '\u2014';
         progressFileRow.hidden = true;
         statusState.textContent = 'Procesando';
         statusState.dataset.tone = 'accent';
+        if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+            animationFrameId = null;
+        }
     }
 }
 
@@ -897,12 +915,43 @@ function clearProgressPolling() {
     progressPollFailures = 0;
 }
 
+// Smooth progress animation — interpolates toward target to avoid jerky jumps
+function animateProgress() {
+    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+
+    function step() {
+        const diff = targetPercent - displayedPercent;
+        if (Math.abs(diff) < 0.3) {
+            displayedPercent = targetPercent;
+        } else {
+            // Ease toward target: fast when far, slow when close
+            displayedPercent += diff * 0.15;
+        }
+        const rounded = Math.round(displayedPercent);
+        progressBar.style.width = `${rounded}%`;
+        progressPercent.textContent = `${rounded}%`;
+
+        if (Math.abs(targetPercent - displayedPercent) >= 0.3) {
+            animationFrameId = requestAnimationFrame(step);
+        } else {
+            animationFrameId = null;
+        }
+    }
+    animationFrameId = requestAnimationFrame(step);
+}
+
 function handleFiles(files) {
     const excelFiles = files.filter((file) =>
         file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.xlsm')
     );
     if (!excelFiles.length) return;
-    selectedFiles = [...selectedFiles, ...excelFiles];
+
+    // Deduplicate by name+size to avoid adding the same file twice
+    const existingKeys = new Set(selectedFiles.map(f => `${f.name}|${f.size}`));
+    const newFiles = excelFiles.filter(f => !existingKeys.has(`${f.name}|${f.size}`));
+
+    if (!newFiles.length) return;
+    selectedFiles = [...selectedFiles, ...newFiles];
     renderFileLists();
 }
 
@@ -917,6 +966,7 @@ function renderFileList(listElement, emptyMessage) {
         return;
     }
 
+    const fragment = document.createDocumentFragment();
     selectedFiles.forEach((file, index) => {
         const item = document.createElement('div');
         item.className = 'file-item';
@@ -928,10 +978,11 @@ function renderFileList(listElement, emptyMessage) {
                     <p>${formatFileSize(file.size)}</p>
                 </div>
             </div>
-            <button class="btn-remove" onclick="removeFile(${index})" title="Eliminar">✕</button>
+            <button class="btn-remove" onclick="removeFile(${index})" title="Eliminar"${isProcessing ? ' disabled' : ''}>&#10005;</button>
         `;
-        listElement.appendChild(item);
+        fragment.appendChild(item);
     });
+    listElement.appendChild(fragment);
 }
 
 function renderFileLists() {
@@ -940,11 +991,13 @@ function renderFileLists() {
 }
 
 function removeFile(index) {
+    if (isProcessing) return;
     selectedFiles.splice(index, 1);
     renderFileLists();
 }
 
 function clearFiles() {
+    if (isProcessing) return;
     selectedFiles = [];
     fileInput.value = '';
     renderFileLists();
@@ -983,7 +1036,7 @@ function updateProgressHeader() {
     statusSelection.textContent = `Ente: ${enteLabel}`;
     statusSelection.title = hasSelection ? (option.dataset.nombre || option.textContent || '') : '';
     statusFiles.textContent = selectedFiles.length
-        ? `${selectedFiles.length} archivo(s) · ${formatFileSize(totalBytes)}`
+        ? `${selectedFiles.length} archivo(s) \u00B7 ${formatFileSize(totalBytes)}`
         : '0 archivos';
 }
 
@@ -1047,6 +1100,7 @@ function scaleProcessingProgress(progress) {
 function submitFilesForProcessing(formData) {
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
+        activeXhr = xhr;
         const uploadLabel = getUploadCurrentFileLabel();
 
         xhr.open('POST', '/api/process', true);
@@ -1068,8 +1122,10 @@ function submitFilesForProcessing(formData) {
                 UPLOAD_PROGRESS_MAX,
                 (event.loaded / event.total) * UPLOAD_PROGRESS_MAX
             );
+            const totalMB = (event.total / (1024 * 1024)).toFixed(1);
+            const loadedMB = (event.loaded / (1024 * 1024)).toFixed(1);
             setStatusState('Cargando');
-            updateProgress(uploadProgress, 'Cargando archivos al servidor...', uploadLabel);
+            updateProgress(uploadProgress, `Cargando al servidor... ${loadedMB} / ${totalMB} MB`, uploadLabel);
         });
 
         xhr.addEventListener('readystatechange', () => {
@@ -1080,6 +1136,7 @@ function submitFilesForProcessing(formData) {
         });
 
         xhr.onload = () => {
+            activeXhr = null;
             const contentType = xhr.getResponseHeader('content-type') || '';
             let data = null;
 
@@ -1105,13 +1162,22 @@ function submitFilesForProcessing(formData) {
         };
 
         xhr.onerror = () => {
-            reject(new Error('Error de conexión al cargar archivos'));
+            activeXhr = null;
+            reject(new Error('Error de conexión al cargar archivos. Verifica tu red e intenta de nuevo.'));
+        };
+
+        xhr.ontimeout = () => {
+            activeXhr = null;
+            reject(new Error('La carga tardó demasiado. Intenta con menos archivos.'));
         };
 
         xhr.onabort = () => {
+            activeXhr = null;
             reject(new Error('La carga fue cancelada'));
         };
 
+        // 10 min timeout for very large uploads
+        xhr.timeout = 600000;
         xhr.send(formData);
     });
 }
@@ -1160,39 +1226,80 @@ async function processFiles(force = false) {
             Array.isArray(error.payload.duplicate_files) &&
             error.payload.duplicate_files.length
         ) {
-            const shouldRetry = confirm(
-                `Estos archivos ya fueron procesados: ${error.payload.duplicate_files.join(', ')}. ` +
-                '¿Deseas reprocesarlos de todos modos?'
-            );
+            // Use non-blocking duplicate confirmation
             keepStatusVisible = false;
             isProcessing = false;
             syncProgressVisibility();
             updateButtons();
-            if (shouldRetry) {
-                return processFiles(true);
-            }
+            showDuplicateConfirmation(error.payload.duplicate_files);
             return;
         }
 
-        setStatusState('Error', 'error');
-        keepStatusVisible = true;
-        isProcessing = false;
-        syncProgressVisibility();
-        updateButtons();
-        updateProgress(Math.max(Number(progressPercent.textContent.replace('%', '')) || 0, PROCESS_PROGRESS_START), error.message, null);
-        showError(error.message);
+        finishWithError(error.message);
     }
+}
+
+// Non-blocking duplicate confirmation instead of window.confirm()
+function showDuplicateConfirmation(duplicateFiles) {
+    hideAlerts();
+    const fileList = duplicateFiles.join(', ');
+    warningMessage.innerHTML = `Estos archivos ya fueron procesados: <strong>${fileList}</strong>`;
+
+    // Add retry/cancel buttons inside the warning alert
+    const btnWrap = document.createElement('div');
+    btnWrap.style.cssText = 'margin-top: 0.6rem; display: flex; gap: 0.5rem;';
+    btnWrap.innerHTML = `
+        <button class="btn btn-primary" style="padding: 0.5rem 1.1rem; font-size: 0.82rem;" id="btnDupRetry">Reprocesar de todos modos</button>
+        <button class="btn btn-outline" style="padding: 0.5rem 1.1rem; font-size: 0.82rem;" id="btnDupCancel">Cancelar</button>
+    `;
+    warningAlert.appendChild(btnWrap);
+    warningAlert.classList.add('active');
+
+    document.getElementById('btnDupRetry').addEventListener('click', () => {
+        if (btnWrap.parentNode) btnWrap.remove();
+        hideAlerts();
+        processFiles(true);
+    });
+    document.getElementById('btnDupCancel').addEventListener('click', () => {
+        if (btnWrap.parentNode) btnWrap.remove();
+        hideAlerts();
+    });
+}
+
+function finishWithError(message) {
+    setStatusState('Error', 'error');
+    keepStatusVisible = true;
+    isProcessing = false;
+    syncProgressVisibility();
+    updateButtons();
+    renderFileLists();
+    updateProgress(
+        Math.max(displayedPercent, PROCESS_PROGRESS_START),
+        message,
+        null
+    );
+    showError(message);
 }
 
 async function monitorProgress(jobId) {
     clearProgressPolling();
     progressPollFailures = 0;
 
+    // Adaptive polling: starts fast (500ms), slows to 2s for long jobs
+    let pollInterval = 500;
+    const MAX_POLL_INTERVAL = 2000;
+    let pollCount = 0;
+
     const poll = async () => {
         try {
+            const controller = new AbortController();
+            const fetchTimeout = setTimeout(() => controller.abort(), 10000);
+
             const response = await fetch(`/api/progress/${jobId}?format=json&ts=${Date.now()}`, {
                 cache: 'no-store',
+                signal: controller.signal,
             });
+            clearTimeout(fetchTimeout);
 
             if (!response.ok) {
                 throw new Error('No se pudo consultar el progreso del procesamiento');
@@ -1200,6 +1307,13 @@ async function monitorProgress(jobId) {
 
             const data = await response.json();
             progressPollFailures = 0;
+            pollCount++;
+
+            // Adaptive interval: increase after 20 polls up to MAX_POLL_INTERVAL
+            if (pollCount > 20 && pollInterval < MAX_POLL_INTERVAL) {
+                pollInterval = Math.min(pollInterval + 100, MAX_POLL_INTERVAL);
+            }
+
             updateProgress(
                 data.done && !data.error ? 100 : scaleProcessingProgress(data.progress),
                 data.message,
@@ -1222,7 +1336,7 @@ async function monitorProgress(jobId) {
                 );
                 showSuccess(
                     data.message ||
-                    `Archivo procesado con exito. ${(data.total_registros || 0).toLocaleString('es-MX')} registros agregados.`
+                    `Archivos procesados con éxito. ${(data.total_registros || 0).toLocaleString('es-MX')} registros agregados.`
                 );
                 loadProcessedFiles();
                 return;
@@ -1230,40 +1344,33 @@ async function monitorProgress(jobId) {
 
             if (data.error) {
                 clearProgressPolling();
-                setStatusState('Error', 'error');
-                keepStatusVisible = true;
-                isProcessing = false;
-                syncProgressVisibility();
-                updateButtons();
-                updateProgress(
-                    Math.max(Number(data.progress) || 0, PROCESS_PROGRESS_START),
-                    data.error,
-                    data.current_file
-                );
-                showError(data.error);
+                finishWithError(data.error);
                 return;
             }
 
-            progressPollTimeout = window.setTimeout(poll, 350);
+            progressPollTimeout = window.setTimeout(poll, pollInterval);
         } catch (error) {
+            if (error.name === 'AbortError') {
+                // Fetch timeout — just retry, don't count as failure
+                progressPollTimeout = window.setTimeout(poll, pollInterval);
+                return;
+            }
+
             progressPollFailures += 1;
             if (progressPollFailures < MAX_PROGRESS_POLL_FAILURES) {
-                progressPollTimeout = window.setTimeout(poll, 750);
+                // Exponential backoff on failures: 1s, 2s, 4s, 8s...
+                const backoff = Math.min(1000 * Math.pow(2, progressPollFailures - 1), 8000);
+                progressPollTimeout = window.setTimeout(poll, backoff);
+                updateProgress(
+                    displayedPercent,
+                    `Reintentando conexión (${progressPollFailures}/${MAX_PROGRESS_POLL_FAILURES})...`,
+                    null
+                );
                 return;
             }
 
             clearProgressPolling();
-            setStatusState('Error', 'error');
-            keepStatusVisible = true;
-            isProcessing = false;
-            syncProgressVisibility();
-            updateButtons();
-            updateProgress(
-                Math.max(Number(progressPercent.textContent.replace('%', '')) || 0, PROCESS_PROGRESS_START),
-                error.message,
-                null
-            );
-            showError(error.message);
+            finishWithError('Se perdió la conexión con el servidor. El proceso puede continuar en segundo plano.');
         }
     };
 
@@ -1271,33 +1378,49 @@ async function monitorProgress(jobId) {
 }
 
 function updateProgress(percent, message, currentFile) {
-    const safePercent = Math.max(0, Math.min(100, Number(percent) || 0));
-    progressBar.style.width = `${safePercent}%`;
+    targetPercent = Math.max(0, Math.min(100, Number(percent) || 0));
+    // Only allow progress to go forward (prevent backwards jumps from out-of-order responses)
+    if (targetPercent < displayedPercent && targetPercent !== 0 && targetPercent < 100) {
+        targetPercent = displayedPercent;
+    }
     progressMessage.textContent = message || 'Procesando';
-    progressPercent.textContent = `${Math.round(safePercent)}%`;
-    progressFile.textContent = currentFile || '—';
+    progressFile.textContent = currentFile || '\u2014';
     progressFileRow.hidden = !currentFile;
+    animateProgress();
 }
 
 function showSuccess(message) {
     successMessage.textContent = message;
     successAlert.classList.add('active');
+    scrollToElement('statusBar');
 }
 
 function showWarning(message) {
-    warningMessage.textContent = message;
+    if (typeof message === 'string') {
+        warningMessage.textContent = message;
+    }
     warningAlert.classList.add('active');
 }
 
 function showError(message) {
     errorMessage.textContent = message;
     errorAlert.classList.add('active');
+    scrollToElement('statusBar');
 }
 
 function hideAlerts() {
     successAlert.classList.remove('active');
     warningAlert.classList.remove('active');
     errorAlert.classList.remove('active');
+    // Clean up any dynamic buttons from duplicate confirmation
+    warningAlert.querySelectorAll('div').forEach(el => {
+        if (el !== warningMessage) el.remove();
+    });
+}
+
+function scrollToElement(id) {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function formatMetodo(tipo) {
@@ -1329,7 +1452,7 @@ function renderProcessedFiles(items) {
         const row = document.createElement('div');
         row.className = 'processed-item';
         row.innerHTML = `
-            <div class="processed-file" title="${item.archivo || '—'}">${item.archivo || '—'}</div>
+            <div class="processed-file" title="${item.archivo || '\u2014'}">${item.archivo || '\u2014'}</div>
             <div class="processed-method">${formatMetodo(item.tipo_archivo)}</div>
         `;
         fragment.appendChild(row);
@@ -1367,7 +1490,10 @@ function updateButtons() {
     const hasFiles = selectedFiles.length > 0;
     const hasEnte = Boolean(enteSelect.value);
     btnProcess.disabled = !(hasFiles && hasEnte) || isProcessing;
-    btnClear.style.display = hasFiles ? 'inline-flex' : 'none';
+    btnClear.style.display = hasFiles && !isProcessing ? 'inline-flex' : 'none';
+    enteSelect.disabled = isProcessing;
+    uploadArea.style.pointerEvents = isProcessing ? 'none' : '';
+    uploadArea.style.opacity = isProcessing ? '0.6' : '';
 }
 
 function formatFileSize(bytes) {
