@@ -1,0 +1,145 @@
+<section
+    class="catalogos-consulta-section"
+    id="catalogosConsultaModule"
+    aria-labelledby="catalogosConsultaTitle"
+>
+    <div class="catalogos-consulta-header">
+        <div class="catalogos-consulta-copy">
+            <span class="section-eyebrow">Catálogos de consulta</span>
+            <h3 id="catalogosConsultaTitle">Catálogos de consulta</h3>
+            <p>
+                Consulta visual independiente de entes y fuentes de financiamiento.
+                Este módulo no altera filtros, transacciones, resúmenes ni reportes.
+            </p>
+        </div>
+        <div class="catalogos-consulta-badges">
+            <span class="catalogos-consulta-reference-pill">Solo referencia</span>
+            <span class="catalogos-consulta-secondary-note">
+                Separado del flujo transaccional
+            </span>
+        </div>
+    </div>
+
+    <div class="catalogos-consulta-notice">
+        Los datos mostrados aquí son de lectura. No participan en carga, validación,
+        parsing, filtros operativos ni en <code>/api/transacciones</code>.
+    </div>
+
+    <div class="catalogos-consulta-controls" id="catalogosConsultaControls" hidden>
+        <div
+            class="catalogos-consulta-tabs"
+            id="catalogosConsultaTabs"
+            role="tablist"
+            aria-label="Catálogos de consulta disponibles"
+        ></div>
+        <label class="catalogos-consulta-select-wrap" for="catalogoConsultaSelect">
+            <span>Cambiar catálogo</span>
+            <select id="catalogoConsultaSelect" class="catalogos-consulta-select"></select>
+        </label>
+    </div>
+
+    <div class="catalogos-consulta-loading" id="catalogosConsultaLoading">
+        <span class="spinner" aria-hidden="true"></span>
+        <p>Cargando catálogos de consulta...</p>
+    </div>
+
+    <div class="catalogos-consulta-empty" id="catalogosConsultaEmpty" hidden></div>
+
+    <div class="catalogos-consulta-content" id="catalogosConsultaContent" hidden>
+        <div class="catalogos-consulta-summary">
+            <article class="catalogos-consulta-summary-card catalogos-consulta-summary-card--principal">
+                <span class="catalogos-consulta-summary-label">Catálogo activo</span>
+                <strong class="catalogos-consulta-summary-value" id="catalogoConsultaNombreActivo">-</strong>
+                <p class="catalogos-consulta-summary-text" id="catalogoConsultaDescripcionActiva">
+                    -
+                </p>
+            </article>
+            <article class="catalogos-consulta-summary-card">
+                <span class="catalogos-consulta-summary-label">Entes de referencia</span>
+                <strong class="catalogos-consulta-summary-value" id="catalogoConsultaTotalEntes">0</strong>
+                <p class="catalogos-consulta-summary-text">Listado visual separado del catálogo general operativo.</p>
+            </article>
+            <article class="catalogos-consulta-summary-card">
+                <span class="catalogos-consulta-summary-label">Fuentes de financiamiento</span>
+                <strong class="catalogos-consulta-summary-value" id="catalogoConsultaTotalFuentes">0</strong>
+                <p class="catalogos-consulta-summary-text">Consulta rápida para referencia sin afectar la búsqueda de transacciones.</p>
+            </article>
+        </div>
+
+        <div class="catalogos-consulta-grid">
+            <article class="catalogos-consulta-panel">
+                <div class="catalogos-consulta-panel-header">
+                    <div>
+                        <h4>Entes</h4>
+                        <p>Busca por número, DD, siglas, nombre o clasificación.</p>
+                    </div>
+                    <label class="catalogos-consulta-search-wrap" for="catalogoConsultaBusquedaEntes">
+                        <span class="sr-only">Buscar entes de referencia</span>
+                        <input
+                            type="search"
+                            id="catalogoConsultaBusquedaEntes"
+                            class="catalogos-consulta-search"
+                            placeholder="Buscar entes de referencia..."
+                            autocomplete="off"
+                        >
+                    </label>
+                </div>
+                <div class="catalogos-consulta-table-wrap">
+                    <table class="catalogos-consulta-table">
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>DD</th>
+                                <th>Siglas</th>
+                                <th>Nombre</th>
+                                <th>Clasificación</th>
+                            </tr>
+                        </thead>
+                        <tbody id="catalogoConsultaEntesBody"></tbody>
+                    </table>
+                </div>
+                <p class="catalogos-consulta-panel-empty" id="catalogoConsultaEntesEmpty" hidden>
+                    No se encontraron entes en este catálogo de consulta.
+                </p>
+            </article>
+
+            <article class="catalogos-consulta-panel">
+                <div class="catalogos-consulta-panel-header">
+                    <div>
+                        <h4>Fuentes de financiamiento</h4>
+                        <p>Busca por FF, fuente, ID, descripción, ramo o fondo.</p>
+                    </div>
+                    <label class="catalogos-consulta-search-wrap" for="catalogoConsultaBusquedaFuentes">
+                        <span class="sr-only">Buscar fuentes de financiamiento de referencia</span>
+                        <input
+                            type="search"
+                            id="catalogoConsultaBusquedaFuentes"
+                            class="catalogos-consulta-search"
+                            placeholder="Buscar fuentes de financiamiento..."
+                            autocomplete="off"
+                        >
+                    </label>
+                </div>
+                <div class="catalogos-consulta-table-wrap">
+                    <table class="catalogos-consulta-table catalogos-consulta-table--fuentes">
+                        <thead>
+                            <tr>
+                                <th>FF</th>
+                                <th>Fuente</th>
+                                <th>ID</th>
+                                <th>Alfa</th>
+                                <th>Descripción</th>
+                                <th>Ramo Federal</th>
+                                <th>Fondo de Ingreso</th>
+                            </tr>
+                        </thead>
+                        <tbody id="catalogoConsultaFuentesBody"></tbody>
+                    </table>
+                </div>
+                <p class="catalogos-consulta-panel-empty" id="catalogoConsultaFuentesEmpty" hidden>
+                    No se encontraron fuentes de financiamiento en este catálogo de consulta.
+                </p>
+            </article>
+        </div>
+    </div>
+</section>

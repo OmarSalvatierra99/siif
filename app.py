@@ -28,6 +28,7 @@ def create_app(config_name="default"):
         canonical_dependency_aliases.setdefault(canonical_code, set()).update(
             {canonical_code, alias_code}
         )
+    limited_catalog_selection_users = {"juan", "luis"}
     miguel_allowed_catalog_siglas = "OPD_SALUD"
     miguel_allowed_dependency = "06"
 
@@ -148,21 +149,38 @@ def create_app(config_name="default"):
             dependencias.update(_expand_dependency_codes(ente.dd))
         return dependencias
 
+    def _user_hides_municipios(username=None):
+        current_username = (username or session.get("auth_user") or "").strip().lower()
+        return current_username in {"luis", "juan"}
+
+    def _get_catalog_group_siglas(group_key):
+        catalogo_general = _load_catalogo_general()
+        return {
+            _normalize_catalog_sigla(item.get("siglas"))
+            for item in catalogo_general.get(group_key, [])
+            if _normalize_catalog_sigla(item.get("siglas"))
+        }
+
     def _user_transaccion_base_query():
         """Retorna Transaccion.query pre-filtrado según los permisos del usuario en sesión.
-        - luis: todos los entes
-        - juan: todos los entes estatales
+        - luis y juan: solo entes estatales
         - miguel: solo OPD_SALUD
         """
         username = (session.get("auth_user") or "").strip().lower()
-        if username == "luis":
-            return Transaccion.query
-        if username == "juan":
-            return Transaccion.query.filter(
+        if _user_hides_municipios(username):
+            municipal_siglas = sorted(_get_catalog_group_siglas("municipios"))
+            municipal_filters = [
                 or_(
                     Transaccion.ente_grupo_catalogo.is_(None),
                     func.lower(Transaccion.ente_grupo_catalogo) != "municipios",
                 )
+            ]
+            if municipal_siglas:
+                municipal_filters.append(
+                    func.upper(func.coalesce(Transaccion.ente_siglas_catalogo, "")).notin_(municipal_siglas)
+                )
+            return Transaccion.query.filter(
+                and_(*municipal_filters)
             )
         if username == "miguel":
             return Transaccion.query.filter(
@@ -235,6 +253,25 @@ def create_app(config_name="default"):
             or "paraestatal" in clasificacion
         )
 
+    def _user_has_restricted_catalog_selection(username=None):
+        current_username = (username or session.get("auth_user") or "").strip().lower()
+        return current_username in limited_catalog_selection_users or current_username == "miguel"
+
+    def _catalog_item_is_visible_for_limited_selection(item):
+        if str(item.get("grupo") or "").strip().lower() != "entes":
+            return False
+
+        num = str(item.get("num") or "").strip()
+        siglas = _normalize_catalog_sigla(item.get("siglas"))
+        if num == "1":
+            return True
+
+        branch_match = re.fullmatch(r"1\.(\d+)", num)
+        if branch_match:
+            return 1 <= int(branch_match.group(1)) <= 29
+
+        return num == "22" and siglas == miguel_allowed_catalog_siglas
+
     def _catalogo_selection_policy(username=None):
         return {
             "scope": "catalogo_disponible",
@@ -306,7 +343,7 @@ def create_app(config_name="default"):
     def _filter_catalogo_general_items(username=None):
         current_username = (username or session.get("auth_user") or "").strip().lower()
         all_items = _flatten_catalogo_general()
-        if current_username == "juan":
+        if _user_hides_municipios(current_username):
             return [item for item in all_items if item["grupo"] == "entes"]
         if current_username == "miguel":
             return [
@@ -317,10 +354,28 @@ def create_app(config_name="default"):
             ]
         return all_items
 
-    def _build_dependencia_catalog_index(username=None):
+    def _filter_catalogo_general_selection_items(username=None):
+        current_username = (username or session.get("auth_user") or "").strip().lower()
+        all_items = _flatten_catalogo_general()
+        if current_username in limited_catalog_selection_users:
+            return [
+                item
+                for item in all_items
+                if _catalog_item_is_visible_for_limited_selection(item)
+            ]
+        if current_username == "miguel":
+            return [
+                item
+                for item in all_items
+                if item["grupo"] == "entes"
+                and _matches_opd_salud(item.get("siglas"), item.get("dd"))
+            ]
+        return all_items
+
+    def _build_catalog_index(items):
         indexed_items = {}
 
-        for item in _filter_catalogo_general_items(username=username):
+        for item in items:
             siglas = str(item.get("siglas") or "").strip()
             normalized_sigla = _normalize_catalog_sigla(siglas)
             if not normalized_sigla:
@@ -351,6 +406,12 @@ def create_app(config_name="default"):
                 indexed_items[normalized_sigla] = payload
 
         return sorted(indexed_items.values(), key=lambda item: (item["orden"], item["label"]))
+
+    def _build_dependencia_catalog_index(username=None):
+        return _build_catalog_index(_filter_catalogo_general_items(username=username))
+
+    def _build_catalogo_general_selection_index(username=None):
+        return _build_catalog_index(_filter_catalogo_general_selection_items(username=username))
 
     def _dependencia_catalog_matches_search(item, search_term):
         normalized_search = _normalize_text(search_term)
@@ -403,8 +464,23 @@ def create_app(config_name="default"):
             ]
         return entes
 
+    def _sanitize_ente_catalog_filter_values(values, username=None):
+        if not _user_has_restricted_catalog_selection(username=username):
+            return values
+
+        allowed_siglas = {
+            _normalize_catalog_sigla(item.get("value"))
+            for item in _build_catalogo_general_selection_index(username=username)
+            if _normalize_catalog_sigla(item.get("value"))
+        }
+        return [
+            value
+            for value in values
+            if _normalize_catalog_sigla(value) in allowed_siglas
+        ]
+
     def _get_catalogo_general_selection_payload(username=None):
-        items = _filter_catalogo_general_items(username=username)
+        items = _filter_catalogo_general_selection_items(username=username)
         return {
             "opciones": items,
             "total": len(items),
@@ -420,7 +496,7 @@ def create_app(config_name="default"):
         candidate = str(raw_value or "").strip()
         if not candidate:
             return None
-        for item in _filter_catalogo_general_items(username=username):
+        for item in _filter_catalogo_general_selection_items(username=username):
             if candidate in {item["id"], item["ente_clave"], item["siglas"]}:
                 return item
         return None
@@ -1055,6 +1131,8 @@ def create_app(config_name="default"):
                 raw_values = source.get(key)
 
             values = _sanitize_filter_values(raw_values)
+            if key == "ente_catalogo":
+                values = _sanitize_ente_catalog_filter_values(values)
             if not values:
                 continue
 
@@ -1214,8 +1292,9 @@ def create_app(config_name="default"):
                     continue
                 seen_selected.add(normalized_value)
                 selected_values.append(normalized_value)
-            catalog_index = _build_ente_catalog_index()
+            catalog_index = _build_catalogo_general_selection_index()
             catalog_codes = {_normalize_catalog_sigla(item["value"]) for item in catalog_index}
+            restrict_extras = _user_has_restricted_catalog_selection()
 
             items = []
             for item in catalog_index:
@@ -1240,6 +1319,8 @@ def create_app(config_name="default"):
             normalized_search = _normalize_text(search_term)
             for value, count in counts_by_value.items():
                 if value in catalog_codes:
+                    continue
+                if restrict_extras:
                     continue
                 label = value
                 if normalized_search and normalized_search not in _normalize_text(label):
