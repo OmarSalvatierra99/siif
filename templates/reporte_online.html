@@ -1482,6 +1482,12 @@
         z-index: 2;
     }
 
+    .tabla-resultados th.money-stick,
+    .tabla-resultados td.money-stick {
+        position: sticky;
+        z-index: 3;
+    }
+
     .tabla-resultados th {
         position: sticky;
         top: 0;
@@ -1577,6 +1583,10 @@
         z-index: 11;
     }
 
+    .tabla-resultados th.money-stick {
+        z-index: 12;
+    }
+
     .tabla-resultados td {
         border-bottom: 1px solid rgba(31, 59, 44, 0.08);
         padding: 0.78rem 0.7rem;
@@ -1596,6 +1606,11 @@
         box-shadow: inset 1px 0 0 rgba(31, 59, 44, 0.08);
     }
 
+    .tabla-resultados td.money-stick {
+        background: #f3f7f4;
+        box-shadow: inset 1px 0 0 rgba(31, 59, 44, 0.08);
+    }
+
     .money-col {
         background: rgba(232, 240, 235, 0.35);
     }
@@ -1612,6 +1627,10 @@
         background: #f1f6f2;
     }
 
+    .tabla-resultados tr:nth-child(even) td.money-stick {
+        background: #edf4ef;
+    }
+
     .tabla-resultados tr:hover td {
         background: #eef4f0;
     }
@@ -1622,6 +1641,10 @@
 
     .tabla-resultados tr:hover td.sticky-right {
         background: #e7efe9;
+    }
+
+    .tabla-resultados tr:hover td.money-stick {
+        background: #e3ede6;
     }
 
     .tabla-resultados.compact th,
@@ -1718,6 +1741,27 @@
         text-align: right;
         font-family: "Courier New", monospace;
         font-weight: 600;
+    }
+
+    .tabla-resultados th.money-col,
+    .tabla-resultados td.money-col {
+        min-width: 132px;
+    }
+
+    .money-col-saldo-final {
+        right: 0;
+    }
+
+    .money-col-abonos {
+        right: 132px;
+    }
+
+    .money-col-cargos {
+        right: 264px;
+    }
+
+    .money-col-saldo-inicial {
+        right: 396px;
     }
 
     .positive {
@@ -2278,6 +2322,10 @@
         </div>
     </aside>
 
+    <div class="floating-filters-dock" id="floatingFiltersDock">
+        <button class="floating-clear-btn" id="floatingClearBtn" type="button" disabled>Limpiar filtros</button>
+    </div>
+
     <div class="consulta-layout">
         <section class="results-section" id="detalle-operativo">
             <div class="stats-bar">
@@ -2339,10 +2387,10 @@
                                 <th class="col-beneficiario"><span class="table-head-label"><span class="table-head-title">Beneficiario</span></span></th>
                                 <th class="col-descripcion"><span class="table-head-label"><span class="table-head-title">Descripción</span></span></th>
                                 <th><span class="table-head-label"><span class="table-head-title">O.P.</span></span></th>
-                                <th class="money-col"><span class="table-head-label"><span class="table-head-title">Saldo Inicial</span></span></th>
-                                <th class="money-col"><span class="table-head-label"><span class="table-head-title">Cargos</span></span></th>
-                                <th class="money-col"><span class="table-head-label"><span class="table-head-title">Abonos</span></span></th>
-                                <th class="money-col sticky-right"><span class="table-head-label"><span class="table-head-title">Saldo Final</span></span></th>
+                                <th class="money-col money-stick money-col-saldo-inicial"><span class="table-head-label"><span class="table-head-title">Saldo Inicial</span><span class="table-head-subtitle">Antes</span></span></th>
+                                <th class="money-col money-stick money-col-cargos"><span class="table-head-label"><span class="table-head-title">Cargos</span><span class="table-head-subtitle">Aumenta</span></span></th>
+                                <th class="money-col money-stick money-col-abonos"><span class="table-head-label"><span class="table-head-title">Abonos</span><span class="table-head-subtitle">Disminuye</span></span></th>
+                                <th class="money-col money-stick money-col-saldo-final sticky-right"><span class="table-head-label"><span class="table-head-title">Saldo Final</span><span class="table-head-subtitle">Después</span></span></th>
                             </tr>
                         </thead>
                         <tbody id="tablaBody">
@@ -2578,8 +2626,10 @@ function formatActiveFilterValue(key, value) {
 
 function getActiveFilterEntries(filters = filtrosActuales) {
     const entries = [];
+    const HIDDEN_FILTER_KEYS = new Set(['ente_catalogo']);
 
     Object.entries(filters || {}).forEach(([key, value]) => {
+        if (HIDDEN_FILTER_KEYS.has(key)) return;
         if (Array.isArray(value)) {
             normalizeValueList(value).forEach((item) => {
                 entries.push({
@@ -2917,6 +2967,11 @@ function updateFilterSummaryUI() {
         statusText.textContent = criteriaCount
             ? `${criteriaCount.toLocaleString('es-MX')} criterio${criteriaCount === 1 ? '' : 's'} activo${criteriaCount === 1 ? '' : 's'}.`
             : 'Abre la barra cuando necesites acotar resultados.';
+    }
+
+    const floatingClearBtn = document.getElementById('floatingClearBtn');
+    if (floatingClearBtn) {
+        floatingClearBtn.disabled = criteriaCount === 0;
     }
 }
 
@@ -3262,10 +3317,10 @@ function renderizarTabla(transacciones) {
             <td class="cell-beneficiary" data-label="Beneficiario" title="${t.beneficiario || ''}">${truncate(t.beneficiario, 25)}</td>
             <td class="cell-description" data-label="Descripción" title="${t.descripcion || ''}">${truncate(t.descripcion, 30)}</td>
             <td data-label="O.P.">${t.orden_pago || ''}</td>
-            <td class="money money-col" data-label="Saldo Inicial">${formatNumber(t.saldo_inicial)}</td>
-            <td class="money positive money-col" data-label="Cargos">${formatNumber(t.cargos)}</td>
-            <td class="money negative money-col" data-label="Abonos">${formatNumber(t.abonos)}</td>
-            <td class="money money-col sticky-right" data-label="Saldo Final"><strong>${formatNumber(t.saldo_final)}</strong></td>
+            <td class="money money-col money-stick money-col-saldo-inicial" data-label="Saldo Inicial">${formatNumber(t.saldo_inicial)}</td>
+            <td class="money positive money-col money-stick money-col-cargos" data-label="Cargos">${formatNumber(t.cargos)}</td>
+            <td class="money negative money-col money-stick money-col-abonos" data-label="Abonos">${formatNumber(t.abonos)}</td>
+            <td class="money money-col money-stick money-col-saldo-final sticky-right" data-label="Saldo Final"><strong>${formatNumber(t.saldo_final)}</strong></td>
         `;
         fragment.appendChild(row);
     });
@@ -4373,6 +4428,11 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
 
     mountFiltersDrawerToBody();
+
+    const floatingClearBtnEl = document.getElementById('floatingClearBtn');
+    if (floatingClearBtnEl) {
+        floatingClearBtnEl.addEventListener('click', limpiarFiltros);
+    }
 
     syncFloatingDockWidth();
     initFloatingDockResize();

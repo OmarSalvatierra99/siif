@@ -224,6 +224,22 @@ def create_app(config_name="default"):
             "coincide": abs(diferencia) < 0.005,
         }
 
+    def _build_visible_balance_payload(transaccion):
+        genero = str(transaccion.genero or "").strip()
+        if genero in CONTABLE_GENEROS:
+            return {
+                "saldo_inicial": float(transaccion.saldo_inicial) if transaccion.saldo_inicial else 0,
+                "cargos": float(transaccion.cargos) if transaccion.cargos else 0,
+                "abonos": float(transaccion.abonos) if transaccion.abonos else 0,
+                "saldo_final": float(transaccion.saldo_final) if transaccion.saldo_final else 0,
+            }
+        return {
+            "saldo_inicial": float(transaccion.abonos) if transaccion.abonos else 0,
+            "cargos": float(transaccion.saldo_inicial) if transaccion.saldo_inicial else 0,
+            "abonos": float(transaccion.cargos) if transaccion.cargos else 0,
+            "saldo_final": float(transaccion.saldo_final) if transaccion.saldo_final else 0,
+        }
+
     def _safe_next_url(raw_url):
         url = (raw_url or "").strip()
         if not url.startswith("/") or url.startswith("//"):
@@ -1960,6 +1976,7 @@ def create_app(config_name="default"):
                 "transacciones": [
                     {
                         **t.to_dict(),
+                        **_build_visible_balance_payload(t),
                         "ente": ente_catalogo_lookup.get(
                             _normalize_catalog_sigla(t.ente_siglas_catalogo),
                             t.ente_siglas_catalogo or "",
@@ -2081,10 +2098,12 @@ def create_app(config_name="default"):
                 'BENEFICIARIO': t.beneficiario,
                 'DESCRIPCION': t.descripcion,
                 'O.P.': t.orden_pago,
-                'SALDO INICIAL': float(t.saldo_inicial) if t.saldo_inicial else 0,
-                'CARGOS': float(t.cargos) if t.cargos else 0,
-                'ABONOS': float(t.abonos) if t.abonos else 0,
-                'SALDO FINAL': float(t.saldo_final) if t.saldo_final else 0,
+                **{
+                    'SALDO INICIAL': _build_visible_balance_payload(t)["saldo_inicial"],
+                    'CARGOS': _build_visible_balance_payload(t)["cargos"],
+                    'ABONOS': _build_visible_balance_payload(t)["abonos"],
+                    'SALDO FINAL': _build_visible_balance_payload(t)["saldo_final"],
+                },
             } for t in transacciones])
 
             df.to_excel(output, index=False, sheet_name='Reporte')

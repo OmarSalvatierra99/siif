@@ -557,10 +557,9 @@ def _validate_contable_balance(base, lote_id, tolerance=0.01):
 
 
 def _hash_transaccion_row(row):
-    # Include source file and auxiliary row order so repeated source lines are preserved.
+    # Include running balances so repeated source lines remain distinct after normalization.
     parts = [
         _norm(row.get("archivo_origen")),
-        _norm(row.get("orden_auxiliar")),
         _norm(row.get("cuenta_contable")),
         _norm(row.get("nombre_cuenta")),
         _norm(row.get("genero")),
@@ -582,8 +581,10 @@ def _hash_transaccion_row(row):
         _norm(row.get("orden_pago")),
         _norm(row.get("ente_siglas_catalogo")),
         _norm(row.get("ente_grupo_catalogo")),
+        _format_amount(row.get("saldo_inicial")),
         _format_amount(row.get("cargos")),
         _format_amount(row.get("abonos")),
+        _format_amount(row.get("saldo_final")),
     ]
 
     fecha = row.get("fecha_transaccion")
