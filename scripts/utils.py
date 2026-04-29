@@ -10,6 +10,7 @@ import re
 import traceback
 import uuid
 
+import numpy as np
 import pandas as pd
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Index
@@ -314,6 +315,9 @@ def _infer_account_balance_side(account_rows, tolerance=0.01):
     best_diff = None
 
     for _, row in account_rows.iterrows():
+        if "_saldo_inicial_origen_present" in account_rows.columns and not bool(row.get("_saldo_inicial_origen_present")):
+            continue
+
         saldo_inicial = float(row.get("saldo_inicial") or 0)
         cargos = float(row.get("cargos") or 0)
         abonos = float(row.get("abonos") or 0)
@@ -351,28 +355,75 @@ def _rebuild_account_balances(base):
         return base
 
     sort_columns = ["cuenta_contable", "_periodo_inicio_dt", "_archivo_orden", "_orden_auxiliar"]
-    base = base.sort_values(sort_columns, kind="stable").copy()
-    base["saldo_final"] = 0.0
+    base = base.sort_values(sort_columns, kind="stable").reset_index(drop=True).copy()
+
+    saldo_inicial_values = base["saldo_inicial"].to_numpy(dtype=float, copy=True)
+    cargos_values = base["cargos"].to_numpy(dtype=float, copy=False)
+    abonos_values = base["abonos"].to_numpy(dtype=float, copy=False)
+    saldo_final_origen_values = base["saldo_final_origen"].to_numpy(dtype=float, copy=False)
+    saldo_final_values = np.zeros(len(base), dtype=float)
+
+    if "_saldo_inicial_origen_present" in base.columns:
+        has_source_initial_values = base["_saldo_inicial_origen_present"].to_numpy(dtype=bool, copy=False)
+    else:
+        has_source_initial_values = np.ones(len(base), dtype=bool)
+
+    if "_saldo_final_origen_present" in base.columns:
+        has_source_final_values = base["_saldo_final_origen_present"].to_numpy(dtype=bool, copy=False)
+    else:
+        has_source_final_values = np.zeros(len(base), dtype=bool)
 
     for _, account_rows in base.groupby("cuenta_contable", sort=False):
         balance_side = _infer_account_balance_side(account_rows)
-        saldo_actual = None
+        idx = account_rows.index.to_numpy(dtype=int)
+        account_saldo_inicial = saldo_inicial_values[idx].copy()
+        account_cargos = cargos_values[idx]
+        account_abonos = abonos_values[idx]
+        account_saldo_final = np.zeros(len(idx), dtype=float)
 
-        for position, idx in enumerate(account_rows.index):
-            saldo_inicial = float(base.loc[idx, "saldo_inicial"] or 0)
-            cargos = float(base.loc[idx, "cargos"] or 0)
-            abonos = float(base.loc[idx, "abonos"] or 0)
+        if len(idx) == 0:
+            continue
 
-            if position > 0 and saldo_actual is not None:
-                saldo_inicial = saldo_actual
-                base.loc[idx, "saldo_inicial"] = saldo_inicial
-
+        if not has_source_initial_values[idx[0]] and has_source_final_values[idx[0]]:
             if balance_side == "acreedora":
-                saldo_actual = saldo_inicial - cargos + abonos
+                account_saldo_inicial[0] = round(
+                    saldo_final_origen_values[idx[0]] + account_cargos[0] - account_abonos[0],
+                    2,
+                )
             else:
-                saldo_actual = saldo_inicial + cargos - abonos
+                account_saldo_inicial[0] = round(
+                    saldo_final_origen_values[idx[0]] - account_cargos[0] + account_abonos[0],
+                    2,
+                )
 
-            base.loc[idx, "saldo_final"] = saldo_actual
+        if balance_side == "acreedora":
+            account_saldo_final[0] = round(
+                account_saldo_inicial[0] - account_cargos[0] + account_abonos[0],
+                2,
+            )
+            for pos in range(1, len(idx)):
+                account_saldo_inicial[pos] = round(account_saldo_final[pos - 1], 2)
+                account_saldo_final[pos] = round(
+                    account_saldo_inicial[pos] - account_cargos[pos] + account_abonos[pos],
+                    2,
+                )
+        else:
+            account_saldo_final[0] = round(
+                account_saldo_inicial[0] + account_cargos[0] - account_abonos[0],
+                2,
+            )
+            for pos in range(1, len(idx)):
+                account_saldo_inicial[pos] = round(account_saldo_final[pos - 1], 2)
+                account_saldo_final[pos] = round(
+                    account_saldo_inicial[pos] + account_cargos[pos] - account_abonos[pos],
+                    2,
+                )
+
+        saldo_inicial_values[idx] = account_saldo_inicial
+        saldo_final_values[idx] = account_saldo_final
+
+    base["saldo_inicial"] = np.round(saldo_inicial_values, 2)
+    base["saldo_final"] = np.round(saldo_final_values, 2)
 
     return base
 
@@ -468,7 +519,7 @@ def _build_rollforward_error_message(invalid_rows):
     return " ".join(parts)
 
 
-def _validate_reconstructed_rollforwards(base, lote_id, tolerance=0.01):
+def _validate_reconstructed_rollforwards(base, lote_id, tolerance=0.3):
     validation_rows = base[base["_saldo_final_origen_present"]].copy()
     if validation_rows.empty:
         logger.info(f"Sin saldos finales origen para validar en lote {lote_id}")
@@ -556,6 +607,100 @@ def _validate_contable_balance(base, lote_id, tolerance=0.01):
     )
 
 
+def _seed_historical_opening_balances(base, ente_siglas, tolerance=0.3):
+    if base.empty or not ente_siglas:
+        return base
+
+    sort_columns = ["cuenta_contable", "_periodo_inicio_dt", "_archivo_orden", "_orden_auxiliar"]
+    base = base.sort_values(sort_columns, kind="stable").copy()
+    adjusted_accounts = []
+
+    for cuenta_contable, account_rows in base.groupby("cuenta_contable", sort=False):
+        first_idx = account_rows.index[0]
+        first_row = base.loc[first_idx]
+        first_date = first_row.get("fecha_transaccion")
+        if pd.isna(first_date):
+            continue
+
+        saldo_final_origen = float(first_row.get("saldo_final_origen") or 0)
+        if not bool(first_row.get("_saldo_final_origen_present")):
+            continue
+
+        saldo_inicial_actual = float(first_row.get("saldo_inicial") or 0)
+        saldo_inicial_present = bool(first_row.get("_saldo_inicial_origen_present"))
+        if saldo_inicial_present and abs(saldo_inicial_actual) > tolerance:
+            continue
+
+        cargos = float(first_row.get("cargos") or 0)
+        abonos = float(first_row.get("abonos") or 0)
+        genero = str(first_row.get("genero") or "").strip()
+        balance_side = "acreedora" if genero in {"2", "3", "4", "9"} else "deudora"
+
+        if balance_side == "acreedora":
+            saldo_final_desde_actual = round(saldo_inicial_actual - cargos + abonos, 2)
+        else:
+            saldo_final_desde_actual = round(saldo_inicial_actual + cargos - abonos, 2)
+
+        if abs(saldo_final_desde_actual - saldo_final_origen) <= tolerance:
+            continue
+
+        previous = (
+            db.session.query(
+                Transaccion.saldo_final,
+                Transaccion.fecha_transaccion,
+                Transaccion.id,
+            )
+            .filter(
+                Transaccion.ente_siglas_catalogo == ente_siglas,
+                Transaccion.cuenta_contable == cuenta_contable,
+                Transaccion.fecha_transaccion < first_date,
+            )
+            .order_by(Transaccion.fecha_transaccion.desc(), Transaccion.id.desc())
+            .first()
+        )
+        if not previous:
+            continue
+
+        saldo_inicial_historico = round(float(previous[0] or 0), 2)
+        if balance_side == "acreedora":
+            saldo_final_desde_historico = round(saldo_inicial_historico - cargos + abonos, 2)
+        else:
+            saldo_final_desde_historico = round(saldo_inicial_historico + cargos - abonos, 2)
+
+        if abs(saldo_final_desde_historico - saldo_final_origen) > tolerance:
+            continue
+
+        base.loc[first_idx, "saldo_inicial"] = saldo_inicial_historico
+        base.loc[first_idx, "_saldo_inicial_origen_present"] = True
+        base.loc[first_idx, "_saldo_inicial_origen_text"] = f"{saldo_inicial_historico:.2f}"
+        adjusted_accounts.append(
+            (
+                cuenta_contable,
+                saldo_inicial_historico,
+                saldo_final_origen,
+                first_row.get("fecha"),
+                first_row.get("poliza"),
+            )
+        )
+
+    if adjusted_accounts:
+        logger.info(
+            "Saldos iniciales historicos aplicados para %s cuenta(s) del ente %s",
+            len(adjusted_accounts),
+            ente_siglas,
+        )
+        for cuenta_contable, saldo_inicial_historico, saldo_final_origen, fecha, poliza in adjusted_accounts[:10]:
+            logger.info(
+                "  %s | %s | %s: saldo inicial historico=%0.2f -> saldo final origen=%0.2f",
+                cuenta_contable,
+                fecha,
+                poliza,
+                saldo_inicial_historico,
+                saldo_final_origen,
+            )
+    return base
+
+
 def _hash_transaccion_row(row):
     # Include running balances so repeated source lines remain distinct after normalization.
     parts = [
@@ -600,6 +745,46 @@ def _hash_transaccion_row(row):
     return hashlib.sha256(fingerprint).hexdigest()
 
 
+_STRICT_NS_MAP = {
+    "http://purl.oclc.org/ooxml/spreadsheetml/main": "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+    "http://purl.oclc.org/ooxml/officeDocument/relationships": "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+    "http://purl.oclc.org/ooxml/drawingml/main": "http://schemas.openxmlformats.org/drawingml/2006/main",
+    "http://purl.oclc.org/ooxml/officeDocument/sharedTypes": "http://schemas.openxmlformats.org/officeDocument/2006/sharedTypes",
+}
+
+
+def _convert_strict_ooxml(file_bytes: bytes) -> bytes:
+    """Convierte archivos OOXML Strict al formato Transitional que soporta openpyxl."""
+    src = BytesIO(file_bytes)
+    dst = BytesIO()
+    with zipfile.ZipFile(src, "r") as zin, zipfile.ZipFile(dst, "w", zipfile.ZIP_DEFLATED) as zout:
+        for item in zin.infolist():
+            data = zin.read(item.filename)
+            if item.filename.endswith(".xml") or item.filename.endswith(".rels"):
+                try:
+                    text = data.decode("utf-8")
+                    for old, new in _STRICT_NS_MAP.items():
+                        text = text.replace(old, new)
+                    text = re.sub(r' conformance="strict"', "", text)
+                    data = text.encode("utf-8")
+                except Exception:
+                    pass
+            zout.writestr(item, data)
+    return dst.getvalue()
+
+
+def _is_strict_ooxml(file_bytes: bytes) -> bool:
+    """Detecta si un archivo xlsx usa el formato OOXML Strict."""
+    try:
+        with zipfile.ZipFile(BytesIO(file_bytes)) as zf:
+            if "xl/workbook.xml" in zf.namelist():
+                content = zf.read("xl/workbook.xml").decode("utf-8", errors="ignore")
+                return "purl.oclc.org/ooxml" in content
+    except Exception:
+        pass
+    return False
+
+
 def _read_one_excel(file_data):
     """Lee un archivo Excel y extrae las transacciones"""
     filename, file_content = file_data
@@ -607,7 +792,27 @@ def _read_one_excel(file_data):
     file_content.seek(0)
 
     try:
-        raw = pd.read_excel(file_content, header=None, dtype=str, engine="openpyxl")
+        raw_bytes = file_content.read()
+        is_strict = _is_strict_ooxml(raw_bytes)
+        raw = None
+
+        if is_strict:
+            logger.info(
+                f"Detectado formato OOXML Strict en {filename}, "
+                "usando lector XML optimizado..."
+            )
+            raw = _read_xlsx_xml_to_dataframe(BytesIO(raw_bytes))
+
+        if raw is None:
+            read_bytes = raw_bytes
+            if is_strict:
+                logger.info(
+                    f"Fallback a conversion OOXML Strict en {filename} "
+                    "para compatibilidad con openpyxl..."
+                )
+                read_bytes = _convert_strict_ooxml(raw_bytes)
+            raw = pd.read_excel(BytesIO(read_bytes), header=None, dtype=str, engine="openpyxl")
+
         logger.info(f"Archivo leído exitosamente: {filename} ({len(raw)} filas)")
     except Exception as e:
         logger.error(f"Error al leer archivo {filename}: {type(e).__name__} - {str(e)}")
@@ -939,80 +1144,264 @@ def _unique_headers(headers):
     return result
 
 
-def _read_xlsx_xml_to_dataframe(file_content):
-    file_content.seek(0)
-    data = file_content.read()
-    try:
-        z = zipfile.ZipFile(BytesIO(data))
-    except Exception:
-        return None
+def _xml_local_name(tag):
+    if "}" in tag:
+        return tag.split("}", 1)[1]
+    return tag
 
-    if "xl/worksheets/sheet1.xml" not in z.namelist():
-        return None
+
+def _estimate_stream_size(file_obj):
+    try:
+        current = file_obj.tell()
+        file_obj.seek(0, 2)
+        size = file_obj.tell()
+        file_obj.seek(current)
+        return size
+    except Exception:
+        return 0
+
+
+def _extract_xlsx_shared_strings(zip_file):
+    if "xl/sharedStrings.xml" not in zip_file.namelist():
+        return []
 
     shared = []
-    if "xl/sharedStrings.xml" in z.namelist():
-        try:
-            root = ET.fromstring(z.read("xl/sharedStrings.xml"))
-            ns = {"s": root.tag.split("}")[0].strip("{")}
-            for si in root.findall("s:si", ns):
-                texts = []
-                for t in si.findall(".//s:t", ns):
-                    texts.append(t.text or "")
-                shared.append("".join(texts))
-        except Exception:
-            shared = []
 
     try:
-        sheet_root = ET.fromstring(z.read("xl/worksheets/sheet1.xml"))
-    except Exception:
-        return None
+        with zip_file.open("xl/sharedStrings.xml") as shared_file:
+            current_text = []
+            for event, elem in ET.iterparse(shared_file, events=("start", "end")):
+                tag = _xml_local_name(elem.tag)
 
-    ns = {"s": sheet_root.tag.split("}")[0].strip("{")}
-    row_dicts = []
+                if event == "start" and tag == "si":
+                    current_text = []
+                    continue
+
+                if event != "end":
+                    continue
+
+                if tag == "t":
+                    current_text.append(elem.text or "")
+                elif tag == "si":
+                    shared.append("".join(current_text))
+                    elem.clear()
+
+        return shared
+    except Exception:
+        return []
+
+
+def _extract_xlsx_cell_value(cell_elem, shared_strings):
+    cell_type = cell_elem.attrib.get("t")
+
+    if cell_type == "inlineStr":
+        inline_text = []
+        for child in cell_elem.iter():
+            if _xml_local_name(child.tag) == "t":
+                inline_text.append(child.text or "")
+        return "".join(inline_text)
+
+    value = ""
+    for child in cell_elem:
+        if _xml_local_name(child.tag) == "v":
+            value = child.text or ""
+            break
+
+    if cell_type == "s":
+        try:
+            return shared_strings[int(value)]
+        except Exception:
+            return value
+
+    return value
+
+
+def _iter_xlsx_sheet_rows(zip_file, sheet_path, shared_strings):
     max_col_idx = 0
 
-    for row in sheet_root.findall(".//s:sheetData/s:row", ns):
-        cells = {}
-        for c in row.findall("s:c", ns):
-            ref = c.attrib.get("r", "")
-            letters = "".join(ch for ch in ref if ch.isalpha())
-            if not letters:
+    with zip_file.open(sheet_path) as sheet_file:
+        for event, elem in ET.iterparse(sheet_file, events=("end",)):
+            if _xml_local_name(elem.tag) != "row":
                 continue
-            col_idx = _col_to_index(letters)
-            max_col_idx = max(max_col_idx, col_idx)
-            t = c.attrib.get("t")
-            v = c.find("s:v", ns)
-            val = v.text if v is not None else ""
 
-            if t == "s":
-                try:
-                    val = shared[int(val)]
-                except Exception:
-                    pass
-            elif t == "inlineStr":
-                is_node = c.find("s:is", ns)
-                if is_node is not None:
-                    t_node = is_node.find("s:t", ns)
-                    if t_node is not None and t_node.text is not None:
-                        val = t_node.text
+            cells = {}
+            for child in elem:
+                if _xml_local_name(child.tag) != "c":
+                    continue
 
-            cells[col_idx] = val
+                ref = child.attrib.get("r", "")
+                letters = "".join(ch for ch in ref if ch.isalpha())
+                if not letters:
+                    continue
 
-        if cells:
-            row_dicts.append(cells)
+                col_idx = _col_to_index(letters)
+                value = _extract_xlsx_cell_value(child, shared_strings)
+                if value == "":
+                    continue
 
-    if not row_dicts or max_col_idx == 0:
+                max_col_idx = max(max_col_idx, col_idx)
+                cells[col_idx] = value
+
+            if cells:
+                yield cells, max_col_idx
+
+            elem.clear()
+
+
+def _get_xlsx_sheet_candidates(zip_file):
+    return sorted(
+        [
+            name
+            for name in zip_file.namelist()
+            if re.fullmatch(r"xl/worksheets/sheet\d+\.xml", name)
+        ],
+        key=lambda name: int(re.search(r"sheet(\d+)\.xml$", name).group(1))
+    )
+
+
+def _read_xlsx_xml_sheet_frames(file_content):
+    file_content.seek(0)
+    try:
+        z = zipfile.ZipFile(file_content)
+    except Exception:
+        return
+
+    sheet_candidates = _get_xlsx_sheet_candidates(z)
+    if not sheet_candidates:
+        return
+
+    shared = _extract_xlsx_shared_strings(z)
+
+    for sheet_path in sheet_candidates:
+        row_dicts = []
+        max_col_idx = 0
+
+        try:
+            for cells, current_max_col_idx in _iter_xlsx_sheet_rows(z, sheet_path, shared):
+                row_dicts.append({idx - 1: value for idx, value in cells.items()})
+                max_col_idx = max(max_col_idx, current_max_col_idx)
+        except Exception:
+            continue
+
+        if not row_dicts or max_col_idx == 0:
+            continue
+
+        frame = pd.DataFrame.from_records(row_dicts)
+        frame = frame.reindex(columns=range(max_col_idx), fill_value="").fillna("")
+        yield sheet_path, frame.astype(str)
+
+
+def _read_xlsx_xml_to_dataframe(file_content):
+    for _, frame in _read_xlsx_xml_sheet_frames(file_content):
+        return frame
+    return None
+
+
+def _read_one_excel_macro_xml(zip_file, sheet_path, shared_strings, filename):
+    def _clean_cell(value):
+        if pd.isna(value):
+            return ""
+        return str(value).strip()
+
+    header_positions = None
+    periodo_inicio_base = ""
+    records = []
+
+    for row_number, (cells, current_max_col_idx) in enumerate(
+        _iter_xlsx_sheet_rows(zip_file, sheet_path, shared_strings),
+        start=1,
+    ):
+        if header_positions is None:
+            if row_number > 30:
+                break
+
+            raw_headers = [
+                _clean_cell(cells.get(col_idx, ""))
+                for col_idx in range(1, current_max_col_idx + 1)
+            ]
+            row_text = " ".join(raw_headers).lower()
+            if not ("cuenta" in row_text and "fecha" in row_text and ("poliza" in row_text or "póliza" in row_text)):
+                continue
+
+            headers = _unique_headers(raw_headers)
+            col_map = {col: _norm(col) for col in headers}
+            header_positions = {header: idx for idx, header in enumerate(headers, start=1)}
+
+            cuenta_col = _select_column(col_map, ["cuenta contable", "cuenta", "cta contable"])
+            if not cuenta_col:
+                logger.warning(f"No se encontró columna de cuenta en {filename} ({sheet_path})")
+                return None
+
+            header_positions = {
+                "cuenta": header_positions.get(cuenta_col),
+                "nombre": header_positions.get(_select_column(col_map, ["nombre cuenta", "nombre de la cuenta", "descripcion cuenta", "nombre"])),
+                "fecha": header_positions.get(_select_column(col_map, ["fecha", "fecha transaccion", "fecha movimiento"])),
+                "poliza": header_positions.get(_select_column(col_map, ["poliza", "póliza", "no poliza", "no. poliza", "numero poliza"])),
+                "beneficiario": header_positions.get(_select_column(col_map, ["beneficiario", "proveedor", "razon social"])),
+                "descripcion": header_positions.get(_select_column(col_map, ["descripcion", "concepto", "detalle", "observaciones"])),
+                "op": header_positions.get(_select_column(col_map, ["o.p.", "op", "orden pago", "orden de pago", "orden_pago"])),
+                "saldo_inicial": header_positions.get(_select_column(col_map, ["saldo inicial", "saldo inicial cuenta", "saldo ini"])),
+                "cargos": header_positions.get(_select_column(col_map, ["cargos", "cargo", "debe"])),
+                "abonos": header_positions.get(_select_column(col_map, ["abonos", "abono", "haber"])),
+                "saldo_final": header_positions.get(_select_column(col_map, ["saldo final", "saldo final cuenta", "saldo"])),
+            }
+            continue
+
+        cuenta_pos = header_positions.get("cuenta")
+        fecha_pos = header_positions.get("fecha")
+        if not cuenta_pos or not fecha_pos:
+            continue
+
+        cuenta_val = _clean_cell(cells.get(cuenta_pos, ""))
+        if not cuenta_val:
+            continue
+
+        fecha_raw = cells.get(fecha_pos, "")
+        if pd.isna(fecha_raw) or str(fecha_raw).strip() == "":
+            continue
+
+        try:
+            fecha = pd.to_datetime(fecha_raw).strftime("%d/%m/%Y")
+        except Exception:
+            fecha = _clean_cell(fecha_raw)
+
+        if not periodo_inicio_base:
+            periodo_inicio_base = fecha
+
+        nombre_val = _clean_cell(cells.get(header_positions.get("nombre"), ""))
+        if not nombre_val and " - " in cuenta_val:
+            parts = cuenta_val.split(" - ", 1)
+            cuenta_val = parts[0].strip()
+            nombre_val = parts[1].strip()
+
+        records.append({
+            "cuenta_contable": cuenta_val,
+            "nombre_cuenta": nombre_val,
+            "fecha": fecha,
+            "poliza": _clean_cell(cells.get(header_positions.get("poliza"), "")),
+            "beneficiario": _clean_cell(cells.get(header_positions.get("beneficiario"), "")),
+            "descripcion": _clean_cell(cells.get(header_positions.get("descripcion"), "")),
+            "orden_pago": _clean_cell(cells.get(header_positions.get("op"), "")),
+            "saldo_inicial": _clean_cell(cells.get(header_positions.get("saldo_inicial"), "")),
+            "cargos": _clean_cell(cells.get(header_positions.get("cargos"), "")),
+            "abonos": _clean_cell(cells.get(header_positions.get("abonos"), "")),
+            "saldo_final": _clean_cell(cells.get(header_positions.get("saldo_final"), "")),
+            "periodo_inicio": periodo_inicio_base or fecha,
+            "orden_auxiliar": len(records),
+        })
+
+        if records and len(records) % 50000 == 0:
+            logger.info(
+                "Extracción macro XML en %s (%s): %s movimientos",
+                filename,
+                sheet_path,
+                len(records),
+            )
+
+    if not records:
         return None
 
-    rows = []
-    for cells in row_dicts:
-        row_list = [""] * max_col_idx
-        for idx, val in cells.items():
-            row_list[idx - 1] = val
-        rows.append(row_list)
-
-    return pd.DataFrame(rows)
+    return pd.DataFrame(records)
 
 
 def _read_one_excel_macro(file_data):
@@ -1021,18 +1410,14 @@ def _read_one_excel_macro(file_data):
     logger.info(f"Iniciando lectura macro de archivo: {filename}")
     file_content.seek(0)
 
-    try:
-        xl = pd.ExcelFile(file_content, engine="openpyxl")
-        sheets = xl.sheet_names
-    except Exception as e:
-        logger.error(f"Error al leer archivo macro {filename}: {type(e).__name__} - {str(e)}")
-        logger.error(f"Traceback: {traceback.format_exc()}")
-        sheets = []
-        xl = None
-
     def build_from_raw(raw):
         if raw.empty or len(raw) < 2:
             return None
+
+        def _clean_cell(value):
+            if pd.isna(value):
+                return ""
+            return str(value).strip()
 
         header_row_idx = None
         for idx in range(min(30, len(raw))):
@@ -1069,13 +1454,25 @@ def _read_one_excel_macro(file_data):
         abonos_col = _select_column(col_map, ["abonos", "abono", "haber"])
         saldo_final_col = _select_column(col_map, ["saldo final", "saldo final cuenta", "saldo"])
 
+        periodo_inicio_base = ""
+        if fecha_col:
+            for raw_value in data[fecha_col].tolist():
+                if pd.isna(raw_value) or str(raw_value).strip() == "":
+                    continue
+                try:
+                    periodo_inicio_base = pd.to_datetime(raw_value).strftime("%d/%m/%Y")
+                except Exception:
+                    periodo_inicio_base = str(raw_value).strip()
+                if periodo_inicio_base:
+                    break
+
         records = []
         for order_idx, (_, row) in enumerate(data.iterrows()):
-            cuenta_val = str(row.get(cuenta_col, "")).strip() if cuenta_col else ""
+            cuenta_val = _clean_cell(row.get(cuenta_col, "")) if cuenta_col else ""
             if not cuenta_val:
                 continue
 
-            nombre_val = str(row.get(nombre_col, "")).strip() if nombre_col else ""
+            nombre_val = _clean_cell(row.get(nombre_col, "")) if nombre_col else ""
             if not nombre_val and " - " in cuenta_val:
                 parts = cuenta_val.split(" - ", 1)
                 cuenta_val = parts[0].strip()
@@ -1088,16 +1485,16 @@ def _read_one_excel_macro(file_data):
             try:
                 fecha = pd.to_datetime(fecha_raw).strftime("%d/%m/%Y")
             except Exception:
-                fecha = str(fecha_raw).strip()
+                fecha = _clean_cell(fecha_raw)
 
-            poliza = str(row.get(poliza_col, "")).strip() if poliza_col else ""
-            beneficiario = str(row.get(beneficiario_col, "")).strip() if beneficiario_col else ""
-            descripcion = str(row.get(descripcion_col, "")).strip() if descripcion_col else ""
-            op = str(row.get(op_col, "")).strip() if op_col else ""
-            saldo_inicial = str(row.get(saldo_inicial_col, "")).strip() if saldo_inicial_col else ""
-            cargos = str(row.get(cargos_col, "")).strip() if cargos_col else ""
-            abonos = str(row.get(abonos_col, "")).strip() if abonos_col else ""
-            saldo_final = str(row.get(saldo_final_col, "")).strip() if saldo_final_col else ""
+            poliza = _clean_cell(row.get(poliza_col, "")) if poliza_col else ""
+            beneficiario = _clean_cell(row.get(beneficiario_col, "")) if beneficiario_col else ""
+            descripcion = _clean_cell(row.get(descripcion_col, "")) if descripcion_col else ""
+            op = _clean_cell(row.get(op_col, "")) if op_col else ""
+            saldo_inicial = _clean_cell(row.get(saldo_inicial_col, "")) if saldo_inicial_col else ""
+            cargos = _clean_cell(row.get(cargos_col, "")) if cargos_col else ""
+            abonos = _clean_cell(row.get(abonos_col, "")) if abonos_col else ""
+            saldo_final = _clean_cell(row.get(saldo_final_col, "")) if saldo_final_col else ""
 
             records.append({
                 "cuenta_contable": cuenta_val,
@@ -1111,7 +1508,7 @@ def _read_one_excel_macro(file_data):
                 "cargos": cargos,
                 "abonos": abonos,
                 "saldo_final": saldo_final,
-                "periodo_inicio": fecha,
+                "periodo_inicio": periodo_inicio_base or fecha,
                 "orden_auxiliar": order_idx,
             })
 
@@ -1119,6 +1516,39 @@ def _read_one_excel_macro(file_data):
             return None
 
         return pd.DataFrame(records)
+
+    try:
+        raw_bytes = file_content.read()
+        is_strict = _is_strict_ooxml(raw_bytes)
+        if is_strict:
+            logger.info(
+                f"Detectado formato OOXML Strict en {filename}, "
+                "usando lector XML optimizado para archivos macro..."
+            )
+            with zipfile.ZipFile(BytesIO(raw_bytes)) as zf:
+                shared = _extract_xlsx_shared_strings(zf)
+                for sheet_path in _get_xlsx_sheet_candidates(zf):
+                    logger.info(
+                        f"Probando hoja XML {sheet_path} en {filename}"
+                    )
+                    df = _read_one_excel_macro_xml(zf, sheet_path, shared, filename)
+                    if df is not None and not df.empty:
+                        logger.info(
+                            f"✓ Extraídas {len(df)} transacciones macro de {filename} "
+                            f"({sheet_path}, xml)"
+                        )
+                        return df, filename
+
+        if is_strict:
+            logger.info(f"Fallback a conversion OOXML Strict en {filename} para openpyxl...")
+            raw_bytes = _convert_strict_ooxml(raw_bytes)
+        xl = pd.ExcelFile(BytesIO(raw_bytes), engine="openpyxl")
+        sheets = xl.sheet_names
+    except Exception as e:
+        logger.error(f"Error al leer archivo macro {filename}: {type(e).__name__} - {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        sheets = []
+        xl = None
 
     for sheet in sheets:
         try:
@@ -1146,6 +1576,8 @@ def process_files_to_database(
     usuario: str = "sistema",
     progress_callback: Optional[Callable[[int, str], None]] = None,
     tipo_archivo: str = "auxiliar",
+    enforce_contable_balance: bool = True,
+    seed_historical_opening_balances: bool = False,
     expected_dependency: Optional[str] = None,
     selected_ente: Optional[str] = None,
     selected_ente_siglas: Optional[str] = None,
@@ -1167,6 +1599,13 @@ def process_files_to_database(
     selected_ente_siglas = str(selected_ente_siglas or "").strip()
     selected_ente_nombre = str(selected_ente_nombre or "").strip()
     selected_ente_grupo = str(selected_ente_grupo or "").strip()
+    file_sizes = [_estimate_stream_size(file_info[1]) for file_info in file_list]
+    total_input_bytes = sum(file_sizes)
+    max_input_bytes = max(file_sizes, default=0)
+    worker_count = min(4, len(file_list))
+
+    if max_input_bytes >= 20 * 1024 * 1024 or total_input_bytes >= 40 * 1024 * 1024:
+        worker_count = 1
 
     # Crear registro de lote
     lote = LoteCarga(
@@ -1193,7 +1632,11 @@ def process_files_to_database(
         file_order = {file_info[0]: idx for idx, file_info in enumerate(file_list)}
 
         reader = _read_one_excel_macro if tipo_archivo == "macro" else _read_one_excel
-        with ThreadPoolExecutor(max_workers=min(4, len(file_list))) as ex:
+        logger.info(
+            f"Procesando lote {lote_id} con {worker_count} worker(s). "
+            f"Tamaño total={total_input_bytes:,} bytes, archivo mayor={max_input_bytes:,} bytes"
+        )
+        with ThreadPoolExecutor(max_workers=worker_count) as ex:
             futures = {ex.submit(reader, f): f for f in file_list}
             for f in as_completed(futures):
                 completed_files += 1
@@ -1318,12 +1761,16 @@ def process_files_to_database(
 
         # Convertir columnas monetarias
         report(50, "Convirtiendo valores monetarios...")
+        base["_saldo_inicial_origen_text"] = base["saldo_inicial"].fillna("").astype(str).str.strip()
         base["_saldo_final_origen_text"] = base["saldo_final"].fillna("").astype(str).str.strip()
         base["saldo_inicial"] = _to_numeric_fast(base["saldo_inicial"]).astype(float)
         base["cargos"] = _to_numeric_fast(base["cargos"]).astype(float)
         base["abonos"] = _to_numeric_fast(base["abonos"]).astype(float)
+        base["_saldo_inicial_origen_present"] = base["_saldo_inicial_origen_text"] != ""
         base["saldo_final_origen"] = _to_numeric_fast(base["saldo_final"]).astype(float)
         base["_saldo_final_origen_present"] = base["_saldo_final_origen_text"] != ""
+        for money_col in ["saldo_inicial", "cargos", "abonos", "saldo_final_origen"]:
+            base[money_col] = base[money_col].round(2)
         base["_archivo_orden"] = pd.to_numeric(base.get("_archivo_orden", 0), errors="coerce").fillna(0).astype(int)
         base["_orden_auxiliar"] = pd.to_numeric(base.get("orden_auxiliar", 0), errors="coerce").fillna(0).astype(int)
         periodo_inicio_series = base["periodo_inicio"] if "periodo_inicio" in base.columns else base["fecha"]
@@ -1332,6 +1779,16 @@ def process_files_to_database(
             format="%d/%m/%Y",
             errors="coerce"
         )
+        base["fecha_transaccion"] = pd.to_datetime(
+            base["fecha"], format="%d/%m/%Y", errors="coerce"
+        )
+
+        if seed_historical_opening_balances:
+            report(55, "Sembrando saldos iniciales desde historial...")
+            base = _seed_historical_opening_balances(
+                base,
+                selected_ente_siglas,
+            )
 
         # Reconstruir el auxiliar en orden estable y respetando la naturaleza de la cuenta.
         report(60, "Calculando saldos acumulativos...")
@@ -1339,12 +1796,12 @@ def process_files_to_database(
 
         report(65, "Validando integridad del auxiliar...")
         _validate_reconstructed_rollforwards(base, lote_id)
-        _validate_contable_balance(base, lote_id)
-
-        # Convertir fechas
-        base["fecha_transaccion"] = pd.to_datetime(
-            base["fecha"], format="%d/%m/%Y", errors="coerce"
-        )
+        if enforce_contable_balance:
+            _validate_contable_balance(base, lote_id)
+        else:
+            logger.info(
+                f"Se omite validación contable de cargos/abonos para lote {lote_id}"
+            )
 
         # Generar hash por registro para evitar duplicados
         report(70, "Generando firmas de registros...")

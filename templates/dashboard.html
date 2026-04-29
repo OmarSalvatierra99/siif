@@ -146,10 +146,10 @@ async function cargarDependencias() {
         const data = await response.json();
 
         const select = document.getElementById('filtroDependencia');
-        data.dependencias.forEach(dep => {
+        (data.dependencias || []).forEach(item => {
             const option = document.createElement('option');
-            option.value = dep;
-            option.textContent = dep;
+            option.value = item.nombre;
+            option.textContent = `${item.nombre} (${item.total.toLocaleString()} transacciones)`;
             select.appendChild(option);
         });
     } catch (error) {

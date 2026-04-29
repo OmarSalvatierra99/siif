@@ -5,7 +5,7 @@ class Config:
     """Configuración base de la aplicación"""
 
     # Flask
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
+    SECRET_KEY = os.environ.get('SECRET_KEY')
     PORT = int(os.environ.get('PORT', 5009))
 
     # Base de datos

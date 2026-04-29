@@ -1,0 +1,21 @@
+[Unit]
+Description=SIIF — Sistema de Información de Ingresos y Finanzas
+After=network.target
+
+[Service]
+Type=simple
+User=gabo
+WorkingDirectory=/home/gabo/portfolio/projects/08-siif
+EnvironmentFile=/etc/default/portfolio-siif
+ExecStart=/home/gabo/portfolio/projects/08-siif/venv/bin/gunicorn \
+    --bind 127.0.0.1:${PORT} \
+    --workers 2 \
+    --timeout 180 \
+    --access-logfile logs/gunicorn-access.log \
+    --error-logfile logs/gunicorn-error.log \
+    "app:create_app('production')"
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

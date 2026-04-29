@@ -20,12 +20,13 @@ class CatalogosConsultaApiTests(unittest.TestCase):
         cls.client = cls.app.test_client()
 
         with cls.app.app_context():
-            usuarios = [
-                Usuario(username="juan", nombre_completo="Juan", activo=True),
-                Usuario(username="miguel", nombre_completo="Miguel", activo=True),
-                Usuario(username="luis", nombre_completo="Luis", activo=True),
-            ]
-            db.session.add_all(usuarios)
+            for username, nombre_completo in (("juan", "Juan"), ("miguel", "Miguel")):
+                user = Usuario.query.filter_by(username=username).first()
+                if user is None:
+                    user = Usuario(username=username)
+                user.nombre_completo = nombre_completo
+                user.activo = True
+                db.session.add(user)
             db.session.commit()
 
     @classmethod

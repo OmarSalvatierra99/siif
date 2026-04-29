@@ -2851,6 +2851,7 @@ function renderPrimaryEnteOptions(items = []) {
             siglas: normalizeValue(item?.siglas) || value,
             ambito: normalizeValue(item?.ambito) || '',
             grupo_label: grupoLabel,
+            orden: Number(item?.orden) || 999999,
         };
 
         primaryEnteCatalogLabels.set(comparableValue(value), label);
@@ -2859,7 +2860,13 @@ function renderPrimaryEnteOptions(items = []) {
         if (!groupedItems.has(grupoLabel)) {
             groupedItems.set(grupoLabel, []);
         }
-        groupedItems.get(grupoLabel).push({ value, label, meta });
+        groupedItems.get(grupoLabel).push({
+            value,
+            label,
+            meta,
+            count: item.count || 0,
+            orden: Number(item?.orden) || meta.orden,
+        });
     });
 
     const getGroupSortOrder = (groupLabel) => {
@@ -2883,11 +2890,22 @@ function renderPrimaryEnteOptions(items = []) {
             group.label = groupLabel;
 
             groupItems
-                .sort((left, right) => alphaNumericCollator.compare(left.label, right.label))
+                .sort((left, right) => {
+                    const leftOrder = Number(left.orden) || 999999;
+                    const rightOrder = Number(right.orden) || 999999;
+                    if (leftOrder !== rightOrder) {
+                        return leftOrder - rightOrder;
+                    }
+                    return alphaNumericCollator.compare(left.label, right.label);
+                })
                 .forEach((item) => {
                     const option = document.createElement('option');
                     option.value = item.value;
-                    option.textContent = item.label;
+                    const count = item.count || 0;
+                    option.textContent = count > 0
+                        ? `${item.label} (${count.toLocaleString()} transacciones)`
+                        : item.label;
+                    option.disabled = count === 0;
                     option.dataset.nombre = item.meta.nombre || '';
                     option.dataset.siglas = item.meta.siglas || item.value;
                     option.dataset.ambito = item.meta.ambito || '';

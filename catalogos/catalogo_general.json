@@ -2,429 +2,351 @@
   "entes": [
     {
       "num": "1",
-      "nombre": "PODER EJECUTIVO DEL ESTADO DE TLAXCALA",
+      "nombre": "Poder Ejecutivo del Estado de Tlaxcala",
       "siglas": "EJECUTIVO",
-      "clasificacion": "PODER DEL ESTADO"
+      "clasificacion": "Poder Ejecutivo y Dependencias"
     },
     {
       "num": "1.1",
-      "nombre": "DESPACHO DE LA GOBERNADORA",
+      "nombre": "Despacho de la Gobernadora",
       "siglas": "DG",
-      "clasificacion": "DEPENDENCIA"
+      "clasificacion": "Poder Ejecutivo y Dependencias"
     },
     {
       "num": "1.2",
-      "nombre": "SECRETARÍA DE GOBIERNO",
-      "siglas": "SEGOB",
-      "clasificacion": "DEPENDENCIA"
+      "nombre": "Oficialía Mayor de Gobierno",
+      "siglas": "OMG",
+      "clasificacion": "Poder Ejecutivo y Dependencias"
     },
     {
       "num": "1.3",
-      "nombre": "OFICIALIA MAYOR DE GOBIERNO",
-      "siglas": "OMG",
-      "clasificacion": "DEPENDENCIA"
+      "nombre": "Secretaría de Finanzas",
+      "siglas": "SF",
+      "clasificacion": "Poder Ejecutivo y Dependencias"
     },
     {
       "num": "1.4",
-      "nombre": "SECRETARÍA DE FINANZAS",
-      "siglas": "SF",
-      "clasificacion": "DEPENDENCIA"
+      "nombre": "Secretaría de Educación Pública",
+      "siglas": "SEPE",
+      "clasificacion": "Poder Ejecutivo y Dependencias"
     },
     {
       "num": "1.5",
-      "nombre": "SECRETARÍA DE DESARROLLO ECONOMICO",
-      "siglas": "SEDECO",
-      "clasificacion": "DEPENDENCIA"
+      "nombre": "Secretaría de Movilidad y Transporte",
+      "siglas": "SMyT",
+      "clasificacion": "Poder Ejecutivo y Dependencias"
     },
     {
       "num": "1.6",
-      "nombre": "SECRETARÍA DE TURISMO",
-      "siglas": "SECTUR",
-      "clasificacion": "DEPENDENCIA"
+      "nombre": "Secretaría de Impulso Agropecuario",
+      "siglas": "SIA",
+      "clasificacion": "Poder Ejecutivo y Dependencias"
     },
     {
       "num": "1.7",
-      "nombre": "SECRETARÍA DE INFRAESTRUCTURA",
-      "siglas": "SI",
-      "clasificacion": "DEPENDENCIA"
+      "nombre": "Coordinación de Comunicación",
+      "siglas": "CCOM",
+      "clasificacion": "Poder Ejecutivo y Dependencias"
     },
     {
       "num": "1.8",
-      "nombre": "SECRETARÍA DE EDUCACIÓN PÚBLICA",
-      "siglas": "SEPE",
-      "clasificacion": "DEPENDENCIA"
+      "nombre": "Secretaría de las Mujeres",
+      "siglas": "SM",
+      "clasificacion": "Poder Ejecutivo y Dependencias"
     },
     {
       "num": "1.9",
-      "nombre": "SECRETARÍA DE MOVILIDAD Y TRANSPORTE",
-      "siglas": "SMYT",
-      "clasificacion": "DEPENDENCIA"
+      "nombre": "Secretaría de Ordenamiento Territorial y Vivienda",
+      "siglas": "SOTyV",
+      "clasificacion": "Poder Ejecutivo y Dependencias"
     },
     {
       "num": "1.10",
-      "nombre": "SECRETARÍA DE LA FUNCIÓN PÚBLICA",
-      "siglas": "SFP",
-      "clasificacion": "DEPENDENCIA"
+      "nombre": "Secretaría de Seguridad Ciudadana",
+      "siglas": "SSC",
+      "clasificacion": "Poder Ejecutivo y Dependencias"
     },
     {
       "num": "1.11",
-      "nombre": "SECRETARÍA DE IMPULSO AGROPECUARIO",
-      "siglas": "SIA",
-      "clasificacion": "DEPENDENCIA"
+      "nombre": "Coordinación General de Planeación e Inversión",
+      "siglas": "CGPI",
+      "clasificacion": "Poder Ejecutivo y Dependencias"
     },
     {
       "num": "1.12",
-      "nombre": "COORDINACIÓN DE COMUNICACIÓN",
-      "siglas": "CCOM",
-      "clasificacion": "DEPENDENCIA"
+      "nombre": "Secretaría de Bienestar",
+      "siglas": "SB",
+      "clasificacion": "Poder Ejecutivo y Dependencias"
     },
     {
       "num": "1.13",
-      "nombre": "SECRETARÍA DE MEDIO AMBIENTE",
-      "siglas": "SMA",
-      "clasificacion": "DEPENDENCIA"
+      "nombre": "Secretariado Ejecutivo del Sistema Estatal de Seguridad Pública",
+      "siglas": "SESESP",
+      "clasificacion": "Poder Ejecutivo y Dependencias"
     },
     {
       "num": "1.14",
-      "nombre": "SECRETARÍA DE CULTURA",
-      "siglas": "SC",
-      "clasificacion": "DEPENDENCIA"
+      "nombre": "Instituto Tlaxcalteca de Asistencia Especializada a la Salud",
+      "siglas": "ITAES",
+      "clasificacion": "Poder Ejecutivo y Dependencias"
     },
     {
       "num": "1.15",
-      "nombre": "SECRETARÍA DE LAS MUJERES",
-      "siglas": "SMET",
-      "clasificacion": "DEPENDENCIA"
+      "nombre": "Procuraduría de Protección al Ambiente del Estado de Tlaxcala",
+      "siglas": "PROPAET",
+      "clasificacion": "Poder Ejecutivo y Dependencias"
     },
     {
       "num": "1.16",
-      "nombre": "SECRETARÍA DE ORDENAMIENTO TERRITORIAL Y VIVIENDA",
-      "siglas": "SOTYV",
-      "clasificacion": "DEPENDENCIA"
-    },
-    {
-      "num": "1.17",
-      "nombre": "SECRETARÍA DE SEGURIDAD CIUDADANA",
-      "siglas": "SSC",
-      "clasificacion": "DEPENDENCIA"
-    },
-    {
-      "num": "1.18",
-      "nombre": "COORDINACIÓN GENERAL DE PLANEACIÓN E INVERSIÓN",
-      "siglas": "CGPI",
-      "clasificacion": "DEPENDENCIA"
-    },
-    {
-      "num": "1.19",
-      "nombre": "SECRETARÍA DE BIENESTAR",
-      "siglas": "SB",
-      "clasificacion": "DEPENDENCIA"
-    },
-    {
-      "num": "1.20",
-      "nombre": "SECRETARÍA DE TRABAJO Y COMPETITIVIDAD",
-      "siglas": "STYC",
-      "clasificacion": "DEPENDENCIA"
-    },
-    {
-      "num": "1.21",
-      "nombre": "CONSEJERÍA JURÍDICA DEL EJECUTIVO",
-      "siglas": "CJE",
-      "clasificacion": "DEPENDENCIA"
-    },
-    {
-      "num": "1.22",
-      "nombre": "COORDINACIÓN ESTATAL DE PROTECCIÓN CIVIL",
-      "siglas": "CEPC",
-      "clasificacion": "DESCONCENTRADOS"
-    },
-    {
-      "num": "1.23",
-      "nombre": "SECRETARIADO EJECUTIVO DEL SISTEMA ESTATAL DE SEGURIDAD PÚBLICA",
-      "siglas": "SESESP",
-      "clasificacion": "DESCONCENTRADOS"
-    },
-    {
-      "num": "1.24",
-      "nombre": "INSTITUTO TLAXCALTECA DE DESARROLLO TAURINO",
-      "siglas": "ITDT",
-      "clasificacion": "DESCONCENTRADOS"
-    },
-    {
-      "num": "1.25",
-      "nombre": "INSTITUTO TLAXCALTECA DE ASISTENCIA ESPECIALIZADA A LA SALUD",
-      "siglas": "ITAES",
-      "clasificacion": "DESCONCENTRADOS"
-    },
-    {
-      "num": "1.26",
-      "nombre": "COMISIÓN ESTATAL DE ARBITRAJE MÉDICO",
-      "siglas": "CEAM",
-      "clasificacion": "DESCONCENTRADOS"
-    },
-    {
-      "num": "1.27",
-      "nombre": "CASA DE LAS ARTESANÍAS DE TLAXCALA",
-      "siglas": "CAT",
-      "clasificacion": "DESCONCENTRADOS"
-    },
-    {
-      "num": "1.28",
-      "nombre": "PROCURADURÍA DE PROTECCIÓN AL AMBIENTE DEL ESTADO DE TLAXCALA",
-      "siglas": "PROPAET",
-      "clasificacion": "DESCONCENTRADOS"
-    },
-    {
-      "num": "1.29",
-      "nombre": "INSTITUTO DE FAUNA SILVESTRE PARA EL ESTADO DE TLAXCALA",
-      "siglas": "IFAST",
-      "clasificacion": "DESCONCENTRADOS"
+      "nombre": "Secretaría de Infraestructura",
+      "siglas": "SI",
+      "clasificacion": "Poder Ejecutivo y Dependencias"
     },
     {
       "num": "2",
-      "nombre": "PODER LEGISLATIVO DEL ESTADO DE TLAXCALA",
+      "nombre": "Poder Legislativo del Estado de Tlaxcala",
       "siglas": "LEGISLATIVO",
-      "clasificacion": "PODERES DEL ESTADO"
+      "clasificacion": "Poderes del Estado"
     },
     {
       "num": "3",
-      "nombre": "PODER JUDICIAL DEL ESTADO DE TLAXCALA",
+      "nombre": "Poder Judicial del Estado de Tlaxcala",
       "siglas": "PJET",
-      "clasificacion": "PODERES DEL ESTADO"
+      "clasificacion": "Poderes del Estado"
     },
     {
       "num": "4",
-      "nombre": "CENTRO DE CONCILIACIÓN LABORAL DEL ESTADO DE TLAXCALA",
+      "nombre": "Centro de Conciliación Laboral del Estado de Tlaxcala",
       "siglas": "CCLET",
-      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+      "clasificacion": "Entidades Paraestatales"
     },
     {
       "num": "5",
-      "nombre": "COMISIÓN ESTATAL DEL AGUA Y SANEAMIENTO DEL ESTADO DE TLAXCALA",
+      "nombre": "Comisión Estatal del Agua y Saneamiento del Estado de Tlaxcala",
       "siglas": "CEAS",
-      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+      "clasificacion": "Entidades Paraestatales"
     },
     {
       "num": "6",
-      "nombre": "COLEGIO DE BACHILLERES DEL ESTADO DE TLAXCALA",
+      "nombre": "Colegio de Bachilleres del Estado de Tlaxcala",
       "siglas": "COBAT",
-      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+      "clasificacion": "Entidades Paraestatales"
     },
     {
       "num": "7",
-      "nombre": "COLEGIO DE EDUCACIÓN PROFESIONAL TÉCNICA DEL ESTADO DE TLAXCALA",
+      "nombre": "Colegio de Educación Profesional Técnica del Estado de Tlaxcala",
       "siglas": "CONALEP",
-      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+      "clasificacion": "Entidades Paraestatales"
     },
     {
       "num": "8",
-      "nombre": "COLEGIO DE ESTUDIOS CIENTÍFICOS Y TECNOLÓGICOS DEL ESTADO DE TLAXCALA",
+      "nombre": "Colegio de Estudios Cientificos y Tecnológicos del Estado de Tlaxcala",
       "siglas": "CECYTE",
-      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+      "clasificacion": "Entidades Paraestatales"
     },
     {
       "num": "9",
-      "nombre": "CONSEJO ESTATAL DE POBLACIÓN",
+      "nombre": "Consejo Estatal de Población",
       "siglas": "COESPO",
-      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+      "clasificacion": "Entidades Paraestatales"
     },
     {
       "num": "10",
-      "nombre": "COORDINACIÓN DE RADIO, CINE Y TELEVISIÓN",
+      "nombre": "Coordinación de Radio, Cine y Televisión",
       "siglas": "CORACYT",
-      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+      "clasificacion": "Entidades Paraestatales"
     },
     {
       "num": "11",
-      "nombre": "EL COLEGIO DE TLAXCALA, A.C.",
+      "nombre": "El Colegio de Tlaxcala, A.C.",
       "siglas": "COLTLAX",
-      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+      "clasificacion": "Entidades Paraestatales"
     },
     {
       "num": "12",
-      "nombre": "FIDEICOMISO DE LA CIUDAD INDUSTRIAL DE XICOTÉNCATL",
+      "nombre": "Fideicomiso de la Ciudad Industrial de Xicoténcatl",
       "siglas": "FIDECIX",
-      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+      "clasificacion": "Entidades Paraestatales"
     },
     {
       "num": "13",
-      "nombre": "COMISIÓN EJECUTIVA DE ATENCIÓN A VÍCTIMAS DEL ESTADO DE TLAXCALA",
+      "nombre": "Comisión Ejecutiva de Atención a Víctimas del Estado de Tlaxcala",
       "siglas": "CEAVIT",
-      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+      "clasificacion": "Entidades Paraestatales"
     },
     {
       "num": "14",
-      "nombre": "FONDO MACRO PARA EL DESARROLLO INTEGRAL DE TLAXCALA",
+      "nombre": "Fondo Macro para el Desarrollo Integral de Tlaxcala",
       "siglas": "FOMTLAX",
-      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+      "clasificacion": "Entidades Paraestatales"
     },
     {
       "num": "15",
-      "nombre": "INSTITUTO DE CAPACITACIÓN PARA EL TRABAJO DEL ESTADO DE TLAXCALA",
+      "nombre": "Instituto de Capacitación para el Trabajo del Estado de Tlaxcala",
       "siglas": "ICATLAX",
-      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+      "clasificacion": "Entidades Paraestatales"
     },
     {
       "num": "16",
-      "nombre": "INSTITUTO DE CATASTRO DEL ESTADO DE TLAXCALA",
+      "nombre": "Instituto de Catastro del Estado de Tlaxcala",
       "siglas": "IDC",
-      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+      "clasificacion": "Entidades Paraestatales"
     },
     {
       "num": "17",
-      "nombre": "INSTITUTO DEL DEPORTE DE TLAXCALA",
+      "nombre": "Instituto del Deporte de Tlaxcala",
       "siglas": "IDET",
-      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+      "clasificacion": "Entidades Paraestatales"
     },
     {
       "num": "18",
-      "nombre": "INSTITUTO TECNOLÓGICO SUPERIOR DE TLAXCO",
+      "nombre": "Instituto Tecnológico Superior de Tlaxco",
       "siglas": "ITST",
-      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+      "clasificacion": "Entidades Paraestatales"
     },
     {
       "num": "19",
-      "nombre": "INSTITUTO TLAXCALTECA DE LA INFRAESTRUCTURA FÍSICA EDUCATIVA",
+      "nombre": "Instituto Tlaxcalteca de la Infraestructura Física Educativa",
       "siglas": "ITIFE",
-      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+      "clasificacion": "Entidades Paraestatales"
     },
     {
       "num": "20",
-      "nombre": "INSTITUTO TLAXCALTECA DE LA JUVENTUD",
+      "nombre": "Instituto Tlaxcalteca de la Juventud",
       "siglas": "ITJ",
-      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+      "clasificacion": "Entidades Paraestatales"
     },
     {
       "num": "21",
-      "nombre": "INSTITUTO TLAXCALTECA PARA LA EDUCACIÓN DE LOS ADULTOS, ITEA",
+      "nombre": "Instituto Tlaxcalteca para la Educación de los Adultos",
       "siglas": "ITEA",
-      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+      "clasificacion": "Entidades Paraestatales"
     },
     {
       "num": "22",
-      "nombre": "ÓRGANISMO PÚBLICO DESCENTRALIZADO SALUD DE TLAXCALA",
+      "nombre": "Organismo Público Descentralizado Salud de Tlaxcala",
       "siglas": "OPD_SALUD",
-      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+      "clasificacion": "Entidades Paraestatales"
     },
     {
       "num": "23",
-      "nombre": "PATRONATO CENTRO DE REHABILITACIÓN INTEGRAL Y ESCUELA EN TERAPIA FÍSICA Y REHABILITACIÓN",
+      "nombre": "Patronato Centro de Rehabilitación Integral y Escuela en Terapia Física y Rehabilitación",
       "siglas": "CRI-ESCUELA",
-      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+      "clasificacion": "Entidades Paraestatales"
     },
     {
       "num": "24",
-      "nombre": "PATRONATO \"LA LIBERTAD CENTRO CULTURAL DE APIZACO\"",
+      "nombre": "Patronato La Libertad Centro Cultural de Apizaco",
       "siglas": "LA_LIBERTAD",
-      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+      "clasificacion": "Entidades Paraestatales"
     },
     {
       "num": "25",
-      "nombre": "PENSIONES CIVILES DEL ESTADO DE TLAXCALA",
+      "nombre": "Pensiones Civiles del Estado de Tlaxcala",
       "siglas": "PCET",
-      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+      "clasificacion": "Entidades Paraestatales"
     },
     {
       "num": "26",
-      "nombre": "SISTEMA ESTATAL PARA EL DESARROLLO INTEGRAL DE LA FAMILIA",
+      "nombre": "Sistema Estatal para el Desarrollo Integral de la Familia",
       "siglas": "SEDIF",
-      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+      "clasificacion": "Entidades Paraestatales"
     },
     {
       "num": "27",
-      "nombre": "UNIDAD DE SERVICIOS EDUCATIVOS DEL ESTADO DE TLAXCALA",
+      "nombre": "Unidad de Servicios Educativos del Estado de Tlaxcala",
       "siglas": "USET",
-      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+      "clasificacion": "Entidades Paraestatales"
     },
     {
       "num": "28",
-      "nombre": "UNIVERSIDAD POLITÉCNICA DE TLAXCALA",
+      "nombre": "Universidad Politécnica de Tlaxcala",
       "siglas": "UPT",
-      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+      "clasificacion": "Entidades Paraestatales"
     },
     {
       "num": "29",
-      "nombre": "UNIVERSIDAD POLITÉCNICA DE TLAXCALA REGIÓN PONIENTE",
-      "siglas": "UTREP",
-      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+      "nombre": "Universidad Politécnica de Tlaxcala Región Poniente",
+      "siglas": "UPT REP",
+      "clasificacion": "Entidades Paraestatales"
     },
     {
       "num": "30",
-      "nombre": "UNIVERSIDAD TECNOLÓGICA DE TLAXCALA",
+      "nombre": "Universidad Tecnológica de Tlaxcala",
       "siglas": "UTT",
-      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+      "clasificacion": "Entidades Paraestatales"
     },
     {
       "num": "31",
-      "nombre": "UNIVERSIDAD INTERCULTURAL DE TLAXCALA",
+      "nombre": "Universidad Intercultural de Tlaxcala",
       "siglas": "UIT",
-      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+      "clasificacion": "Entidades Paraestatales"
     },
     {
       "num": "32",
-      "nombre": "ARCHIVO GENERAL E HISTORICO DEL ESTADO DE TLAXCALA",
+      "nombre": "Archivo General e Histórico del Estado de Tlaxcala",
       "siglas": "AGHET",
-      "clasificacion": "DESCENTRALIZADO/PARAESTATAL"
+      "clasificacion": "Entidades Paraestatales"
     },
     {
       "num": "33",
-      "nombre": "TRIBUNAL DE JUSTICIA ADMINISTRATIVA DEL ESTADO DE TLAXCALA",
+      "nombre": "Tribunal de Justicia Administrativa del Estado de Tlaxcala",
       "siglas": "TJA",
-      "clasificacion": "ORGANISMO AUTÓNOMO"
+      "clasificacion": "Organismos Autónomos"
     },
     {
       "num": "34",
-      "nombre": "UNIVERSIDAD AUTÓNOMA DE TLAXCALA",
+      "nombre": "Universidad Autónoma de Tlaxcala",
       "siglas": "UAT",
-      "clasificacion": "ORGANISMO AUTÓNOMO"
+      "clasificacion": "Organismos Autónomos"
     },
     {
       "num": "35",
-      "nombre": "COMISIÓN ESTATAL DE DERECHOS HUMANOS",
+      "nombre": "Comisión Estatal de Derechos Humanos",
       "siglas": "CEDH",
-      "clasificacion": "ORGANISMO AUTÓNOMO"
+      "clasificacion": "Organismos Autónomos"
     },
     {
       "num": "36",
-      "nombre": "INSTITUTO TLAXCALTECA DE ELECCIONES",
+      "nombre": "Instituto Tlaxcalteca de Elecciones",
       "siglas": "ITE",
-      "clasificacion": "ORGANISMO AUTÓNOMO"
+      "clasificacion": "Organismos Autónomos"
     },
     {
       "num": "37",
-      "nombre": "INSTITUTO DE ACCESO A LA INFORMACIÓN PÚBLICA Y PROTECCIÓN DE DATOS PERSONALES DEL ESTADO DE TLAXCALA",
-      "siglas": "IAIP",
-      "clasificacion": "ORGANISMO AUTÓNOMO"
+      "nombre": "Instituto de Acceso a la Información Pública y Protección de Datos Personales del Estado de Tlaxcala",
+      "siglas": "IAIPTLAX",
+      "clasificacion": "Organismos Autónomos"
     },
     {
       "num": "38",
-      "nombre": "TRIBUNAL DE CONCILIACIÓN Y ARBITRAJE DEL ESTADO DE TLAXCALA",
-      "siglas": "TCYA",
-      "clasificacion": "ORGANISMO AUTÓNOMO"
+      "nombre": "Tribunal de Conciliación y Arbitraje del Estado de Tlaxcala",
+      "siglas": "TCyA",
+      "clasificacion": "Organismos Autónomos"
     },
     {
       "num": "39",
-      "nombre": "TRIBUNAL ELECTORAL DE TLAXCALA",
+      "nombre": "Tribunal Electoral de Tlaxcala",
       "siglas": "TET",
-      "clasificacion": "ORGANISMO AUTÓNOMO"
+      "clasificacion": "Organismos Autónomos"
     },
     {
       "num": "40",
-      "nombre": "FISCALÍA GENERAL DE JUSTICIA DEL ESTADO DE TLAXCALA",
+      "nombre": "Fiscalía General de Justicia del Estado del Tlaxcala",
       "siglas": "FGJET",
-      "clasificacion": "ORGANISMO AUTÓNOMO"
+      "clasificacion": "Organismos Autónomos"
     },
     {
       "num": "41",
-      "nombre": "SECRETARIA EJECUTIVA DEL SISTEMA ANTICORRUPCIÓN DEL ESTADO DE TLAXCALA",
+      "nombre": "Secretaria Ejecutiva del Sistema Anticorrupción del Estado de Tlaxcala",
       "siglas": "SESAET",
-      "clasificacion": "ORGANISMO DESCENTRALIZADO NO SECTORIZADO"
+      "clasificacion": "Descentralizado no Sectorizado"
     },
     {
       "num": "42",
-      "nombre": "PATRONATO PARA LAS EXPOSICIONES Y FERIAS EN LA CIUDAD DE TLAXCALA",
+      "nombre": "Patronato para las Exposiciones y Ferias en la Ciudad de Tlaxcala",
       "siglas": "P_FERIA",
-      "clasificacion": "PATRONATO"
+      "clasificacion": "Patronato"
     }
   ],
   "municipios": [

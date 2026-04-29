@@ -1,10 +1,16 @@
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 from flask import Flask, render_template, request, jsonify, Response, send_file, session, redirect, url_for
 from flask_cors import CORS
-import io, os, time, json, threading, uuid, logging, re
+import io, os, sys, time, json, threading, uuid, logging, re
 from pathlib import Path
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 from config import config
 from scripts.utils import db, Transaccion, LoteCarga, Usuario, ReporteGenerado, Ente, CONTABLE_GENEROS
 from scripts.utils import process_files_to_database
@@ -12,13 +18,18 @@ from sqlalchemy import func, and_, or_, inspect, text
 from sqlalchemy.exc import IntegrityError
 import pandas as pd
 
+WORKSPACE_ROOT = Path(__file__).resolve().parent.parent
+if str(WORKSPACE_ROOT) not in sys.path:
+    sys.path.insert(0, str(WORKSPACE_ROOT))
+
+from shared_user_catalog import get_project_role, list_users
+
 def create_app(config_name="default"):
     app = Flask(__name__)
     app.config.from_object(config[config_name])
     preferred_user_display = {
-        "luis": "C.P. Luis Felipe Camilo Fuentes",
-        "miguel": "C.P. Miguel Ángel Roldán Peña",
-        "juan": "C.P. Juan José Blanco Sánchez",
+        user["usuario"]: user["nombre_completo"]
+        for user in list_users(project_key="08-siif")
     }
     legacy_dependency_canonical_map = {
         "0G": "06",
@@ -508,6 +519,106 @@ def create_app(config_name="default"):
             "scope": _catalogo_selection_policy(username=username),
         }
 
+    catalogos_consulta_definitions = {
+        "poder_ejecutivo": {
+            "id": "poder_ejecutivo",
+            "nombre": "Poder Ejecutivo",
+            "descripcion": "Entes de referencia del Poder Ejecutivo y sus dependencias.",
+        },
+        "opd_salud": {
+            "id": "opd_salud",
+            "nombre": "OPD Salud",
+            "descripcion": "Consulta de referencia del Organismo Público Descentralizado Salud.",
+        },
+    }
+
+    def _get_allowed_catalogos_consulta(username=None):
+        current_username = (username or session.get("auth_user") or "").strip().lower()
+        if current_username == "juan":
+            allowed_ids = ("poder_ejecutivo",)
+        elif current_username == "miguel":
+            allowed_ids = ("opd_salud",)
+        else:
+            allowed_ids = ("poder_ejecutivo", "opd_salud")
+        return [catalogos_consulta_definitions[catalog_id] for catalog_id in allowed_ids]
+
+    def _load_fuentes_financiamiento_records():
+        catalogo_path = Path(app.root_path) / "catalogos" / "Fuentes_de_Financiamientos.xlsx"
+        if not catalogo_path.exists():
+            return []
+
+        df = pd.read_excel(catalogo_path)
+        df = df.rename(columns={
+            "FF": "ff",
+            "FUENTE DE FINANCIAMIENTO": "fuente",
+            "ID": "id_fuente",
+            "ALFA": "alfa",
+            "DESCRIPCION": "descripcion",
+            "RAMO FEDERAL": "ramo_federal",
+            "FONDO DE INGRESO": "fondo_ingreso",
+        })
+        columns = [
+            "ff",
+            "fuente",
+            "id_fuente",
+            "alfa",
+            "descripcion",
+            "ramo_federal",
+            "fondo_ingreso",
+        ]
+        df = df[[column for column in columns if column in df.columns]]
+        df = df.astype(object).where(pd.notna(df), None)
+        return df.to_dict(orient="records")
+
+    def _serialize_catalogo_consulta_ente(item):
+        return {
+            "numero_referencia": str(item.get("num") or "").strip(),
+            "dd_referencia": str(item.get("dd") or "").strip(),
+            "siglas": str(item.get("siglas") or "").strip(),
+            "nombre": str(item.get("nombre") or "").strip(),
+            "clasificacion": str(item.get("clasificacion") or "").strip(),
+            "ambito": str(item.get("ambito") or "").strip(),
+        }
+
+    def _get_catalogo_consulta_detail(catalog_id):
+        definition = catalogos_consulta_definitions.get(catalog_id)
+        if not definition:
+            return None
+
+        catalog_items = [
+            item for item in _flatten_catalogo_general()
+            if item.get("grupo") == "entes"
+        ]
+        if catalog_id == "poder_ejecutivo":
+            entes_referencia = [
+                _serialize_catalogo_consulta_ente(item)
+                for item in catalog_items
+                if item.get("num") == "1"
+                or re.fullmatch(r"1\.(?:[1-9]|1[0-6])", str(item.get("num") or ""))
+            ]
+        elif catalog_id == "opd_salud":
+            entes_referencia = [
+                _serialize_catalogo_consulta_ente(item)
+                for item in catalog_items
+                if item.get("num") == "22"
+                and _normalize_catalog_sigla(item.get("siglas")) == miguel_allowed_catalog_siglas
+            ]
+        else:
+            entes_referencia = []
+
+        fuentes_referencia = _load_fuentes_financiamiento_records()
+        return {
+            "catalogo_consulta": {
+                **definition,
+                "entes_referencia": entes_referencia,
+                "fuentes_financiamiento_referencia": fuentes_referencia,
+                "totales": {
+                    "entes_referencia": len(entes_referencia),
+                    "fuentes_financiamiento_referencia": len(fuentes_referencia),
+                },
+            }
+        }
+
     def _find_allowed_catalog_item(raw_value, username=None):
         candidate = str(raw_value or "").strip()
         if not candidate:
@@ -521,7 +632,7 @@ def create_app(config_name="default"):
     def require_login():
         if request.method == "OPTIONS":
             return None
-        if request.endpoint in {"login", "logout", "static"}:
+        if request.endpoint in {"login", "logout", "static", "health_check"}:
             return None
         if request.path.startswith("/static/") or request.endpoint is None:
             return None
@@ -543,9 +654,9 @@ def create_app(config_name="default"):
         }
 
     # Configurar logging
-    log_dir = Path('log')
+    log_dir = Path('logs')
     log_dir.mkdir(exist_ok=True)
-    handler = RotatingFileHandler('log/app.log', maxBytes=10*1024*1024, backupCount=10)
+    handler = RotatingFileHandler('logs/app.log', maxBytes=10*1024*1024, backupCount=10)
     handler.setFormatter(logging.Formatter('[%(asctime)s] %(levelname)s: %(message)s'))
     app.logger.addHandler(handler)
     app.logger.setLevel(logging.INFO)
@@ -793,13 +904,48 @@ def create_app(config_name="default"):
                         ente.dd = dd
                         changed = True
                 if changed:
-                    db.session.commit()
+                        db.session.commit()
+
+            def _sync_catalog_users():
+                project_usernames = set()
+                for catalog_user in list_users(project_key="08-siif"):
+                    username = str(catalog_user.get("usuario") or "").strip().lower()
+                    if not username:
+                        continue
+
+                    project_usernames.add(username)
+                    user = (
+                        Usuario.query
+                        .filter(func.lower(Usuario.username) == username)
+                        .first()
+                    )
+                    if user is None:
+                        user = Usuario(username=username)
+
+                    user.nombre_completo = (
+                        str(catalog_user.get("nombre_completo") or username).strip()
+                    )
+                    user.password_hash = generate_password_hash(
+                        str(catalog_user.get("clave") or "")
+                    )
+                    user.rol = get_project_role(catalog_user, "08-siif", "auditor") or "auditor"
+                    user.activo = bool(catalog_user.get("activo", True))
+                    db.session.add(user)
+
+                # Deactivate users not in this project
+                for extra_user in Usuario.query.all():
+                    if (extra_user.username or "").strip().lower() not in project_usernames:
+                        extra_user.activo = False
+                        db.session.add(extra_user)
+
+                db.session.commit()
 
             _ensure_entes_dd_column()
             _ensure_lotes_tipo_archivo_column()
             _ensure_transacciones_catalog_columns()
             _ensure_lotes_catalog_columns()
             _seed_entes_catalogo()
+            _sync_catalog_users()
             _seed_entes_dd()
         except Exception as e:
             print(f"❌ Error al conectar con la base de datos: {str(e)}")
@@ -1356,6 +1502,7 @@ def create_app(config_name="default"):
                     0 if str(item.get("ambito") or "").strip().upper() == "ESTATAL"
                     else 1 if str(item.get("ambito") or "").strip().upper() == "MUNICIPAL"
                     else 2,
+                    int(item.get("orden") or 999999),
                     _alphanumeric_sort_key(item["label"]),
                 )
             )
@@ -1406,6 +1553,7 @@ def create_app(config_name="default"):
                     "siglas": item.get("siglas") or item["value"],
                     "grupo_label": item.get("grupo_label") or "",
                     "ambito": item.get("ambito") or "",
+                    "orden": int(item.get("orden") or 999999),
                 }
                 for item in visible_items
             ], truncated
@@ -1480,6 +1628,11 @@ def create_app(config_name="default"):
 
         return items, len(rows) > option_limit
 
+    @app.route("/api/health")
+    @app.route("/health")
+    def health_check():
+        return jsonify({"status": "ok", "service": "siif"}), 200
+
     @app.route("/login", methods=["GET", "POST"])
     def login():
         if _is_authenticated():
@@ -1487,7 +1640,7 @@ def create_app(config_name="default"):
 
         error = None
         next_url = _safe_next_url(request.values.get("next", ""))
-        user_priority = {"luis": 0, "juan": 1, "miguel": 2}
+        user_priority = {"luis": 0, "gabo": 1, "juan": 2, "miguel": 3}
         usuarios_activos = sorted(
             Usuario.query.filter(Usuario.activo.is_(True)).all(),
             key=lambda usuario: (
@@ -1603,6 +1756,34 @@ def create_app(config_name="default"):
     def get_catalogo_general():
         try:
             return jsonify(_get_catalogo_general_selection_payload())
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    @app.route("/api/catalogos-consulta")
+    def get_catalogos_consulta():
+        try:
+            catalogos_disponibles = _get_allowed_catalogos_consulta()
+            return jsonify({
+                "catalogo_consulta_inicial": (
+                    catalogos_disponibles[0]["id"] if catalogos_disponibles else ""
+                ),
+                "catalogos_consulta_disponibles": catalogos_disponibles,
+            })
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    @app.route("/api/catalogos-consulta/<catalog_id>")
+    def get_catalogos_consulta_detail(catalog_id):
+        try:
+            if catalog_id not in catalogos_consulta_definitions:
+                return jsonify({"error": "Catálogo de consulta no encontrado"}), 404
+            allowed_ids = {
+                catalogo["id"]
+                for catalogo in _get_allowed_catalogos_consulta()
+            }
+            if catalog_id not in allowed_ids:
+                return jsonify({"error": "Catálogo de consulta no autorizado"}), 403
+            return jsonify(_get_catalogo_consulta_detail(catalog_id))
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
@@ -2038,11 +2219,12 @@ def create_app(config_name="default"):
     def get_dependencias():
         try:
             deps = _user_transaccion_base_query().with_entities(
-                Transaccion.dependencia
-            ).distinct().filter(
+                Transaccion.dependencia,
+                func.count(Transaccion.id).label("total"),
+            ).filter(
                 Transaccion.dependencia.isnot(None)
-            ).order_by(Transaccion.dependencia).all()
-            return jsonify({"dependencias": [d[0] for d in deps if d[0]]})
+            ).group_by(Transaccion.dependencia).order_by(Transaccion.dependencia).all()
+            return jsonify({"dependencias": [{"nombre": d[0], "total": d[1]} for d in deps if d[0]]})
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
@@ -2182,8 +2364,21 @@ def create_app(config_name="default"):
     @app.route("/api/entes")
     def get_entes():
         try:
+            catalog_order = {
+                item.get("num"): int(item.get("orden") or 999999)
+                for item in _flatten_catalogo_general()
+                if item.get("num")
+            }
             entes = Ente.query.filter_by(activo=True).order_by(Ente.clave).all()
             entes = _filter_entes_by_permissions(entes)
+            entes.sort(
+                key=lambda ente: (
+                    0 if str(ente.ambito or "").strip().upper() == "ESTATAL" else 1,
+                    catalog_order.get(str(ente.codigo or "").strip(), 999999),
+                    str(ente.codigo or "").strip(),
+                    str(ente.nombre or "").strip(),
+                )
+            )
             return jsonify({
                 "entes": [e.to_dict() for e in entes],
                 "total": len(entes)
